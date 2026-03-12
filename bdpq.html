@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'expédition du Grand Nord : Le mystère des lettres jumelles</title>
+    <style>
+        :root {
+            --night-blue: #0f172a;
+            --ice-blue: #38bdf8;
+            --snow-white: #f8fafc;
+            --aurora-green: #34d399;
+            --danger-ice: #f87171;
+            --font-main: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--night-blue);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(52, 211, 153, 0.1) 0%, transparent 50%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--snow-white);
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 900px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.3);
+            border: 3px solid rgba(56, 189, 248, 0.5);
+            border-top: 15px solid var(--ice-blue);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            color: var(--snow-white); 
+            margin-top: 0; 
+            text-shadow: 0 0 15px var(--ice-blue);
+            font-weight: bold;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+        }
+        
+        h2, h3 { color: var(--ice-blue); font-weight: normal; }
+        p { font-size: 1.1rem; line-height: 1.5; }
+        
+        .progress-bar {
+            width: 100%; height: 14px;
+            background: #1e293b;
+            border-radius: 7px; margin: 20px 0;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--ice-blue), var(--snow-white));
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--ice-blue);
+        }
+
+        .step { display: none; animation: floatIn 0.8s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes floatIn { 
+            0% { opacity: 0; transform: translateY(20px) scale(0.95); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        @keyframes shiver {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px) rotate(-1deg); }
+            40%, 80% { transform: translateX(8px) rotate(1deg); }
+        }
+        .shiver { animation: shiver 0.4s; border-color: var(--danger-ice) !important; }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--snow-white);
+            border: 2px solid var(--ice-blue);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--ice-blue); 
+            color: var(--night-blue);
+            box-shadow: 0 0 20px var(--ice-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; margin-top: 20px; font-weight: bold; }
+
+        .btn-glacon {
+            border-radius: 15px;
+            min-width: 140px; height: 130px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid rgba(255,255,255,0.8);
+            border-left: 2px solid rgba(255,255,255,0.8);
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+        }
+        .btn-glacon span { font-size: 2.8rem; margin-bottom: 5px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+        .btn-glacon:hover { background: rgba(56, 189, 248, 0.3); border-color: var(--snow-white); }
+
+        .ice-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .ice-btn {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--snow-white);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 12px 18px;
+            font-size: 1.3rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            min-width: 110px;
+        }
+
+        .ice-btn.melted {
+            background: transparent;
+            color: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: none;
+            pointer-events: none;
+            transform: scale(0.9);
+            text-decoration: line-through;
+        }
+
+        .phrase-cliquable { 
+            font-size: 1.5rem; line-height: 2.2; margin: 25px 0; text-align: justify; 
+            background: rgba(0,0,0,0.3); padding: 25px; border-radius: 12px; border-left: 5px solid var(--ice-blue);
+        }
+        .mot-cliquable {
+            display: inline-block; padding: 4px 8px; margin: 0 2px;
+            background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: var(--ice-blue); color: var(--night-blue); }
+
+        .emoji-art { font-size: 4rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.3rem; font-weight: bold; }
+        .correct { color: var(--aurora-green); text-shadow: 0 0 10px rgba(52, 211, 153, 0.4); }
+        .wrong { color: var(--danger-ice); text-shadow: 0 0 10px rgba(248, 113, 113, 0.4); }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.4rem;
+            border: 2px solid var(--ice-blue);
+            border-radius: 12px;
+            width: 80%; max-width: 350px;
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            color: var(--night-blue); outline: none;
+            font-weight: bold;
+        }
+        input[type="text"]:focus { border-color: var(--snow-white); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+
+        .text-box {
+            background: rgba(0,0,0,0.3);
+            padding: 20px; border-radius: 12px; font-style: italic;
+            border-left: 5px solid var(--snow-white);
+            margin: 15px auto; width: 85%; font-size: 1.3rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--ice-blue); color: var(--night-blue);
+            padding: 6px 18px; border-radius: 20px; font-size: 1rem; font-weight: bold;
+            margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 2px dashed rgba(255,255,255,0.5); border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--snow-white); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.3s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; filter: drop-shadow(0 0 10px white); }
+
+        .bonus-box {
+            text-align: left; background: rgba(0,0,0,0.3); padding: 25px;
+            border-radius: 12px; border: 2px solid rgba(56, 189, 248, 0.3); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.25rem; line-height: 1.8; }
+        .highlight { color: var(--ice-blue); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Le mystère du Grand Nord ❄️</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🏔️</span>
+        <h2>Bienvenue, explorateur !</h2>
+        <p>Une tempête de neige magique a gelé notre village. Le seul moyen de ramener le soleil est de prouver que tu es un expert de la lecture ! <br><br><b>Attention au Yéti farceur :</b> il adore effacer les mots et mélanger les lettres jumelles comme le <b>b</b>, le <b>d</b>, le <b>p</b> et le <b>q</b>.</p>
+        <button class="btn btn-large" onclick="nextStep()">Commencer l'expédition</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Étape 1 - La rivière gelée (1/3)</span>
+        <span class="emoji-art">🧊</span>
+        <h3>Le piège du B et du D</h3>
+        <p>Pour traverser, tu dois sauter sur le glaçon qui montre la lettre <b>b</b> comme dans <b>b</b>otte :</p>
+        <div>
+            <button class="btn btn-glacon" onclick="checkBtn(1, false)"><span>d</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(1, true)"><span>b</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(1, false)"><span>p</span></button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Étape 1 - La rivière gelée (2/3)</span>
+        <span class="emoji-art">🧊</span>
+        <h3>Le piège du P et du Q</h3>
+        <p>Maintenant, trouve le glaçon avec la lettre <b>p</b> comme dans <b>p</b>atin :</p>
+        <div>
+            <button class="btn btn-glacon" onclick="checkBtn(2, true)"><span>p</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(2, false)"><span>q</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(2, false)"><span>b</span></button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Étape 1 - La rivière gelée (3/3)</span>
+        <span class="emoji-art">🧊</span>
+        <h3>La syllabe perdue</h3>
+        <p>Le Yéti a caché le mot "<b>do</b>do". Trouve la bonne syllabe :</p>
+        <div>
+            <button class="btn btn-glacon" onclick="checkBtn(3, false)"><span>bo</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(3, false)"><span>po</span></button>
+            <button class="btn btn-glacon" onclick="checkBtn(3, true)"><span>do</span></button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Étape 2 - La tempête</span>
+        <span class="emoji-art">🌬️</span>
+        <h3>Fais fondre la glace</h3>
+        <p>Le chemin est bloqué par des mots gelés ! Lis chaque mot à voix haute, cherche son <b>b, d, p ou q</b>, puis <b>clique dessus</b> pour le faire fondre avec la chaleur de ta voix. Fais fondre les 20 blocs !</p>
+        
+        <div class="ice-grid" id="ice-grid-container">
+            </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Étape 3 - Les traces (1/5)</span>
+        <span class="emoji-art">🐾</span>
+        <h3>La construction</h3>
+        <p>Le Yéti a fait une erreur en remplaçant un "b" par un "d". Clique sur le mot mal écrit :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">Avec</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">mes</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">mitaines,</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">je</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">fais</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">une</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">très</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">grosse</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, true)">doule</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">neige</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">blanche.</span>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Étape 3 - Les traces (2/5)</span>
+        <span class="emoji-art">🐾</span>
+        <h3>L'outil de déneigement</h3>
+        <p>Ici, le Yéti a mis un "b" à la place d'un "p". Trouve l'erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">Mon</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">papa</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">utilise</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">une</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">grande</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, true)">belle</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">rouge</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">enlever</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">neige.</span>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Étape 3 - Les traces (3/5)</span>
+        <span class="emoji-art">🐾</span>
+        <h3>Le vêtement chaud</h3>
+        <p>Attention, confusion "d" et "b" ! Le mot devrait s'écrire avec un "b". Clique dessus :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">Ce</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">matin,</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">petit</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">garçon</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">a</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">perdu</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">dotte</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">gauche</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">cour.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Étape 3 - Les traces (4/5)</span>
+        <span class="emoji-art">🐾</span>
+        <h3>L'oiseau qui nage</h3>
+        <p>Le mot animal est mal écrit, le Yéti a mis un "d" au lieu d'un "p". Trouve-le :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">Sur</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">banquise,</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">joli</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">petit</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, true)">dingouin</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">glisse</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">sur</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">son</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">ventre.</span>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Étape 3 - Les traces (5/5)</span>
+        <span class="emoji-art">🐾</span>
+        <h3>La température</h3>
+        <p>Dernière phrase à corriger ! L'erreur se trouve à la fin du mot qui indique la température ("d" remplacé par un "b") :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">Il</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">faut</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">mettre</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">tuque</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">car</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">il</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">fait</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">très</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, true)">froib</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">dehors</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">aujourd'hui.</span>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Étape 4 - La pêche sur glace (1/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La devinette toute douce</h3>
+        <div class="text-box">"Je suis la petite boule douce et poilue tout en haut de ta tuque. Mon nom commence et contient un 'p'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">🧶</span></div><br>
+        <input type="text" id="in-10" placeholder="Écris la réponse ici...">
+        <br><button class="btn" onclick="checkInput(10, ['pompon', 'un pompon', 'le pompon'])">Pêcher le mot</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Étape 4 - La pêche sur glace (2/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La devinette de l'outil</h3>
+        <div class="text-box">"Je suis un outil très utile avec un long manche pour ramasser la neige de l'entrée. Je commence par 'p'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">🧹</span></div><br>
+        <input type="text" id="in-11" placeholder="Écris la réponse ici...">
+        <br><button class="btn" onclick="checkInput(11, ['pelle', 'une pelle', 'la pelle'])">Pêcher le mot</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Étape 4 - La pêche sur glace (3/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La devinette sportive</h3>
+        <div class="text-box">"Tu me mets sous tes pieds pour glisser très vite sur la glace. Mon nom commence par 'p'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">⛸️</span></div><br>
+        <input type="text" id="in-12" placeholder="Écris la réponse ici...">
+        <br><button class="btn" onclick="checkInput(12, ['patin', 'patins', 'des patins', 'les patins', 'un patin', 'le patin'])">Pêcher le mot</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Étape 5 - La caverne (1/3)</span>
+        <span class="emoji-art">🧌</span>
+        <h3>L'énigme du Yéti</h3>
+        <p>Le Yéti te bloque le passage. Réponds à sa question : "Je suis l'immense étendue de glace sur la mer où se promènent les ours polaires. Mon nom contient un 'b' et un 'q'."</p>
+        <input type="text" id="in-13" placeholder="Réponse...">
+        <br><button class="btn" onclick="checkInput(13, ['banquise', 'la banquise', 'une banquise'])">Valider</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Étape 5 - La caverne (2/3)</span>
+        <span class="emoji-art">🧌</span>
+        <h3>L'énigme de la tête</h3>
+        <p>"Je suis un chapeau d'hiver très chaud, en laine. Mon nom contient la lettre 'q'."</p>
+        <input type="text" id="in-14" placeholder="Réponse...">
+        <br><button class="btn" onclick="checkInput(14, ['tuque', 'une tuque', 'la tuque'])">Valider</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Étape 5 - Le Cristal Solaire</span>
+        <span class="emoji-art">💎</span>
+        <h3>L'ultime épreuve</h3>
+        <p>Dernière question ! "Je suis le grand cousin du chevreuil qui vit dans le Nord. Mon nom se termine par la syllabe 'bou'."</p>
+        <input type="text" id="in-15" placeholder="Dernière réponse...">
+        <br><button class="btn btn-large" style="background:var(--aurora-green); color:var(--night-blue); border:none;" onclick="checkInput(15, ['caribou', 'un caribou', 'le caribou', 'des caribous'])">Briser la malédiction !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">☀️</span>
+        <h2>Mission accomplie !</h2>
+        <p>Bravo explorateur ! Tu as déjoué les pièges du b, d, p et q. La neige fond doucement et le soleil brille enfin sur le village.</p>
+        
+        <div class="bonus-box">
+            <h4>La lecture d'hiver A : Le grand bonhomme</h4>
+            <p>Aujourd'hui, Léo sort <span class="highlight">dehors</span> avec son amie Mia. Ils vont construire un beau <span class="highlight">bonhomme</span> de neige ! Léo pousse une grosse <span class="highlight">boule</span>, et Mia cherche une carotte pour le nez. Pour terminer, ils lui mettent une belle <span class="highlight">tuque</span> avec un grand <span class="highlight">pompon</span>. Quel beau travail !</p>
+            <hr style="border-top:1px solid rgba(255,255,255,0.2); margin: 20px 0;">
+            <small style="color:#cbd5e1;"><b>Questions du Yéti (Cherche et trouve) :</b><br>
+            1. Trouve et écris deux mots du texte qui commencent par la lettre "b".<br>
+            2. Trouve et écris un mot du texte qui contient la lettre "q".
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>La lecture d'hiver B : La glissade</h4>
+            <p>Ce matin, il fait très <span class="highlight">froid</span>. La grande <span class="highlight">pente</span> est couverte de glace et de neige <span class="highlight">poudreuse</span>. Papa prend sa grande <span class="highlight">pelle</span> pour dégager le chemin. Ensuite, les enfants enfilent leurs <span class="highlight">bottes</span> et glissent à toute vitesse ! En bas, ils voient même les traces d'un <span class="highlight">caribou</span> dans le bois.</p>
+            <hr style="border-top:1px solid rgba(255,255,255,0.2); margin: 20px 0;">
+            <small style="color:#cbd5e1;"><b>Questions du Yéti (Cherche et trouve) :</b><br>
+            1. Trouve et écris deux mots du texte qui commencent par la lettre "p".<br>
+            2. Quel animal les enfants ont-ils vu en bas de la pente ? (Attention à bien écrire le "b")
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer l'expédition</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 16;
+
+    // --- Mots 100% b/d/p/q ---
+    const iceWords = [
+        'botte', 'patin', 'froid', 'pelle', 
+        'blanc', 'sapin', 'boule', 'pente', 
+        'loup', 'doux', 'tuque', 'banquise', 
+        'pompon', 'dehors', 'pique', 'pingouin', 
+        'tempête', 'caribou', 'bonhomme', 'piste'
+    ];
+    let meltedCount = 0;
+
+    window.onload = function() {
+        const grid = document.getElementById('ice-grid-container');
+        const shuffledWords = iceWords.sort(() => Math.random() - 0.5);
+        
+        shuffledWords.forEach((word) => {
+            let btn = document.createElement('div');
+            btn.className = 'ice-btn';
+            btn.innerText = word;
+            btn.onclick = function() { meltIce(this); };
+            grid.appendChild(btn);
+        });
+    };
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.1); 
+            osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.2); 
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        } else if(type === 'melt') {
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.2); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    function shiverScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shiver');
+        void box.offsetWidth;
+        box.classList.add('shiver');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function meltIce(btnElement) {
+        if(!btnElement.classList.contains('melted')) {
+            playSound('melt');
+            btnElement.classList.add('melted');
+            meltedCount++;
+            
+            if(meltedCount === 20) {
+                playSound('win');
+                document.getElementById('f-4').innerHTML = "<span class='correct'>Incroyable ! La glace a fondu ! 🌊</span>";
+                setTimeout(nextStep, 1500);
+            }
+        }
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>C'est exactement ça ! ✔️</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shiverScreen();
+            fb.innerHTML = "<span class='wrong'>Brrr... le Yéti t'a piégé ! Essaie encore. ❌</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal) || validAnswersArray.includes(inputVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Excellente réponse ! 🌟</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shiverScreen();
+            fb.innerHTML = "<span class='wrong'>La glace est trop dure. Ce n'est pas la bonne réponse.</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
