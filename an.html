@@ -3,32 +3,549 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission 5 : Le Son AN</title>
+    <title>Le mystère du monstre Anselm</title>
     <style>
-        body { background: #f39c12; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: 5px solid #e67e22; }
-        .mot { font-size: 3rem; color: #d35400; margin: 15px 0; font-weight: bold; }
-        button { padding: 15px 25px; font-size: 1.2rem; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; margin: 5px; }
-        .oui { background: #27ae60; } .non { background: #c0392b; }
+        :root {
+            --fond: #f0f8ff;
+            --texte: #2c3e50;
+            --primaire: #3498db;
+            --secondaire: #9b59b6;
+            --succes: #2ecc71;
+            --erreur: #e74c3c;
+            --carte: #ffffff;
+        }
+
+        body {
+            /* LA FAMEUSE POLICE AVEC LE "A" ROND ! */
+            font-family: 'Century Gothic', 'Tw Cen MT', Futura, sans-serif;
+            background-color: var(--fond);
+            color: var(--texte);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        #jeu-conteneur {
+            width: 100%;
+            max-width: 700px;
+            background: var(--carte);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 3px solid var(--primaire);
+            position: relative;
+            z-index: 10;
+        }
+
+        h1, h2, h3 {
+            color: var(--secondaire);
+            text-align: center;
+        }
+
+        .niveau-titre {
+            background: var(--primaire);
+            color: white;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .ecran {
+            display: none;
+            animation: fondu 0.4s ease-in-out;
+        }
+
+        .ecran.actif {
+            display: block;
+        }
+
+        @keyframes fondu {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .anselm-entete {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 5px solid var(--primaire);
+        }
+
+        .anselm-avatar {
+            font-size: 50px; 
+            animation: flotter 3s ease-in-out infinite;
+        }
+
+        @keyframes flotter {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .bulle-anselm {
+            font-size: 1.1rem;
+            flex-grow: 1;
+        }
+
+        .image-salle {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px; 
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .grille-boutons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: var(--primaire);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-family: inherit; /* Hérite de Century Gothic */
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #2980b9;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2980b9;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            box-shadow: 0 4px 0 #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .texte-lecture {
+            background-color: #fffde7;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px dashed #f1c40f;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .retroaction {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 24px;
+            font-size: 1.2rem;
+        }
+
+        .confetti {
+            position: fixed;
+            top: -50px;
+            font-size: 30px;
+            z-index: 9999;
+            animation: tomber 3s linear forwards;
+        }
+
+        @keyframes tomber {
+            to { transform: translateY(120vh) rotate(360deg); }
+        }
+
+        /* Style spécifique pour la section bonus */
+        .boite-bonus {
+            background-color: #e8f8f5;
+            border: 3px solid #1abc9c;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .boite-questions {
+            background-color: #fdf2e9;
+            border-left: 5px solid #e67e22;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 10px 10px 0;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="font-size: 50px;">🐘</div>
-    <p>Entends-tu <b>"AN"</b> ?</p>
-    <div id="mot" class="mot">---</div>
-    <button class="oui" onclick="check(true)">OUI</button>
-    <button class="non" onclick="check(false)">NON</button>
+
+<div id="jeu-conteneur">
+    
+    <div id="ecran-intro" class="ecran actif">
+        <h1>Le Mystère d'Anselm</h1>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">
+                "Bonjour ! Je suis Anselm le détective. Le son <strong>[an]</strong> a disparu ! Aide-moi à fouiller les 5 salles pour le retrouver."
+            </div>
+        </div>
+        <div class="image-salle">🚪</div>
+        <div style="text-align: center;">
+            <button onclick="changerEcran('ecran-salle1a')">Ouvrir la porte !</button>
+        </div>
+    </div>
+
+    <div id="ecran-salle1a" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 1 : Non-mots (1/2)</span></div>
+        <h2>Le Laboratoire</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Trouve le faux-mot qui contient le son <strong>[an]</strong> ou <strong>[en]</strong>.</div>
+        </div>
+        <div class="image-salle">🧪</div>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-1a')">Pir</button>
+            <button onclick="verifierReponse(this, true, 'retro-1a', 'ecran-salle1b')">Lan</button>
+            <button onclick="verifierReponse(this, false, 'retro-1a')">Mot</button>
+            <button onclick="verifierReponse(this, false, 'retro-1a')">Sur</button>
+        </div>
+        <div id="retro-1a" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle1b" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 1 : Non-mots (2/2)</span></div>
+        <h2>Le Laboratoire</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Trouve le faux-mot avec le son <strong>[em]</strong> ou <strong>[am]</strong>.</div>
+        </div>
+        <div class="image-salle">🔬</div>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-1b')">Pou</button>
+            <button onclick="verifierReponse(this, false, 'retro-1b')">Fil</button>
+            <button onclick="verifierReponse(this, true, 'retro-1b', 'ecran-salle2a', true)">Tem</button>
+            <button onclick="verifierReponse(this, false, 'retro-1b')">Rac</button>
+        </div>
+        <div id="retro-1b" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle2a" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 2 : Mots (1/2)</span></div>
+        <h2>Le Marché</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Je suis chaud et je couvre ton dos. Mon nom contient <strong>[an]</strong>. Qui suis-je ?</div>
+        </div>
+        <div class="image-salle">🛒</div>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-2a')">Un chapeau</button>
+            <button onclick="verifierReponse(this, true, 'retro-2a', 'ecran-salle2b')">Un manteau</button>
+            <button onclick="verifierReponse(this, false, 'retro-2a')">Un pull</button>
+            <button onclick="verifierReponse(this, false, 'retro-2a')">Un foulard</button>
+        </div>
+        <div id="retro-2a" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle2b" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 2 : Mots (2/2)</span></div>
+        <h2>Le Marché</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Je sers à éclairer la pièce. Mon nom contient <strong>[am]</strong>. Qui suis-je ?</div>
+        </div>
+        <div class="image-salle">🛍️</div>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, true, 'retro-2b', 'ecran-salle3a', true)">Une lampe</button>
+            <button onclick="verifierReponse(this, false, 'retro-2b')">Une bougie</button>
+            <button onclick="verifierReponse(this, false, 'retro-2b')">Une chaise</button>
+            <button onclick="verifierReponse(this, false, 'retro-2b')">Une table</button>
+        </div>
+        <div id="retro-2b" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle3a" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 3 : Phrases (1/2)</span></div>
+        <h2>L'École</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Complète la phrase avec un mot contenant le son <strong>[en]</strong>.</div>
+        </div>
+        <div class="image-salle">🏫</div>
+        <p class="texte-lecture">L'_____ mange une banane.</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, true, 'retro-3a', 'ecran-salle3b')">Enfant</button>
+            <button onclick="verifierReponse(this, false, 'retro-3a')">Oiseau</button>
+            <button onclick="verifierReponse(this, false, 'retro-3a')">Ourson</button>
+            <button onclick="verifierReponse(this, false, 'retro-3a')">Ami</button>
+        </div>
+        <div id="retro-3a" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle3b" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 3 : Phrases (2/2)</span></div>
+        <h2>L'École</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Il manque un mot avec le son <strong>[en]</strong> !</div>
+        </div>
+        <div class="image-salle">🎒</div>
+        <p class="texte-lecture">Le facteur dépose une _____ .</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-3b')">Boîte</button>
+            <button onclick="verifierReponse(this, false, 'retro-3b')">Pomme</button>
+            <button onclick="verifierReponse(this, false, 'retro-3b')">Lettre</button>
+            <button onclick="verifierReponse(this, true, 'retro-3b', 'ecran-salle4a', true)">Enveloppe</button>
+        </div>
+        <div id="retro-3b" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle4a" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 4 : Textes (1/2)</span></div>
+        <h2>La Bibliothèque</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Trouve le mot qui cache le son <strong>[en]</strong> !</div>
+        </div>
+        <div class="image-salle">📚</div>
+        <p class="texte-lecture">Le vent souffle. Maman installe la tente.</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-4a')">Souffle</button>
+            <button onclick="verifierReponse(this, true, 'retro-4a', 'ecran-salle4b')">Tente</button>
+            <button onclick="verifierReponse(this, false, 'retro-4a')">Vent</button>
+            <button onclick="verifierReponse(this, false, 'retro-4a')">Maman</button>
+        </div>
+        <div id="retro-4a" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle4b" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 4 : Textes (2/2)</span></div>
+        <h2>La Bibliothèque</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Cherche le mot avec le son <strong>[am]</strong>.</div>
+        </div>
+        <div class="image-salle">📖</div>
+        <p class="texte-lecture">Le renard observe le campement des voyageurs.</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-4b')">Observe</button>
+            <button onclick="verifierReponse(this, true, 'retro-4b', 'ecran-salle5a', true)">Campement</button>
+            <button onclick="verifierReponse(this, false, 'retro-4b')">Renard</button>
+            <button onclick="verifierReponse(this, false, 'retro-4b')">Voyageurs</button>
+        </div>
+        <div id="retro-4b" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle5a" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 5 : Le Mystère (1/2)</span></div>
+        <h2>Le Château</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Trouve la personne dont le nom contient le son <strong>[an]</strong>.</div>
+        </div>
+        <div class="image-salle">🏰</div>
+        <p class="texte-lecture">Le vieux marchand vend des bonbons géants au village.</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-5a')">Vieux</button>
+            <button onclick="verifierReponse(this, true, 'retro-5a', 'ecran-salle5b')">Marchand</button>
+            <button onclick="verifierReponse(this, false, 'retro-5a')">Village</button>
+            <button onclick="verifierReponse(this, false, 'retro-5a')">Géants</button>
+        </div>
+        <div id="retro-5a" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-salle5b" class="ecran">
+        <div style="text-align: center;"><span class="niveau-titre">Niveau 5 : Le Mystère (2/2)</span></div>
+        <h2>Le Château</h2>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">Mot de passe final : il contient <strong>trois fois</strong> le son [an/en/am/em] !</div>
+        </div>
+        <div class="image-salle">👑</div>
+        <p class="texte-lecture">Le fantôme se promène en chantant. Le paysage est vraiment enchantant !</p>
+        <div class="grille-boutons">
+            <button onclick="verifierReponse(this, false, 'retro-5b')">Fantôme</button>
+            <button onclick="verifierReponse(this, false, 'retro-5b')">Chantant</button>
+            <button onclick="verifierReponse(this, true, 'retro-5b', 'ecran-victoire', false, true)">Enchantant</button>
+            <button onclick="verifierReponse(this, false, 'retro-5b')">Vraiment</button>
+        </div>
+        <div id="retro-5b" class="retroaction"></div>
+    </div>
+
+    <div id="ecran-victoire" class="ecran">
+        <h2 style="font-size: 2.5rem; color: var(--succes);">Mission Accomplie !</h2>
+        <div style="font-size: 5rem; text-align: center; margin: 10px 0;">🏆</div>
+        <div class="anselm-entete">
+            <div class="anselm-avatar">🕵️‍♂️</div>
+            <div class="bulle-anselm">
+                "MERCI ! Grâce à toi, le son <strong>[an]</strong> est de retour."
+            </div>
+        </div>
+        <p style="text-align: center; font-size: 1.4rem; color: var(--primaire);"><strong>Badge obtenu : Détective d'Élite !</strong></p>
+        <div class="grille-boutons" style="margin-top: 30px;">
+            <button onclick="location.reload()" style="background-color: #7f8c8d;">Jouer à nouveau 🔄</button>
+            <button onclick="changerEcran('ecran-bonus')" style="background-color: #1abc9c;">Aller au Bonus 📖</button>
+        </div>
+    </div>
+
+    <div id="ecran-bonus" class="ecran">
+        <h2>Bonus de Lecture : La Tempête</h2>
+        <div class="image-salle" style="font-size: 60px;">🐼🍂</div>
+        <div class="boite-bonus">
+            <strong>À lire ensemble (repérez les sons AN / EN / AM / EM) :</strong><br><br>
+            Le grand panda blanc, nommé Armand, se promène lentement. Soudain, le vent se lève sur le campement. En entendant le bruit, il tremble et s'enfuit vers une grande branche pour se mettre à l'abri. Dans son immense cachette, il mange des pampres de bambou en attendant que le temps se calme.
+        </div>
+        
+        <div class="boite-questions">
+            <strong style="color: #d35400;">Questions concrètes (dans le texte) :</strong>
+            <ul>
+                <li>Comment s'appelle le panda ?</li>
+                <li>Où s'enfuit-il quand il entend le bruit ?</li>
+                <li>Que mange Armand dans sa cachette ?</li>
+            </ul>
+            
+            <strong style="color: #d35400;">Questions abstraites / Inférences :</strong>
+            <ul>
+                <li>Comment se sent Armand quand le vent se lève ? (Qu'est-ce qui te fait dire ça ?)</li>
+                <li>D'après toi, est-ce qu'Armand est un animal courageux ou plutôt peureux ? Pourquoi ?</li>
+            </ul>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="location.reload()">Recommencer le jeu 🔄</button>
+        </div>
+    </div>
+
 </div>
+
 <script>
-    const quiz = [{m:"Maman", r:true}, {m:"Vélo", r:false}, {m:"Enfant", r:true}, {m:"Banc", r:true}, {m:"Lune", r:false}];
-    let i = 0;
-    function up() {
-        if(i < quiz.length) { document.getElementById('mot').innerText = quiz[i].m; }
-        else { document.querySelector('.card').innerHTML = "<h1>BRAVO !</h1><p>Code secret :</p><h2>VOLANT-55</h2>"; }
+    // --- MAGIE AUDIO : SONS SYNTHÉTISÉS (100% Anti-Blocage) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
     }
-    function check(c) { if(c === quiz[i].r) { i++; up(); } else { alert("Réessaie !"); } }
-    up();
+
+    function jouerSon(type) {
+        initAudio();
+        const t = audioCtx.currentTime;
+        
+        if (type === 'clic-ok') {
+            // Un petit "Ding" joyeux !
+            creerBip(880, 'sine', 0.1, t); // La
+            creerBip(1108.73, 'sine', 0.2, t + 0.1); // Do# aigu
+        } 
+        else if (type === 'niveau-up') {
+            // Une petite musique de victoire (arpège magique)
+            creerBip(523.25, 'triangle', 0.15, t); // Do
+            creerBip(659.25, 'triangle', 0.15, t + 0.15); // Mi
+            creerBip(783.99, 'triangle', 0.15, t + 0.3); // Sol
+            creerBip(1046.50, 'triangle', 0.4, t + 0.45); // Do aigu
+        }
+    }
+
+    function creerBip(frequence, type, duree, debut) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequence, debut);
+        
+        // Pour un son doux qui s'estompe
+        gain.gain.setValueAtTime(0.1, debut);
+        gain.gain.exponentialRampToValueAtTime(0.001, debut + duree);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(debut);
+        osc.stop(debut + duree);
+    }
+    // -----------------------------------------------------------
+
+    function lancerConfettis() {
+        const emojis = ['🎉', '✨', '🎈', '⭐'];
+        for (let i = 0; i < 40; i++) {
+            let confetti = document.createElement('div');
+            confetti.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+        }
+    }
+
+    function changerEcran(idEcranCible, estVictoire = false) {
+        document.querySelectorAll('.ecran').forEach(function(ecran) {
+            ecran.classList.remove('actif');
+        });
+        document.getElementById(idEcranCible).classList.add('actif');
+
+        if (estVictoire) {
+            jouerSon('niveau-up'); // Grande musique de victoire
+            lancerConfettis();
+        }
+    }
+
+    function verifierReponse(bouton, estCorrect, idRetro, idEcranSuivant = null, changementDeNiveau = false, estVictoireFinale = false) {
+        initAudio(); // Assure que le son est prêt au premier clic
+        const zoneRetro = document.getElementById(idRetro);
+        
+        if (estCorrect) {
+            // Si c'est un changement de niveau (activité B vers A de la salle suivante)
+            if (changementDeNiveau) {
+                jouerSon('niveau-up');
+            } else {
+                jouerSon('clic-ok');
+            }
+
+            bouton.style.backgroundColor = 'var(--succes)';
+            if (zoneRetro) {
+                zoneRetro.style.color = 'var(--succes)';
+                zoneRetro.innerText = "Excellent ! ✅";
+            }
+            
+            const boutonsFreres = bouton.parentElement.querySelectorAll('button');
+            boutonsFreres.forEach(function(b) { b.disabled = true; });
+
+            if (idEcranSuivant) {
+                setTimeout(function() {
+                    changerEcran(idEcranSuivant, estVictoireFinale);
+                }, 1500);
+            }
+        } else {
+            bouton.style.backgroundColor = 'var(--erreur)';
+            if (zoneRetro) {
+                zoneRetro.style.color = 'var(--erreur)';
+                zoneRetro.innerText = "Essaie encore ! ❌";
+            }
+            
+            setTimeout(function() {
+                bouton.style.backgroundColor = 'var(--primaire)';
+                if (zoneRetro) zoneRetro.innerText = "";
+            }, 1000);
+        }
+    }
 </script>
+
 </body>
 </html>
