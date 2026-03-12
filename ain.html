@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerte à la plage : Le mystère des ain, ein et ien</title>
+    <style>
+        :root {
+            --sun-yellow: #fde047;
+            --ocean-blue: #0ea5e9;
+            --sand-color: #fcd34d;
+            --crab-red: #ef4444;
+            --white-cloud: #f8fafc;
+            --text-dark: #1e293b;
+            --font-main: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #38bdf8;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(253, 224, 71, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(252, 211, 77, 0.6) 0%, transparent 50%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 950px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            border: 4px solid var(--sun-yellow);
+            border-top: 25px solid var(--ocean-blue);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        h1 { color: var(--ocean-blue); margin-top: 0; font-size: 2.4rem; text-shadow: 2px 2px 0px var(--sun-yellow); }
+        h2 { color: var(--crab-red); font-weight: bold; font-size: 1.8rem; }
+        p { font-size: 1.25rem; line-height: 1.6; }
+
+        .progress-bar {
+            width: 100%; height: 18px; background: #e2e8f0;
+            border-radius: 9px; margin: 20px 0; border: 2px solid var(--ocean-blue);
+            overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, var(--sun-yellow), var(--crab-red));
+            transition: width 0.5s ease;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        .btn {
+            background: var(--ocean-blue); color: white;
+            border: 3px solid #0284c7; padding: 12px 25px;
+            font-size: 1.2rem; border-radius: 12px; cursor: pointer;
+            margin: 10px; font-family: var(--font-main); font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 5px 0 #0284c7;
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 #0284c7; filter: brightness(1.1); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+        
+        .btn-yellow { background: var(--sun-yellow); color: var(--text-dark); border-color: #ca8a04; box-shadow: 0 5px 0 #ca8a04; }
+        .btn-red { background: var(--crab-red); color: white; border-color: #b91c1c; box-shadow: 0 5px 0 #b91c1c; }
+
+        /* Étape 1 : Trieuse */
+        .machine-mot {
+            font-size: 3rem; font-weight: bold; margin: 30px 0; padding: 20px;
+            background: var(--white-cloud); border: 4px dashed var(--ocean-blue); border-radius: 15px;
+            display: inline-block; min-width: 280px; color: var(--ocean-blue);
+        }
+        .btn-tri { font-size: 1.6rem; padding: 15px 25px; margin: 0 10px; }
+
+        /* Étape 2 : Interrupteurs (Bouées) */
+        .switch-grid { display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 0 auto; }
+        .switch-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fffbeb; padding: 12px 25px; border-radius: 12px; border: 3px solid var(--sand-color);
+            font-size: 1.5rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .switch-btn {
+            background: var(--ocean-blue); color: white; border: 3px solid #0284c7;
+            padding: 8px 20px; font-size: 1.6rem; font-weight: bold; border-radius: 10px; cursor: pointer;
+            min-width: 90px; text-align: center; user-select: none; transition: transform 0.1s;
+        }
+        .switch-btn:active { transform: scale(0.95); }
+
+        /* Étape 3 : Code (Coffre fort) */
+        .reading-text {
+            background: #e0f2fe; padding: 25px; border-radius: 15px; border-left: 8px solid var(--ocean-blue);
+            text-align: left; font-size: 1.4rem; margin-bottom: 20px; line-height: 1.8;
+        }
+        .code-inputs { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .code-box { text-align: center; background: var(--sand-color); padding: 15px; border-radius: 12px; }
+        .code-box input {
+            width: 70px; height: 70px; font-size: 2.5rem; text-align: center;
+            border: 4px solid var(--text-dark); border-radius: 12px; font-weight: bold;
+        }
+
+        /* Étape 4 : Étiquettes (Phrases) */
+        .phrases-container { text-align: left; max-width: 700px; margin: 0 auto; font-size: 1.4rem; line-height: 2.2; }
+        .input-inline {
+            width: 75px; padding: 5px; font-size: 1.3rem; text-align: center;
+            border: 3px solid var(--ocean-blue); border-radius: 8px; margin: 0 5px;
+            font-family: var(--font-main); font-weight: bold; text-transform: lowercase;
+            background: #f8fafc;
+        }
+        
+        /* Étape 5 : L'intrus */
+        .intrus-group { margin: 20px 0; background: #fffbeb; padding: 20px; border-radius: 15px; border: 3px dashed var(--sand-color); }
+        .intrus-group h3 { margin-top: 0; color: var(--text-dark); }
+
+        /* Textes bonus */
+        .bonus-box {
+            text-align: left; background: var(--white-cloud); padding: 30px;
+            border-radius: 15px; border: 3px solid var(--ocean-blue); margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .bonus-box h4 { margin-top: 0; color: var(--ocean-blue); font-size: 1.5rem; border-bottom: 2px solid var(--sun-yellow); padding-bottom: 10px; }
+        .bonus-box p { font-size: 1.25rem; line-height: 1.8; }
+        .highlight { font-weight: bold; color: var(--crab-red); }
+        .question-box { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 15px; font-size: 1.15rem; border-left: 5px solid var(--ocean-blue); }
+        
+        /* Général */
+        input[type="text"]:not(.input-inline) {
+            font-family: var(--font-main); padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--ocean-blue); border-radius: 12px;
+            width: 80%; max-width: 350px; text-align: center;
+        }
+        .feedback { min-height: 35px; margin-top: 15px; font-size: 1.4rem; font-weight: bold; }
+        .correct { color: #15803d; }
+        .wrong { color: var(--crab-red); }
+        .emoji-art { font-size: 4.5rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Alerte sur la plage ! 🏖️</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🦀</span>
+        <h2>Un crabe coquin a tout mélangé !</h2>
+        <p>Un gros coup de vent et un crabe farceur ont mélangé tous les mots de l'été ! Les sons <b>ain</b> (comme b<b>ain</b>), <b>ein</b> (comme pl<b>ein</b>) et <b>ien</b> (comme ch<b>ien</b>) sont cachés dans le sable.<br><br>Réussiras-tu toutes les épreuves pour retrouver tes affaires de plage ?</p>
+        <button class="btn btn-large btn-yellow" onclick="nextStep()">Aller sur la plage</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="emoji-art">🍦</span>
+        <h2>Les glaces aux trois saveurs</h2>
+        <p>Lis le mot à voix haute. Quel son entends-tu à l'intérieur ? Range-le dans le bon cornet de glace ! (12 mots à trouver)</p>
+        
+        <div class="machine-mot" id="mot-a-trier">...</div>
+        <br>
+        <button class="btn btn-tri btn-yellow" onclick="trierMot('ain')">ain 🍞</button>
+        <button class="btn btn-tri btn-red" onclick="trierMot('ein')">ein 🎨</button>
+        <button class="btn btn-tri" onclick="trierMot('ien')">ien 🐶</button>
+        
+        <p id="tri-compteur" style="font-size: 1.2rem; margin-top: 20px; font-weight: bold;">Mots triés : 0 / 12</p>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="emoji-art">🛟</span>
+        <h2>Répare les mots crevés</h2>
+        <p>Clique sur la syllabe bleue pour la changer (<b>ain</b> ➔ <b>ein</b> ➔ <b>ien</b>). Assure-toi que les 6 mots sont bien écrits avant de lancer les bouées !</p>
+        
+        <div class="switch-grid">
+            <div class="switch-row">
+                <span>1. Le ch</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ien">ain</div>
+            </div>
+            <div class="switch-row">
+                <span>2. Le b</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ain">ien</div>
+            </div>
+            <div class="switch-row">
+                <span>3. Le seau est pl</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ein">ain</div>
+            </div>
+            <div class="switch-row">
+                <span>4. Le magic</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ien">ein</div>
+            </div>
+            <div class="switch-row">
+                <span>5. Je te donne la m</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ain">ien</div>
+            </div>
+            <div class="switch-row">
+                <span>6. Attache ta c</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="ein">ain</div><span>ture</span>
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large btn-yellow" onclick="verifierSwitches()">Lancer les bouées</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="emoji-art">🪙</span>
+        <h2>Le coffre du pirate</h2>
+        <p>Lis cette histoire très attentivement. Compte chaque son pour trouver le code à 3 chiffres du coffre !</p>
+        
+        <div class="reading-text">
+            "Le <b>chien</b> de mon <b>copain</b> court sur le sable chaud. Il a <b>plein</b> d'eau sur lui car il <b>vient</b> de prendre son <b>bain</b>. Il trouve un vieux morceau de <b>pain</b>, mais ce n'est <b>rien</b> de bon. Le <b>gardien</b> de la plage lui lance une balle !"
+        </div>
+        
+        <div class="code-inputs">
+            <div class="code-box">
+                <label>Combien de <b>ain</b> ?</label><br><input type="number" id="code-ain" min="0" max="9">
+            </div>
+            <div class="code-box">
+                <label>Combien de <b>ein</b> ?</label><br><input type="number" id="code-ein" min="0" max="9">
+            </div>
+            <div class="code-box">
+                <label>Combien de <b>ien</b> ?</label><br><input type="number" id="code-ien" min="0" max="9">
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierCode()">Ouvrir le coffre</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="emoji-art">🏰</span>
+        <h2>Les châteaux de sable</h2>
+        <p>Complète les mots effacés par les vagues. Écris <b>ain</b>, <b>ein</b> ou <b>ien</b> dans chaque case.</p>
+        
+        <div class="phrases-container">
+            1. Pour faire un sandwich, je coupe du p<input type="text" class="input-inline" id="etq-1" maxlength="3">.<br>
+            2. Mon ch<input type="text" class="input-inline" id="etq-2" maxlength="3"> creuse un gros trou.<br>
+            3. Mon seau rouge est pl<input type="text" class="input-inline" id="etq-3" maxlength="3"> de coquillages.<br>
+            4. Le soleil brille, j'ai besoin de mes lunettes de b<input type="text" class="input-inline" id="etq-4" maxlength="3">.<br>
+            5. Le music<input type="text" class="input-inline" id="etq-5" maxlength="3"> joue de la guitare le soir.<br>
+            6. Ralentis avec ton vélo, appuie sur le fr<input type="text" class="input-inline" id="etq-6" maxlength="3"> !
+        </div>
+        <br>
+        <button class="btn btn-large btn-red" onclick="verifierEtiquettes()">Construire les châteaux</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="emoji-art">🐚</span>
+        <h2>La chasse aux coquillages (L'intrus)</h2>
+        <p>Dans chaque ligne, un mot cache un son différent des autres ! Trouve l'intrus et clique dessus.</p>
+
+        <div class="intrus-group" id="groupe-1">
+            <h3>Niveau 1</h3>
+            <button class="btn" onclick="verifierIntrus(1, false, this)">bain</button>
+            <button class="btn" onclick="verifierIntrus(1, false, this)">pain</button> 
+            <button class="btn" onclick="verifierIntrus(1, true, this)">chien</button> <button class="btn" onclick="verifierIntrus(1, false, this)">train</button>
+        </div>
+
+        <div class="intrus-group" id="groupe-2" style="display:none;">
+            <h3>Niveau 2</h3>
+            <button class="btn" onclick="verifierIntrus(2, false, this)">bien</button>
+            <button class="btn" onclick="verifierIntrus(2, false, this)">rien</button>
+            <button class="btn" onclick="verifierIntrus(2, true, this)">plein</button> <button class="btn" onclick="verifierIntrus(2, false, this)">sien</button>
+        </div>
+
+        <div class="intrus-group" id="groupe-3" style="display:none;">
+            <h3>Niveau 3</h3>
+            <button class="btn" onclick="verifierIntrus(3, false, this)">frein</button>
+            <button class="btn" onclick="verifierIntrus(3, true, this)">demain</button> <button class="btn" onclick="verifierIntrus(3, false, this)">ceinture</button>
+            <button class="btn" onclick="verifierIntrus(3, false, this)">peintre</button>
+        </div>
+
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="emoji-art">🦜</span>
+        <h2>La devinette du perroquet</h2>
+        <p>Dernière épreuve ! Écris la bonne réponse. <br><i>Indice : Le mot contient ain, ein ou ien.</i></p>
+        
+        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 12px; margin-bottom: 20px; font-style: italic; font-size: 1.4rem; border: 2px dashed var(--crab-red);">
+            "Je suis le meilleur ami de l'homme. J'ai quatre pattes, j'aime ronger des os et j'aboie quand je suis content. Qui suis-je ?"
+        </div>
+        
+        <input type="text" id="in-enigme" placeholder="Écris l'animal...">
+        <br><button class="btn btn-large btn-yellow" onclick="verifierEnigme()">Répondre au perroquet</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="emoji-art">😎</span>
+        <h2>Mission accomplie !</h2>
+        <p>Félicitations ! Tu as déjoué tous les pièges du sable et maîtrisé les sons ain, ein et ien. <br>Voici de belles histoires pour célébrer ta victoire.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : Le trésor dans le sable</h4>
+            <p>Ce matin, le soleil brille très fort. Je vais me préparer pour prendre mon <span class="highlight">bain</span> de mer. Mon <span class="highlight">copain</span> Léo arrive avec son gros <span class="highlight">chien</span> noir. Ils ont <span class="highlight">plein</span> de jouets dans leur sac ! Soudain, le <span class="highlight">chien</span> se met à creuser à toute vitesse. Il trouve un vieux <span class="highlight">frein</span> de bicyclette enfoui sous la plage. « Ce n'est <span class="highlight">rien</span> de dangereux ! » dit le <span class="highlight">gardien</span> en souriant. <span class="highlight">Demain</span>, nous construirons un énorme château à cet endroit. J'utiliserai ma <span class="highlight">main</span> pour bien taper le sable humide.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve 3 mots du texte qui contiennent le son <b>ain</b>.<br>
+                2. Qui creuse un trou dans le sable et que trouve-t-il ?<br>
+                3. Vrai ou faux ? Le gardien est fâché.
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : Le spectacle du camp de jour</h4>
+            <p>Cet été, au camp de vacances, un grand <span class="highlight">magicien</span> <span class="highlight">vient</span> nous faire un spectacle ! Il porte une cape étoilée et une belle <span class="highlight">ceinture</span> dorée. Ses poches sont toujours <span class="highlight">pleines</span> de surprises magiques. Il regarde les enfants et demande : « Est-ce que tout va <span class="highlight">bien</span> ? » Il sort un petit lapin blanc de son grand chapeau. Ensuite, il fait apparaître une <span class="highlight">peinture</span> magnifique d'un <span class="highlight">poulain</span> sauvage. C'est incroyable ! À la toute fin, la lumière s'<span class="highlight">éteint</span> doucement et il disparaît dans un nuage de fumée.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve 2 mots du texte qui contiennent le son <b>ein</b>.<br>
+                2. Trouve 2 mots du texte qui contiennent le son <b>ien</b>.<br>
+                3. Que fait le magicien à la fin de son spectacle ?
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : Le grand voyage sur les rails</h4>
+            <p>Pour aller à la mer, toute ma famille prend le <span class="highlight">train</span>. Le wagon est presque <span class="highlight">plein</span>. Je marche dans l'allée et je me tiens très <span class="highlight">bien</span> avec ma <span class="highlight">main</span> pour ne pas tomber quand ça bouge. Plus <span class="highlight">loin</span>, un <span class="highlight">musicien</span> joyeux joue de la guitare pour les voyageurs. C'est amusant ! À la première gare, j'ai une faim de loup, alors papa me donne un petit <span class="highlight">pain</span> au chocolat. J'ai très hâte d'arriver <span class="highlight">demain</span> pour voir les grandes vagues et les oiseaux marins.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve 4 mots du texte qui contiennent le son <b>ain</b>.<br>
+                2. Pourquoi l'enfant se tient-il avec sa main ?<br>
+                3. Inférence : L'enfant va-t-il se baigner le jour même ? (Lis bien la dernière phrase).
+            </div>
+        </div>
+
+        <button class="btn btn-large btn-yellow" style="margin-top:20px; width:100%;" onclick="location.reload()">Rejouer à la plage</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 7;
+
+    // --- Logique Étape 1 : Machine de tri ---
+    const motsTri = [
+        { mot: "bain", type: "ain" },
+        { mot: "plein", type: "ein" },
+        { mot: "chien", type: "ien" },
+        { mot: "main", type: "ain" },
+        { mot: "frein", type: "ein" },
+        { mot: "bien", type: "ien" },
+        { mot: "train", type: "ain" },
+        { mot: "peintre", type: "ein" },
+        { mot: "rien", type: "ien" },
+        { mot: "copain", type: "ain" },
+        { mot: "ceinture", type: "ein" },
+        { mot: "gardien", type: "ien" }
+    ];
+    let motsMelanges = [];
+    let motActuelIndex = 0;
+    let scoreTri = 0;
+
+    function initTri() {
+        motsMelanges = [...motsTri].sort(() => Math.random() - 0.5);
+        afficherMotTri();
+    }
+
+    function afficherMotTri() {
+        if (motActuelIndex < motsMelanges.length) {
+            document.getElementById('mot-a-trier').innerText = motsMelanges[motActuelIndex].mot;
+        } else {
+            document.getElementById('mot-a-trier').innerText = "Terminé !";
+            document.getElementById('f-1').innerHTML = "<span class='correct'>Fantastique ! Tes glaces sont parfaites. 🍦</span>";
+            setTimeout(nextStep, 1500);
+        }
+    }
+
+    function trierMot(choix) {
+        if (motActuelIndex >= motsMelanges.length) return;
+        
+        const motCourant = motsMelanges[motActuelIndex];
+        const fb = document.getElementById('f-1');
+
+        if (choix === motCourant.type) {
+            scoreTri++;
+            document.getElementById('tri-compteur').innerText = `Mots triés : ${scoreTri} / 12`;
+            fb.innerHTML = "<span class='correct'>Miam ! C'est le bon son. ✅</span>";
+            motActuelIndex++;
+            setTimeout(() => { fb.innerHTML = ""; afficherMotTri(); }, 600);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Oups ! Regarde bien la fin du mot. ❌</span>";
+        }
+    }
+
+    // --- Logique Étape 2 : Interrupteurs cycliques ---
+    function cycleSwitch(element) {
+        let current = element.innerText;
+        if(current === "ain") element.innerText = "ein";
+        else if(current === "ein") element.innerText = "ien";
+        else element.innerText = "ain";
+    }
+
+    function verifierSwitches() {
+        const switches = document.querySelectorAll('.switch-btn');
+        let toutBon = true;
+        
+        switches.forEach(btn => {
+            if (btn.innerText !== btn.getAttribute('data-correct')) {
+                toutBon = false;
+                btn.style.backgroundColor = "var(--crab-red)";
+                btn.style.borderColor = "#991b1b";
+            } else {
+                btn.style.backgroundColor = "#15803d"; // Vert succès
+                btn.style.borderColor = "#166534";
+            }
+        });
+
+        const fb = document.getElementById('f-2');
+        if (toutBon) {
+            fb.innerHTML = "<span class='correct'>Génial ! Toutes les bouées flottent ! 🌊</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Il y a des bouées crevées ! Corrige celles en rouge.</span>";
+            // Remettre le bleu après 1.5s pour réessayer
+            setTimeout(() => {
+                switches.forEach(btn => {
+                    if (btn.innerText !== btn.getAttribute('data-correct')) {
+                        btn.style.backgroundColor = "var(--ocean-blue)";
+                        btn.style.borderColor = "#0284c7";
+                    }
+                });
+            }, 1500);
+        }
+    }
+
+    // --- Logique Étape 3 : Code ---
+    function verifierCode() {
+        const valAin = document.getElementById('code-ain').value;
+        const valEin = document.getElementById('code-ein').value;
+        const valIen = document.getElementById('code-ien').value;
+        const fb = document.getElementById('f-3');
+
+        // Réponses : 3 ain (copain, bain, pain), 1 ein (plein), 4 ien (chien, vient, rien, gardien)
+        if (valAin == "3" && valEin == "1" && valIen == "4") {
+            fb.innerHTML = "<span class='correct'>Clic ! Le coffre regorge d'or ! 🪙</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Le cadenas reste bloqué. Compte encore.</span>";
+        }
+    }
+
+    // --- Logique Étape 4 : Étiquettes ---
+    function verifierEtiquettes() {
+        const r1 = document.getElementById('etq-1').value.toLowerCase().trim(); // pain
+        const r2 = document.getElementById('etq-2').value.toLowerCase().trim(); // chien
+        const r3 = document.getElementById('etq-3').value.toLowerCase().trim(); // plein
+        const r4 = document.getElementById('etq-4').value.toLowerCase().trim(); // bain
+        const r5 = document.getElementById('etq-5').value.toLowerCase().trim(); // magicien
+        const r6 = document.getElementById('etq-6').value.toLowerCase().trim(); // frein
+        
+        const fb = document.getElementById('f-4');
+
+        if(r1==="ain" && r2==="ien" && r3==="ein" && r4==="ain" && r5==="ien" && r6==="ein") {
+            fb.innerHTML = "<span class='correct'>Superbes châteaux de sable ! 🏰</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>L'eau a effacé certaines lettres, vérifie bien.</span>";
+        }
+    }
+
+    // --- Logique Étape 5 : L'intrus ---
+    let etapeIntrus = 1;
+
+    function verifierIntrus(groupeNum, estCorrect, btnElement) {
+        const fb = document.getElementById('f-5');
+        const boutons = document.getElementById('groupe-' + groupeNum).querySelectorAll('.btn');
+        
+        // Reset couleurs
+        boutons.forEach(b => { 
+            b.style.backgroundColor = 'var(--ocean-blue)'; 
+            b.style.borderColor = '#0284c7'; 
+        });
+
+        if(estCorrect) {
+            btnElement.style.backgroundColor = 'var(--sun-yellow)';
+            btnElement.style.color = 'var(--text-dark)';
+            
+            if(etapeIntrus === 1) {
+                fb.innerHTML = "<span class='correct'>Exact ! Chien est l'intrus (ien). Niveau 2 !</span>";
+                etapeIntrus++;
+                setTimeout(() => {
+                    document.getElementById('groupe-1').style.display = 'none';
+                    document.getElementById('groupe-2').style.display = 'block';
+                    fb.innerHTML = "";
+                }, 1500);
+            } else if(etapeIntrus === 2) {
+                fb.innerHTML = "<span class='correct'>Bravo ! Plein (ein) ne va pas avec les autres. Niveau 3 !</span>";
+                etapeIntrus++;
+                setTimeout(() => {
+                    document.getElementById('groupe-2').style.display = 'none';
+                    document.getElementById('groupe-3').style.display = 'block';
+                    fb.innerHTML = "";
+                }, 1500);
+            } else {
+                fb.innerHTML = "<span class='correct'>Excellent ! Demain (ain) était le dernier intrus. 🎯</span>";
+                setTimeout(nextStep, 1500);
+            }
+        } else {
+            animShake();
+            btnElement.style.backgroundColor = 'var(--crab-red)';
+            fb.innerHTML = "<span class='wrong'>Non, regarde la terminaison du mot...</span>";
+        }
+    }
+
+    // --- Logique Étape 6 : Énigme ---
+    function verifierEnigme() {
+        let reponse = document.getElementById('in-enigme').value.toLowerCase().trim();
+        let propre = reponse.replace(/^(un |le |l'|les |des )/i, "").trim();
+        const fb = document.getElementById('f-6');
+
+        if (propre === "chien" || propre === "chiens") {
+            fb.innerHTML = "<span class='correct'>Ouaf ! C'est la bonne réponse ! 🐶</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Le perroquet secoue la tête... Essaie encore.</span>";
+        }
+    }
+
+    // --- Utilitaires ---
+    function animShake() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = (currentStep / totalSteps) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        if(currentStep === 1) initTri();
+    }
+</script>
+
+</body>
+</html>
