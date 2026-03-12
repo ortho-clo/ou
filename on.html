@@ -3,58 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission 2 : Le Son ON</title>
+    <title>Escape Game : Le Château des Monstres (Le son ON)</title>
     <style>
-        body { background: #e67e22; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); border: 4px solid #d35400; }
-        .mot { font-size: 3.5rem; color: #d35400; margin: 20px 0; font-weight: bold; text-transform: uppercase; }
-        .btn-box { display: flex; gap: 20px; justify-content: center; }
-        button { padding: 15px 35px; font-size: 1.3rem; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
-        .oui { background: #27ae60; } .non { background: #c0392b; }
-        #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 30px; }
+        /* CONTRAINTE : Police Century Gothic imposée */
+        body {
+            font-family: 'Century Gothic', sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1, h2 { color: #e94560; text-shadow: 2px 2px #0f3460; }
+        .consigne { font-size: 1.2rem; background: #0f3460; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #e94560; }
+        
+        /* Conteneur principal */
+        #game-container {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px #e94560;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease-in; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Styles des contrôles */
+        button {
+            font-family: 'Century Gothic', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: #e94560;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.3s;
+        }
+        button:hover { background-color: #ff5c77; transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
+
+        /* Niveau 1 : Boutons sélectionnables */
+        .btn-syllabe { background-color: #533483; font-size: 1.5rem; width: 100px; }
+        .btn-syllabe.selected { background-color: #f9ed69; color: #1a1a2e; border: 3px solid #e94560; }
+
+        /* Niveau 3 : Selects */
+        select, input[type="text"] {
+            font-family: 'Century Gothic', sans-serif;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 5px;
+            border: 2px solid #e94560;
+            margin: 5px;
+            text-align: center;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* Emojis géants */
+        .emoji-big { font-size: 5rem; margin: 10px; display: inline-block; }
+        
+        /* Grille pour les mots intrus */
+        .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        
+        /* Bonus */
+        .bonus-text { text-align: left; background: #0f3460; padding: 20px; border-radius: 10px; font-size: 1.1rem; line-height: 1.6; }
+        .questions { text-align: left; margin-top: 20px; }
+        .questions li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="font-size: 50px;">🔍</div>
-    <div style="color: #666;">Mission 2 : Entends-tu <b>"ON"</b> ?</div>
-    <div id="mot-affiche" class="mot">---</div>
-    <div class="btn-box">
-        <button class="oui" onclick="repondre(true)">OUI</button>
-        <button class="non" onclick="repondre(false)">NON</button>
+
+<div id="game-container">
+    
+    <div id="screen-intro" class="screen active">
+        <h1>L'Évasion des Monstres 🏰</h1>
+        <div class="emoji-big">👹 👻 👾</div>
+        <p class="consigne">Les monstres t'ont enfermé dans le donjon ! Pour t'échapper, tu dois leur prouver que tu maîtrises le son <strong>ON</strong>. Résous leurs 5 énigmes pour déverrouiller la grande porte.</p>
+        <button onclick="startGame()">Démarrer l'Aventure !</button>
     </div>
-    <div id="feedback"></div>
+
+    <div id="screen-level1" class="screen">
+        <h2>Niveau 1 : La porte aux bulles</h2>
+        <div class="emoji-big">🫧👾🫧</div>
+        <p class="consigne">Clique <strong>uniquement</strong> sur les bulles qui contiennent le son "ON", puis valide.</p>
+        <div id="syllables-container">
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="true">mon</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="false">man</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="true">pon</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="false">pin</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="true">tron</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="false">trun</button>
+            <button class="btn-syllabe" onclick="toggleSelect(this)" data-correct="true">glon</button>
+        </div>
+        <br>
+        <button onclick="checkLevel1()">Vérifier ma réponse</button>
+    </div>
+
+    <div id="screen-level2" class="screen">
+        <h2>Niveau 2 : L'intrus affamé</h2>
+        <div class="emoji-big">🐉🍖</div>
+        <p class="consigne">Le dragon mange tous les mots avec le son "ON". Trouve l'INTRUS qu'il ne va pas manger ! Clique dessus.</p>
+        <div class="grid-2x2">
+            <button onclick="checkLevel2(false)">un bonbon 🍬</button>
+            <button onclick="checkLevel2(false)">un cochon 🐷</button>
+            <button onclick="checkLevel2(true)">un sapin 🌲</button> <button onclick="checkLevel2(false)">un plongeon 🌊</button>
+        </div>
+    </div>
+
+    <div id="screen-level3" class="screen">
+        <h2>Niveau 3 : Le pont cassé</h2>
+        <div class="emoji-big">🌉👺</div>
+        <p class="consigne">Complète les mots avec le bon son pour réparer le pont.</p>
+        <p>Le m<select id="l3-1"><option value="?">?</option><option value="an">an</option><option value="on">on</option><option value="in">in</option></select>stre joue avec un ball<select id="l3-2"><option value="?">?</option><option value="ou">ou</option><option value="on">on</option><option value="en">en</option></select>.</p>
+        <br>
+        <button onclick="checkLevel3()">Réparer le pont</button>
+    </div>
+
+    <div id="screen-level4" class="screen">
+        <h2>Niveau 4 : Le secret de Léon</h2>
+        <div class="emoji-big">📦👁️</div>
+        <p class="consigne">Lis le texte et trouve le mot de passe de la boîte secrète.</p>
+        <div class="bonus-text">
+            « Léon le monstre habite sous le grand pont. Il garde un beau trésor caché dans un immense carton. »
+        </div>
+        <p>Quel est le mot qui rime avec "pont" et qui cache le trésor ?</p>
+        <input type="text" id="l4-input" placeholder="Écris le mot ici">
+        <br><br>
+        <button onclick="checkLevel4()">Ouvrir la boîte</button>
+    </div>
+
+    <div id="screen-level5" class="screen">
+        <h2>Niveau 5 : L'énigme du Gardien</h2>
+        <div class="emoji-big">🧙‍♂️🚪</div>
+        <p class="consigne">Le Gardien exige le mot de passe final. Devine de quoi il parle :</p>
+        <div class="bonus-text" style="font-style: italic;">
+            "Je suis rond, je rebondis, et les petits monstres adorent jouer avec moi dans la cour de récréation. Qui suis-je ?"
+        </div>
+        <p>(N'oublie pas : la réponse contient le son ON !)</p>
+        <input type="text" id="l5-input" placeholder="un...">
+        <br><br>
+        <button onclick="checkLevel5()">Crier le mot magique !</button>
+    </div>
+
+    <div id="screen-bonus" class="screen">
+        <h2>🎉 VICTOIRE ! Tu es libre ! 🎉</h2>
+        <div class="emoji-big">🏆✨🏃‍♂️</div>
+        <p class="consigne">Félicitations, tu as vaincu les monstres !</p>
+        <hr>
+        <h3>Coin Lecture (Pour l'enseignante)</h3>
+        <div class="bonus-text">
+            <strong>Histoire :</strong> Gaston le monstre est très grognon. Il a perdu son chausson sous le pont de béton. Heureusement, le dragon Siméon lui donne un bonbon au citron pour le réconforter.
+        </div>
+        <div class="questions">
+            <strong>Questions explicites :</strong>
+            <ol>
+                <li>Comment s'appelle le monstre ?</li>
+                <li>Qu'a-t-il perdu ?</li>
+                <li>Qui lui donne un bonbon ?</li>
+            </ol>
+            <strong>Questions d'inférence (implicites) :</strong>
+            <ol start="4">
+                <li>Pourquoi Gaston est-il grognon au début de l'histoire ?</li>
+                <li>Comment Gaston se sent-il à la fin de l'histoire, selon toi ? Pourquoi ?</li>
+            </ol>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    const defis = [
-        {m: "Ballon", r: true},
-        {m: "Maison", r: true},
-        {m: "Château", r: false},
-        {m: "Cochon", r: true},
-        {m: "Lapin", r: false}
-    ];
-    let etape = 0;
+    /* =========================================
+       API AudioContext - Synthèse Sonore (Zéro lien MP3)
+       ========================================= */
+    let audioCtx;
 
-    function actualiser() {
-        if(etape < defis.length) {
-            document.getElementById('mot-affiche').innerText = defis[etape].m;
-            document.getElementById('feedback').innerText = "";
-        } else {
-            document.querySelector('.card').innerHTML = "<h1>🎖️ INDICE TROUVÉ !</h1><p>Bravo détective !</p><p>Le mot de passe du badge 2 est :</p><h2 style='color:#d35400'>DRAGON-99</h2>";
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
     }
 
-    function repondre(choix) {
-        if(choix === defis[etape].r) {
-            document.getElementById('feedback').innerHTML = "<span style='color:green'>✅ OUI !</span>";
-            etape++;
-            setTimeout(actualiser, 800);
+    function playTone(freq, type, duration, startTime) {
+        if (!audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+        
+        // Enveloppe sonore (Attack / Release) pour éviter les clics
+        gain.gain.setValueAtTime(0, audioCtx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + startTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + startTime);
+        osc.stop(audioCtx.currentTime + startTime + duration);
+    }
+
+    function playSuccess() {
+        initAudio();
+        // Petite mélodie joyeuse ascendante
+        playTone(523.25, 'sine', 0.2, 0);    // Do
+        playTone(659.25, 'sine', 0.2, 0.15); // Mi
+        playTone(783.99, 'sine', 0.4, 0.3);  // Sol
+    }
+
+    function playError() {
+        initAudio();
+        // Son de "Buzzer" descendant grave
+        playTone(300, 'sawtooth', 0.3, 0);
+        playTone(250, 'sawtooth', 0.4, 0.2);
+    }
+
+    /* =========================================
+       Moteur du jeu (Navigation et Validation)
+       ========================================= */
+    
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+        initAudio(); // Débloque le son dans le navigateur
+        showScreen('screen-level1');
+    }
+
+    // Niveau 1 : Syllabes (Mécanique : Multi-sélection)
+    function toggleSelect(btn) {
+        btn.classList.toggle('selected');
+        initAudio(); playTone(400, 'sine', 0.1, 0); // Petit bip au clic
+    }
+
+    function checkLevel1() {
+        let buttons = document.querySelectorAll('#syllables-container .btn-syllabe');
+        let success = true;
+        buttons.forEach(btn => {
+            let isSelected = btn.classList.contains('selected');
+            let isCorrect = btn.getAttribute('data-correct') === "true";
+            if (isSelected !== isCorrect) success = false;
+        });
+
+        if (success) {
+            playSuccess();
+            setTimeout(() => showScreen('screen-level2'), 1000);
         } else {
-            document.getElementById('feedback').innerHTML = "<span style='color:red'>❌ Regarde bien...</span>";
+            playError();
         }
     }
-    actualiser();
+
+    // Niveau 2 : Intrus (Mécanique : Choix unique direct)
+    function checkLevel2(isCorrect) {
+        if (isCorrect) {
+            playSuccess();
+            setTimeout(() => showScreen('screen-level3'), 1000);
+        } else {
+            playError();
+        }
+    }
+
+    // Niveau 3 : Phrases à compléter (Mécanique : Listes déroulantes)
+    function checkLevel3() {
+        let rep1 = document.getElementById('l3-1').value;
+        let rep2 = document.getElementById('l3-2').value;
+
+        if (rep1 === "on" && rep2 === "on") {
+            playSuccess();
+            setTimeout(() => showScreen('screen-level4'), 1000);
+        } else {
+            playError();
+        }
+    }
+
+    // Niveau 4 : Mot caché (Mécanique : Champ texte)
+    function checkLevel4() {
+        let rep = document.getElementById('l4-input').value.toLowerCase().trim();
+        if (rep === "carton" || rep === "le carton" || rep === "un carton") {
+            playSuccess();
+            setTimeout(() => showScreen('screen-level5'), 1000);
+        } else {
+            playError();
+        }
+    }
+
+    // Niveau 5 : Énigme / Inférence (Mécanique : Champ texte)
+    function checkLevel5() {
+        let rep = document.getElementById('l5-input').value.toLowerCase().trim();
+        // Retire les accents au cas où (bonne pratique éducative)
+        rep = rep.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        
+        if (rep.includes("ballon")) {
+            playSuccess();
+            setTimeout(() => showScreen('screen-bonus'), 1000);
+        } else {
+            playError();
+        }
+    }
 </script>
 </body>
 </html>
