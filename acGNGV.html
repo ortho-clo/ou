@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu d'Évasion : Le Resto Secret (Grammaire)</title>
+    <style>
+        :root {
+            --ketchup: #ef4444;
+            --mustard: #f59e0b;
+            --lettuce: #84cc16;
+            --bun-light: #fef3c7;
+            --bun-dark: #b45309;
+            --bg-color: #fff7ed;
+            --text-dark: #1e293b;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 40%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 950px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border: 4px solid var(--mustard);
+            border-top: 25px solid var(--ketchup);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        h1 { color: var(--ketchup); margin-top: 0; font-size: 2.4rem; text-transform: uppercase; letter-spacing: 2px;}
+        h2 { color: var(--bun-dark); font-weight: bold; font-size: 1.8rem; }
+        p { font-size: 1.25rem; line-height: 1.6; }
+
+        .progress-bar {
+            width: 100%; height: 18px; background: #e2e8f0;
+            border-radius: 9px; margin: 20px 0; border: 2px solid var(--bun-dark);
+            overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, var(--mustard), var(--ketchup));
+            transition: width 0.5s ease;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        .btn {
+            background: var(--mustard); color: #fff;
+            border: 3px solid var(--bun-dark); padding: 12px 25px;
+            font-size: 1.2rem; border-radius: 12px; cursor: pointer;
+            margin: 10px; font-family: var(--font-main); font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 5px 0 var(--bun-dark);
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--bun-dark); filter: brightness(1.1); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+        
+        .btn-red { background: var(--ketchup); border-color: #991b1b; box-shadow: 0 5px 0 #991b1b; color: white;}
+        .btn-green { background: var(--lettuce); border-color: #3f6212; box-shadow: 0 5px 0 #3f6212; color: white;}
+
+        /* Étape 1 : Le Trio Big Mac */
+        .burger-box {
+            font-size: 2.2rem; font-weight: bold; margin: 20px auto; padding: 20px;
+            background: var(--bun-light); border: 4px dashed var(--mustard); border-radius: 15px;
+            display: inline-block; min-width: 450px; color: var(--bun-dark);
+        }
+        .burger-mot { display: inline-block; margin: 0 10px; }
+        .det { color: var(--ketchup); } /* Déterminant = Ketchup */
+        .nom { color: var(--bun-dark); } /* Nom = Pain/Viande */
+        .choix-container { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .btn-adjectif { font-size: 1.6rem; padding: 15px 30px; width: auto; background: var(--lettuce); border-color: #3f6212; box-shadow: 0 5px 0 #3f6212;}
+
+        /* Étape 2 : Les Mauvaises Commandes */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px; max-width: 800px; margin: 20px auto;
+        }
+        .plateau {
+            background: white; border: 4px solid var(--bun-dark); padding: 15px;
+            border-radius: 15px; font-size: 1.3rem; font-weight: bold; color: var(--text-dark);
+            cursor: pointer; transition: all 0.2s; user-select: none;
+        }
+        .plateau.selected {
+            background: var(--ketchup); border-color: #7f1d1d; color: white;
+            transform: scale(0.95); box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Étape 3 : Les Inséparables */
+        .inseparables-container {
+            display: flex; justify-content: space-around; align-items: center; margin: 20px 0;
+            background: #f0fdf4; padding: 20px; border-radius: 15px; border: 3px solid var(--lettuce);
+        }
+        .colonne { display: flex; flex-direction: column; gap: 15px; }
+        .pronom-box { background: var(--mustard); color: white; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 1.3rem; border: 2px solid #b45309; }
+        select { font-size: 1.3rem; padding: 10px; border-radius: 10px; border: 3px solid var(--lettuce); font-family: var(--font-main); font-weight: bold; }
+
+        /* Étape 4 : La Recette Finale */
+        .recette-texte {
+            background: #fffbeb; padding: 25px; border-radius: 15px; border: 4px solid var(--bun-dark);
+            text-align: left; font-size: 1.5rem; line-height: 2.2; margin-bottom: 20px;
+        }
+        .input-trou {
+            width: 100px; padding: 5px; font-size: 1.3rem; text-align: center;
+            border: 3px solid var(--mustard); border-radius: 8px; margin: 0 5px;
+            font-family: var(--font-main); font-weight: bold;
+        }
+
+        .feedback { min-height: 35px; margin-top: 15px; font-size: 1.4rem; font-weight: bold; }
+        .correct { color: #15803d; }
+        .wrong { color: #b91c1c; }
+        .emoji-art { font-size: 4.5rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Le Resto Secret 🍔</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">👨‍🍳</span>
+        <h2>Évasion de la Cuisine Magique</h2>
+        <p>Le chef du Resto Secret a enfermé la recette de son célèbre burger dans le coffre-fort ! Pour l'ouvrir, tu dois prouver que tu es un as de la grammaire.<br><br>Prépare-toi à cuisiner des <b>Trios Big Mac</b> (déterminant, nom, adjectif) parfaits et à associer les <b>Pros des noms</b> (les pronoms) avec leurs verbes inséparables !</p>
+        <button class="btn btn-large btn-red" onclick="nextStep()">Entrer dans la cuisine !</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="emoji-art">🍟</span>
+        <h2>Épreuve 1 : Assemble le Trio Big Mac</h2>
+        <p>Le déterminant (ketchup) et le nom (pain/viande) commandent. L'adjectif (salade) doit s'accorder avec eux en genre (M/F) et en nombre (S/P).<br>Choisis la bonne "salade" pour compléter ces 5 commandes !</p>
+        
+        <div class="burger-box">
+            <span class="burger-mot det" id="b-det">Les</span>
+            <span class="burger-mot nom" id="b-nom">frites</span>
+            <span class="burger-mot" style="color:var(--lettuce);">...</span>
+        </div>
+        
+        <div class="choix-container" id="choix-burger-container">
+            <button class="btn btn-adjectif" id="btn-adj-1" onclick="verifierBurger(1)">choix 1</button>
+            <button class="btn btn-adjectif" id="btn-adj-2" onclick="verifierBurger(2)">choix 2</button>
+        </div>
+        
+        <p id="burger-compteur" style="font-size: 1.2rem; margin-top: 20px; font-weight: bold;">Commandes réussies : 0 / 5</p>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="emoji-art">🍅</span>
+        <h2>Épreuve 2 : Les plateaux ratés</h2>
+        <p>Catastrophe ! Le commis a mal accordé certains Trios Big Mac. <br>Clique <b>SEULEMENT</b> sur les plateaux où il y a une <b>erreur d'accord</b> pour les jeter à la poubelle.</p>
+        
+        <div class="menu-grid">
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="oui">les belle tomates</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="non">un gros hamburger</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="oui">la fromages fondu</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="non">des oignons frits</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="oui">une petit pizza</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="non">les sauces piquantes</div>
+            <div class="plateau" onclick="togglePlateau(this)" data-erreur="oui">des clients joyeux</div> <div class="plateau" onclick="togglePlateau(this)" data-erreur="oui">le bons dessert</div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierPlateaux()">Jeter les erreurs</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="emoji-art">🤝</span>
+        <h2>Épreuve 3 : Les Inséparables</h2>
+        <p>Le <b>Pro des noms</b> (le pronom) et son verbe sont les meilleurs amis du monde. Associe chaque Pro des noms à la bonne terminaison du verbe pour faire fonctionner les fours !</p>
+        
+        <div class="inseparables-container">
+            <div class="colonne">
+                <div class="pronom-box">1. Je</div>
+                <div class="pronom-box">2. Tu</div>
+                <div class="pronom-box">3. Le chef (Il)</div>
+                <div class="pronom-box">4. Nous</div>
+                <div class="pronom-box">5. Les clients (Ils)</div>
+            </div>
+            <div class="colonne">
+                <select id="v-1"><option value="">-- Choisis le verbe --</option><option value="e">mange</option><option value="ent">mangent</option><option value="es">manges</option><option value="ons">mangeons</option></select>
+                <select id="v-2"><option value="">-- Choisis le verbe --</option><option value="e">coupe</option><option value="es">coupes</option><option value="ez">coupez</option></select>
+                <select id="v-3"><option value="">-- Choisis le verbe --</option><option value="e">cuisine</option><option value="ent">cuisinent</option><option value="ons">cuisinons</option></select>
+                <select id="v-4"><option value="">-- Choisis le verbe --</option><option value="ez">goûtez</option><option value="ons">goûtons</option><option value="e">goûte</option></select>
+                <select id="v-5"><option value="">-- Choisis le verbe --</option><option value="e">adorent</option><option value="ent">adorent</option><option value="es">adores</option></select> </div>
+        </div>
+        
+        <button class="btn btn-large btn-green" onclick="verifierVerbes()">Allumer les fours</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="emoji-art">📜</span>
+        <h2>Épreuve 4 : La recette codée</h2>
+        <p>Dernière étape ! Complète les mots de la recette. Attention : pose-toi la question si c'est un accord du Trio (ajouter un 's' ou un 'e') ou un accord du verbe avec son Pro des noms (ajouter 'ent', 'e', 'ons'...).</p>
+        
+        <div class="recette-texte">
+            "Le matin, les <b>petit</b><input type="text" class="input-trou" id="r-1" placeholder="..."> commis (il/ils) <b>prépar</b><input type="text" class="input-trou" id="r-2" placeholder="..."> une <b>délicieux</b><input type="text" class="input-trou" id="r-3" placeholder="..."> soupe. Nous <b>mélange</b><input type="text" class="input-trou" id="r-4" placeholder="..."> les <b>gros</b><input type="text" class="input-trou" id="r-5" placeholder="..."> légumes."
+        </div>
+        
+        <button class="btn btn-large btn-red" onclick="verifierRecette()">Ouvrir le coffre-fort !</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="emoji-art">🏆</span>
+        <h2>Le Coffre est ouvert !</h2>
+        <p>Félicitations Chef ! Tu as parfaitement maîtrisé les Trios Big Mac et les Inséparables. Tu mérites ton étoile Michelin de la grammaire !</p>
+        
+        <div style="background: white; padding: 20px; border-radius: 15px; border: 3px solid var(--mustard); margin-top: 20px;">
+            <h3 style="color: var(--bun-dark);">🍔 Le savais-tu ?</h3>
+            <p>Le groupe du nom (Le Trio Big Mac) s'accorde <b>toujours</b> en fonction du petit chef d'orchestre : le <b>déterminant</b>. S'il dit "pluriel", tout le monde prend un 's' ou un 'x' !</p>
+            <p>Le verbe, lui, n'écoute <b>que</b> son ami le <b>Pro des noms</b> (le sujet). C'est pour ça qu'ils sont inséparables !</p>
+        </div>
+
+        <button class="btn btn-large btn-mustard" style="margin-top:20px; width:100%;" onclick="location.reload()">Refaire un service (Rejouer)</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 5;
+
+    // --- Étape 1 : Trio Big Mac ---
+    const motsBurger = [
+        { det: "Les", nom: "frites", c1: "salé", c2: "salées", rep: 2 },
+        { det: "Un", nom: "hamburger", c1: "géant", c2: "géants", rep: 1 },
+        { det: "Des", nom: "sauces", c1: "piquante", c2: "piquantes", rep: 2 },
+        { det: "Une", nom: "boisson", c1: "froid", c2: "froide", rep: 2 },
+        { det: "Les", nom: "gros", c1: "cuisiniers", c2: "cuisinier", rep: 1 } // Piège : le nom est l'adjectif ici dans la structure pour le jeu
+    ];
+    let burgerIndex = 0;
+
+    function initBurger() {
+        afficherBurger();
+    }
+
+    function afficherBurger() {
+        if (burgerIndex < motsBurger.length) {
+            const data = motsBurger[burgerIndex];
+            document.getElementById('b-det').innerText = data.det;
+            document.getElementById('b-nom').innerText = data.nom;
+            document.getElementById('btn-adj-1').innerText = data.c1;
+            document.getElementById('btn-adj-2').innerText = data.c2;
+        } else {
+            document.getElementById('b-det').innerText = "Bravo";
+            document.getElementById('b-nom').innerText = "!";
+            document.getElementById('choix-burger-container').style.display = "none";
+            document.getElementById('f-1').innerHTML = "<span class='correct'>Tous les Trios sont parfaits ! 🍔</span>";
+            setTimeout(nextStep, 1500);
+        }
+    }
+
+    function verifierBurger(choix) {
+        if (burgerIndex >= motsBurger.length) return;
+        
+        const data = motsBurger[burgerIndex];
+        const fb = document.getElementById('f-1');
+
+        if (choix === data.rep) {
+            burgerIndex++;
+            document.getElementById('burger-compteur').innerText = `Commandes réussies : ${burgerIndex} / 5`;
+            fb.innerHTML = "<span class='correct'>Miam ! Excellent accord. 🍟</span>";
+            setTimeout(() => { fb.innerHTML = ""; afficherBurger(); }, 600);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Beurk ! Regarde bien le genre (M/F) et le nombre (S/P) !</span>";
+        }
+    }
+
+    // --- Étape 2 : Plateaux ratés ---
+    function togglePlateau(el) {
+        // Correction : L'enfant de 4e année doit cliquer sur les erreurs.
+        el.classList.toggle('selected');
+    }
+
+    function verifierPlateaux() {
+        const plateaux = document.querySelectorAll('.plateau');
+        let toutBon = true;
+        
+        // On veut que TOUS les "data-erreur=oui" soient cliqués (selected)
+        // et qu'AUCUN "data-erreur=non" ne soit cliqué.
+        plateaux.forEach(p => {
+            const estErreur = p.getAttribute('data-erreur') === 'oui';
+            const estSelectionne = p.classList.contains('selected');
+            
+            // Note : le div "des clients joyeux" est bon (sans erreur), on change data-erreur="non" dynamiquement ici pour la logique si j'ai fait une typo dans l'HTML.
+            if(p.innerText === "des clients joyeux") { p.setAttribute('data-erreur', 'non'); }
+
+            const realErreur = p.getAttribute('data-erreur') === 'oui';
+
+            if ((realErreur && !estSelectionne) || (!realErreur && estSelectionne)) {
+                toutBon = false;
+                if(!realErreur && estSelectionne) {
+                    p.style.backgroundColor = "#ef4444"; 
+                    p.style.color = "white";
+                }
+            } else {
+                if(realErreur && estSelectionne) {
+                     p.style.backgroundColor = "var(--lettuce)";
+                     p.style.borderColor = "#3f6212";
+                }
+            }
+        });
+
+        const fb = document.getElementById('f-2');
+        if (toutBon) {
+            fb.innerHTML = "<span class='correct'>Ouf ! La poubelle est pleine, mais les bons plateaux sont sauvés ! 🗑️</span>";
+            setTimeout(nextStep, 2500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Il reste des erreurs ou tu as jeté un bon plateau ! Cherche encore.</span>";
+            setTimeout(() => {
+                plateaux.forEach(p => { p.style.backgroundColor = ""; p.style.color = ""; p.style.borderColor = ""; });
+            }, 2500);
+        }
+    }
+
+    // --- Étape 3 : Inséparables ---
+    function verifierVerbes() {
+        const v1 = document.getElementById('v-1').value; // Je -> e
+        const v2 = document.getElementById('v-2').value; // Tu -> es
+        const v3 = document.getElementById('v-3').value; // Il -> e
+        const v4 = document.getElementById('v-4').value; // Nous -> ons
+        const v5 = document.getElementById('v-5').value; // Ils -> ent
+        
+        const fb = document.getElementById('f-3');
+
+        if(v1 === "e" && v2 === "es" && v3 === "e" && v4 === "ons" && v5 === "ent") {
+            fb.innerHTML = "<span class='correct'>Les pros des noms sont ravis ! Les fours s'allument. 🔥</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Aïe ! Un pronom ne s'entend pas avec son verbe. Vérifie les terminaisons !</span>";
+        }
+    }
+
+    // --- Étape 4 : Recette ---
+    function verifierRecette() {
+        let r1 = document.getElementById('r-1').value.toLowerCase().trim(); // s
+        let r2 = document.getElementById('r-2').value.toLowerCase().trim(); // ent
+        let r3 = document.getElementById('r-3').value.toLowerCase().trim(); // se
+        let r4 = document.getElementById('r-4').value.toLowerCase().trim(); // ons
+        let r5 = document.getElementById('r-5').value.toLowerCase().trim(); // ses (ou vide car gros prend s au singulier, mais ici "légumes" est pluriel. Ah! "gros" au pluriel prend un 's' ou rien ? Un 's' qui y est déjà. "les gros légumes" est déjà correct. Mettons 's' ou '' pour être sûr.)
+        
+        // Ajustement pédagogique:
+        // les petit(s) commis (ils) prépar(ent) une délicieux(se) soupe. Nous mélange(ons) les gros(rien/s) légumes.
+        // "gros" s'écrit avec un s au singulier et au pluriel. L'enfant pourrait taper rien ou un espace.
+
+        const fb = document.getElementById('f-4');
+
+        if (r1 === "s" && r2 === "ent" && (r3 === "se" || r3 === "e") && r4 === "ons" && (r5 === "" || r5 === "s" || r5 === "ses" === false)) { // acceptons vide ou s pour gros
+            fb.innerHTML = "<span class='correct'>CLIC ! Le coffre-fort s'ouvre ! 🔓</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>La recette est fausse ! Accorde bien les trios et les verbes.</span>";
+        }
+    }
+
+    // --- Utilitaires ---
+    function animShake() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = (currentStep / totalSteps) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        if(currentStep === 1) initBurger();
+    }
+</script>
+
+</body>
+</html>
