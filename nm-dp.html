@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La clinique des allergies : La règle du m devant b et p</title>
+    <style>
+        :root {
+            --cat-orange: #f97316;
+            --med-blue: #38bdf8;
+            --tissue-white: #f8fafc;
+            --alert-red: #ef4444;
+            --heal-green: #22c55e;
+            --text-dark: #334155;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #e0f2fe;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.2) 0%, transparent 30%),
+                radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.15) 0%, transparent 40%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 950px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border: 4px solid var(--med-blue);
+            border-top: 25px solid var(--cat-orange);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        h1 { color: var(--cat-orange); margin-top: 0; font-size: 2.4rem; text-shadow: 2px 2px 0px #fed7aa; }
+        h2 { color: var(--med-blue); font-weight: bold; font-size: 1.8rem; }
+        p { font-size: 1.25rem; line-height: 1.6; }
+
+        .progress-bar {
+            width: 100%; height: 18px; background: #e2e8f0;
+            border-radius: 9px; margin: 20px 0; border: 2px solid var(--med-blue);
+            overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, var(--med-blue), var(--cat-orange));
+            transition: width 0.5s ease;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        .btn {
+            background: var(--med-blue); color: white;
+            border: 3px solid #0284c7; padding: 12px 25px;
+            font-size: 1.2rem; border-radius: 12px; cursor: pointer;
+            margin: 10px; font-family: var(--font-main); font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 5px 0 #0284c7;
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 #0284c7; filter: brightness(1.1); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+        
+        .btn-orange { background: var(--cat-orange); color: white; border-color: #c2410c; box-shadow: 0 5px 0 #c2410c; }
+        .btn-green { background: var(--heal-green); color: white; border-color: #16a34a; box-shadow: 0 5px 0 #16a34a; }
+
+        /* Étape 1 : Trieuse */
+        .machine-mot {
+            font-size: 3rem; font-weight: bold; margin: 30px 0; padding: 20px;
+            background: var(--tissue-white); border: 4px dashed var(--cat-orange); border-radius: 15px;
+            display: inline-block; min-width: 280px; color: var(--text-dark); letter-spacing: 2px;
+        }
+        .btn-tri { font-size: 1.6rem; padding: 15px 25px; margin: 0 10px; }
+
+        /* Étape 2 : Interrupteurs (Pilules) */
+        .switch-grid { display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 0 auto; }
+        .switch-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff7ed; padding: 12px 25px; border-radius: 12px; border: 3px solid #fed7aa;
+            font-size: 1.5rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .switch-btn {
+            background: var(--tissue-white); color: var(--alert-red); border: 3px solid var(--alert-red);
+            padding: 8px 20px; font-size: 1.6rem; font-weight: bold; border-radius: 30px; cursor: pointer;
+            min-width: 60px; text-align: center; user-select: none; transition: transform 0.1s;
+        }
+        .switch-btn:active { transform: scale(0.95); }
+
+        /* Étape 3 : Code (Prescription) */
+        .reading-text {
+            background: #f0fdf4; padding: 25px; border-radius: 15px; border-left: 8px solid var(--heal-green);
+            text-align: left; font-size: 1.4rem; margin-bottom: 20px; line-height: 1.8;
+        }
+        .code-inputs { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .code-box { text-align: center; background: #fff7ed; padding: 15px; border-radius: 12px; }
+        .code-box input {
+            width: 70px; height: 70px; font-size: 2.5rem; text-align: center;
+            border: 4px solid var(--text-dark); border-radius: 12px; font-weight: bold;
+        }
+
+        /* Étape 4 : Étiquettes (Dossiers) */
+        .phrases-container { text-align: left; max-width: 700px; margin: 0 auto; font-size: 1.4rem; line-height: 2.2; }
+        .input-inline {
+            width: 45px; padding: 5px; font-size: 1.3rem; text-align: center;
+            border: 3px solid var(--med-blue); border-radius: 8px; margin: 0 5px;
+            font-family: var(--font-main); font-weight: bold; text-transform: lowercase;
+            background: #f8fafc;
+        }
+        
+        /* Étape 5 : L'intrus */
+        .intrus-group { margin: 20px 0; background: #fff7ed; padding: 20px; border-radius: 15px; border: 3px dashed var(--cat-orange); }
+        .intrus-group h3 { margin-top: 0; color: var(--text-dark); }
+
+        /* Textes bonus */
+        .bonus-box {
+            text-align: left; background: var(--tissue-white); padding: 30px;
+            border-radius: 15px; border: 3px solid var(--cat-orange); margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .bonus-box h4 { margin-top: 0; color: var(--cat-orange); font-size: 1.5rem; border-bottom: 2px solid var(--med-blue); padding-bottom: 10px; }
+        .bonus-box p { font-size: 1.25rem; line-height: 1.8; }
+        .highlight { font-weight: bold; color: var(--med-blue); }
+        .question-box { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 15px; font-size: 1.15rem; border-left: 5px solid var(--cat-orange); }
+        
+        /* Général */
+        input[type="text"]:not(.input-inline) {
+            font-family: var(--font-main); padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--cat-orange); border-radius: 12px;
+            width: 80%; max-width: 350px; text-align: center;
+        }
+        .feedback { min-height: 35px; margin-top: 15px; font-size: 1.4rem; font-weight: bold; }
+        .correct { color: #15803d; }
+        .wrong { color: var(--alert-red); }
+        .emoji-art { font-size: 4.5rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>La clinique des allergies 🩺</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🐈</span>
+        <h2>Alerte à la boule de poils !</h2>
+        <p>Le chat <b>B</b>oule de <b>P</b>oils se promène dans les mots ! La lettre <b>n</b> y est très allergique. Dès qu'elle se trouve devant un <b>b</b> ou un <b>p</b>, elle éternue si fort (« Atchoum ! ») qu'il lui pousse une bosse pour devenir un <b>m</b>.<br><br>Aide le docteur de l'orthographe à soigner tous les mots de la clinique !</p>
+        <button class="btn btn-large btn-orange" onclick="nextStep()">Entrer dans la clinique</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="emoji-art">🧻</span>
+        <h2>Le test d'allergie (m ou n ?)</h2>
+        <p>Regarde le mot. La lettre manquante est-elle devant un <b>b</b> ou un <b>p</b> ?<br> Si oui, donne-lui un mouchoir avec un <b>m</b>. Sinon, laisse le <b>n</b> normal.</p>
+        
+        <div class="machine-mot" id="mot-a-trier">...</div>
+        <br>
+        <button class="btn btn-tri" onclick="trierMot('n')">n (Normal) 😃</button>
+        <button class="btn btn-tri btn-orange" onclick="trierMot('m')">m (Atchoum!) 🤧</button>
+        
+        <p id="tri-compteur" style="font-size: 1.2rem; margin-top: 20px; font-weight: bold;">Mots soignés : 0 / 10</p>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="emoji-art">💊</span>
+        <h2>La pharmacie des lettres</h2>
+        <p>Voici des mots malades ! Clique sur la pilule pour changer le <b>n</b> en <b>m</b> là où le chat Boule de Poils a frappé. (Laisse le <b>n</b> si le mot est en santé !)</p>
+        
+        <div class="switch-grid">
+            <div class="switch-row">
+                <span>1. le no</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="m">n</div><span>bre</span>
+            </div>
+            <div class="switch-row">
+                <span>2. cha</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="n">n</div><span>ter</span>
+            </div>
+            <div class="switch-row">
+                <span>3. la te</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="m">n</div><span>pête</span>
+            </div>
+            <div class="switch-row">
+                <span>4. le pri</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="n">n</div><span>temps</span>
+            </div>
+            <div class="switch-row">
+                <span>5. la ja</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="m">n</div><span>be</span>
+            </div>
+            <div class="switch-row">
+                <span>6. la pla</span><div class="switch-btn" onclick="cycleSwitch(this)" data-correct="n">n</div><span>te</span>
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large btn-green" onclick="verifierSwitches()">Valider les remèdes</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="emoji-art">📝</span>
+        <h2>La prescription du docteur</h2>
+        <p>Lis la note du médecin. Compte les mots malades pour trouver le code. Cherche bien les <b>mp</b> et les <b>mb</b> !</p>
+        
+        <div class="reading-text">
+            "Le <b>pompier</b> est tombé malade. Il a allumé sa <b>lampe</b> pour regarder sous le lit de la <b>chambre</b>. Le chat y était caché ! Le pauvre homme a joué un coup de <b>tambour</b> avant de courir au <b>campement</b>."
+        </div>
+        
+        <div class="code-inputs">
+            <div class="code-box">
+                <label>Combien de mots avec <b>mp</b> ?</label><br><input type="number" id="code-mp" min="0" max="9">
+            </div>
+            <div class="code-box">
+                <label>Combien de mots avec <b>mb</b> ?</label><br><input type="number" id="code-mb" min="0" max="9">
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierCode()">Vérifier le dossier</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="emoji-art">📁</span>
+        <h2>Les dossiers médicaux</h2>
+        <p>Complète les fiches des patients. Écris <b>m</b> ou <b>n</b> dans chaque case. Fais attention à la lettre qui suit !</p>
+        
+        <div class="phrases-container">
+            1. Voici un vrai cha<input type="text" class="input-inline" id="etq-1" maxlength="1">pion !<br>
+            2. Il habite à la mo<input type="text" class="input-inline" id="etq-2" maxlength="1">tagne.<br>
+            3. Il met son i<input type="text" class="input-inline" id="etq-3" maxlength="1">perméable jaune.<br>
+            4. J'adore la co<input type="text" class="input-inline" id="etq-4" maxlength="1">pote de pommes.<br>
+            5. Le bébé veut son bibero<input type="text" class="input-inline" id="etq-5" maxlength="1">.<br>
+            6. Le chat da<input type="text" class="input-inline" id="etq-6" maxlength="1">se dans le salon.
+        </div>
+        <br>
+        <button class="btn btn-large btn-orange" onclick="verifierEtiquettes()">Classer les dossiers</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="emoji-art">🤒</span>
+        <h2>Trouve le mot malade (L'intrus)</h2>
+        <p>Dans chaque salle d'attente, un mot a oublié de se changer en <b>m</b> devant un b ou un p ! Trouve <b>le mot mal orthographié</b> et clique dessus.</p>
+
+        <div class="intrus-group" id="groupe-1">
+            <h3>Salle 1</h3>
+            <button class="btn" onclick="verifierIntrus(1, false, this)">bouton</button>
+            <button class="btn" onclick="verifierIntrus(1, false, this)">monde</button> 
+            <button class="btn" onclick="verifierIntrus(1, true, this)">tanbour</button> <button class="btn" onclick="verifierIntrus(1, false, this)">chance</button>
+        </div>
+
+        <div class="intrus-group" id="groupe-2" style="display:none;">
+            <h3>Salle 2</h3>
+            <button class="btn" onclick="verifierIntrus(2, true, this)">lanpe</button> <button class="btn" onclick="verifierIntrus(2, false, this)">chanter</button>
+            <button class="btn" onclick="verifierIntrus(2, false, this)">pantalon</button>
+            <button class="btn" onclick="verifierIntrus(2, false, this)">lente</button>
+        </div>
+
+        <div class="intrus-group" id="groupe-3" style="display:none;">
+            <h3>Salle 3</h3>
+            <button class="btn" onclick="verifierIntrus(3, false, this)">lundi</button>
+            <button class="btn" onclick="verifierIntrus(3, false, this)">peintre</button>
+            <button class="btn" onclick="verifierIntrus(3, false, this)">plante</button>
+            <button class="btn" onclick="verifierIntrus(3, true, this)">chanpignon</button> </div>
+
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="emoji-art">🚑</span>
+        <h2>L'énigme de l'ambulance</h2>
+        <p>Dernière épreuve ! Écris la bonne réponse. <br><i>Indice : Le mot s'écrit avec un <b>m</b> devant un <b>p</b>.</i></p>
+        
+        <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 12px; margin-bottom: 20px; font-style: italic; font-size: 1.4rem; border: 2px dashed var(--alert-red);">
+            "Je porte un casque, je roule dans un gros camion rouge et mon métier est d'éteindre les incendies. Qui suis-je ?"
+        </div>
+        
+        <input type="text" id="in-enigme" placeholder="Écris le métier...">
+        <br><button class="btn btn-large btn-green" onclick="verifierEnigme()">Répondre</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="emoji-art">🎉</span>
+        <h2>Tu es un.e vrai.e Docteur des Mots !</h2>
+        <p>Félicitations ! Tu as guéri tous les mots de leur allergie au chat Boule de Poils. <br>Pour fêter ça, voici trois belles histoires sans éternuement.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : Le chat à la campagne</h4>
+            <p>Cet été, nous allons à la <span class="highlight">campagne</span> chez mon oncle. Dans la <span class="highlight">chambre</span> d'amis, il y a un gros <span class="highlight">matelas</span> confortable. Soudain, un gros chat roux <span class="highlight">saute</span> sur le lit. C'est le <span class="highlight">champion</span> des souris ! Le chien de la ferme aboie, mais le chat n'a pas peur. Il a <span class="highlight">simplement</span> l'habitude de se cacher sous une <span class="highlight">lampe</span> du salon pour faire la sieste.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve 3 mots du texte où le <b>n</b> s'est changé en <b>m</b> (à cause d'un p ou d'un b).<br>
+                2. De quelle couleur est le chat de l'oncle ?<br>
+                3. Pourquoi le chat n'a-t-il pas peur du chien de la ferme ?
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : Le pique-nique de novembre</h4>
+            <p>Au mois de <span class="highlight">novembre</span>, il fait froid, mais la famille décide de faire un petit <span class="highlight">campement</span> dans la forêt. Maman a préparé des sandwichs au <span class="highlight">jambon</span> et au <span class="highlight">concombre</span>. Pour le dessert, il y a une délicieuse tarte aux <span class="highlight">framboises</span>. Mon frère essaie de <span class="highlight">grimper</span> dans un arbre, mais il perd l'<span class="highlight">équilibre</span>. Heureusement, il atterrit doucement sur un lit de feuilles mortes.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Repère 4 mots contenant un <b>m</b> suivi d'un <b>b</b>.<br>
+                2. Que mange la famille en dessert ?<br>
+                3. Inférence : Pourquoi les feuilles sur le sol sont-elles mortes ?
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : La grosse tempête</h4>
+            <p>Une terrible <span class="highlight">tempête</span> approche de la ville. Le vent souffle et la <span class="highlight">température</span> baisse vite. Papa demande d'enfiler un <span class="highlight">imperméable</span> et des bottes. Nous devons faire attention pour ne pas <span class="highlight">tomber</span> dans les flaques d'eau. Les <span class="highlight">pompiers</span> sortent avec leur camion pour dégager les branches cassées sur la route. C'est un travail <span class="highlight">important</span> pour garder tout le <span class="highlight">monde</span> en sécurité.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve 5 mots du texte contenant un <b>m</b> suivi d'un <b>p</b>.<br>
+                2. Quel vêtement papa demande-t-il de mettre pour se protéger de la pluie ?<br>
+                3. Qui s'occupe de ramasser les branches sur la route ?
+            </div>
+        </div>
+
+        <button class="btn btn-large btn-orange" style="margin-top:20px; width:100%;" onclick="location.reload()">Rejouer à la clinique</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 7;
+
+    // --- Logique Étape 1 : Machine de tri ---
+    const motsTri = [
+        { mot: "cha_bre", type: "m" },
+        { mot: "bo_jour", type: "n" },
+        { mot: "po_pier", type: "m" },
+        { mot: "cha_son", type: "n" },
+        { mot: "ta_bour", type: "m" },
+        { mot: "mo_tagne", type: "n" },
+        { mot: "co_pote", type: "m" },
+        { mot: "da_se", type: "n" },
+        { mot: "i_porter", type: "m" },
+        { mot: "bo_bon", type: "n" }
+    ];
+    let motsMelanges = [];
+    let motActuelIndex = 0;
+    let scoreTri = 0;
+
+    function initTri() {
+        motsMelanges = [...motsTri].sort(() => Math.random() - 0.5);
+        afficherMotTri();
+    }
+
+    function afficherMotTri() {
+        if (motActuelIndex < motsMelanges.length) {
+            document.getElementById('mot-a-trier').innerText = motsMelanges[motActuelIndex].mot;
+        } else {
+            document.getElementById('mot-a-trier').innerText = "Terminé !";
+            document.getElementById('f-1').innerHTML = "<span class='correct'>Parfait ! Les patients sont soignés. 🩺</span>";
+            setTimeout(nextStep, 1500);
+        }
+    }
+
+    function trierMot(choix) {
+        if (motActuelIndex >= motsMelanges.length) return;
+        
+        const motCourant = motsMelanges[motActuelIndex];
+        const fb = document.getElementById('f-1');
+
+        if (choix === motCourant.type) {
+            scoreTri++;
+            document.getElementById('tri-compteur').innerText = `Mots soignés : ${scoreTri} / 10`;
+            fb.innerHTML = "<span class='correct'>Bravo ! C'est la bonne lettre. ✅</span>";
+            motActuelIndex++;
+            setTimeout(() => { fb.innerHTML = ""; afficherMotTri(); }, 600);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Alerte ! Regarde bien la lettre qui suit le trou. 🐈</span>";
+        }
+    }
+
+    // --- Logique Étape 2 : Interrupteurs ---
+    function cycleSwitch(element) {
+        element.innerText = element.innerText === "n" ? "m" : "n";
+    }
+
+    function verifierSwitches() {
+        const switches = document.querySelectorAll('.switch-btn');
+        let toutBon = true;
+        
+        switches.forEach(btn => {
+            if (btn.innerText !== btn.getAttribute('data-correct')) {
+                toutBon = false;
+                btn.style.backgroundColor = "var(--alert-red)";
+                btn.style.color = "white";
+            } else {
+                btn.style.backgroundColor = "var(--heal-green)";
+                btn.style.borderColor = "var(--heal-green)";
+                btn.style.color = "white";
+            }
+        });
+
+        const fb = document.getElementById('f-2');
+        if (toutBon) {
+            fb.innerHTML = "<span class='correct'>Merveilleux ! Les pilules ont fait effet. 💊</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Il y a des erreurs. Les mots en rouge éternuent encore !</span>";
+            setTimeout(() => {
+                switches.forEach(btn => {
+                    if (btn.innerText !== btn.getAttribute('data-correct')) {
+                        btn.style.backgroundColor = "var(--tissue-white)";
+                        btn.style.color = "var(--alert-red)";
+                    }
+                });
+            }, 1500);
+        }
+    }
+
+    // --- Logique Étape 3 : Code ---
+    function verifierCode() {
+        const valMp = document.getElementById('code-mp').value;
+        const valMb = document.getElementById('code-mb').value;
+        const fb = document.getElementById('f-3');
+
+        // mp: pompier, lampe, campement (3)
+        // mb: chambre, tambour (2)
+        if (valMp == "3" && valMb == "2") {
+            fb.innerHTML = "<span class='correct'>Prescription validée ! 📝</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Erreur de calcul. Relis le texte attentivement.</span>";
+        }
+    }
+
+    // --- Logique Étape 4 : Étiquettes ---
+    function verifierEtiquettes() {
+        const r1 = document.getElementById('etq-1').value.toLowerCase().trim(); // m (pion)
+        const r2 = document.getElementById('etq-2').value.toLowerCase().trim(); // n (tagne)
+        const r3 = document.getElementById('etq-3').value.toLowerCase().trim(); // m (perméable)
+        const r4 = document.getElementById('etq-4').value.toLowerCase().trim(); // m (pote)
+        const r5 = document.getElementById('etq-5').value.toLowerCase().trim(); // n (fin de mot)
+        const r6 = document.getElementById('etq-6').value.toLowerCase().trim(); // n (se)
+        
+        const fb = document.getElementById('f-4');
+
+        if(r1==="m" && r2==="n" && r3==="m" && r4==="m" && r5==="n" && r6==="n") {
+            fb.innerHTML = "<span class='correct'>Dossiers rangés sans faute ! 📁</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Un patient s'est plaint ! Vérifie tes m et tes n.</span>";
+        }
+    }
+
+    // --- Logique Étape 5 : L'intrus malade ---
+    let etapeIntrus = 1;
+
+    function verifierIntrus(groupeNum, estCorrect, btnElement) {
+        const fb = document.getElementById('f-5');
+        const boutons = document.getElementById('groupe-' + groupeNum).querySelectorAll('.btn');
+        
+        boutons.forEach(b => { 
+            b.style.backgroundColor = 'var(--med-blue)'; 
+            b.style.borderColor = '#0284c7'; 
+        });
+
+        if(estCorrect) {
+            btnElement.style.backgroundColor = 'var(--alert-red)';
+            btnElement.style.borderColor = '#991b1b';
+            
+            if(etapeIntrus === 1) {
+                fb.innerHTML = "<span class='correct'>Bien vu ! 'tanbour' est malade, il faut un m. Salle 2 !</span>";
+                etapeIntrus++;
+                setTimeout(() => {
+                    document.getElementById('groupe-1').style.display = 'none';
+                    document.getElementById('groupe-2').style.display = 'block';
+                    fb.innerHTML = "";
+                }, 2000);
+            } else if(etapeIntrus === 2) {
+                fb.innerHTML = "<span class='correct'>Bravo ! 'lanpe' est malade. Salle 3 !</span>";
+                etapeIntrus++;
+                setTimeout(() => {
+                    document.getElementById('groupe-2').style.display = 'none';
+                    document.getElementById('groupe-3').style.display = 'block';
+                    fb.innerHTML = "";
+                }, 2000);
+            } else {
+                fb.innerHTML = "<span class='correct'>Excellent ! 'chanpignon' était le dernier malade. 🎯</span>";
+                setTimeout(nextStep, 2000);
+            }
+        } else {
+            animShake();
+            btnElement.style.backgroundColor = 'gray';
+            fb.innerHTML = "<span class='wrong'>Ce mot est en parfaite santé. Trouve le mot mal orthographié !</span>";
+        }
+    }
+
+    // --- Logique Étape 6 : Énigme ---
+    function verifierEnigme() {
+        let reponse = document.getElementById('in-enigme').value.toLowerCase().trim();
+        let propre = reponse.replace(/^(un |le |l'|les |des )/i, "").trim();
+        const fb = document.getElementById('f-6');
+
+        if (propre === "pompier" || propre === "pompiers") {
+            fb.innerHTML = "<span class='correct'>Pin Pon ! C'est le pompier ! 🚒</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Ce n'est pas le bon métier. Essaie encore !</span>";
+        }
+    }
+
+    // --- Utilitaires ---
+    function animShake() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = (currentStep / totalSteps) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        if(currentStep === 1) initTri();
+    }
+</script>
+
+</body>
+</html>
