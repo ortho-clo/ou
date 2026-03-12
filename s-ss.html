@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À la recherche d'Atlantis</title>
+    <style>
+        :root {
+            --ocean-dark: #001f3f;
+            --ocean-blue: #003366;
+            --aqua: #008080;
+            --coral: #ff7f50;
+            --sand: #f4a460;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--ocean-dark);
+            background-image: linear-gradient(to bottom, #004080 0%, #001f3f 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Effet de bulles d'air en arrière-plan (CSS pur) */
+        .background-bubbles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="30" cy="180" r="4" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/><circle cx="150" cy="80" r="8" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/><circle cx="90" cy="20" r="3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/></svg>') repeat;
+            animation: rise 20s linear infinite;
+        }
+
+        @keyframes rise {
+            from { background-position: 0 100vh; }
+            to { background-position: 0 -100vh; }
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: rgba(0, 51, 102, 0.85);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 128, 128, 0.4);
+            border: 4px solid var(--aqua);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 { 
+            color: var(--aqua); 
+            margin-top: 0; 
+            text-shadow: 0 0 10px rgba(0, 128, 128, 0.5);
+        }
+        
+        h2, h3, h4 { color: var(--sand); }
+
+        .progress-bar {
+            width: 100%; height: 15px;
+            background: #000;
+            border-radius: 10px; margin: 20px 0;
+            border: 2px solid var(--aqua);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--aqua), var(--coral));
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--coral);
+        }
+
+        .step { display: none; animation: floatIn 0.6s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes floatIn { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s; border-color: var(--coral) !important; }
+
+        .btn {
+            background: transparent;
+            color: #fff;
+            border: 2px solid var(--aqua);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--aqua); 
+            color: var(--ocean-dark);
+            box-shadow: 0 0 15px var(--aqua);
+            transform: scale(1.05);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; font-weight: bold; }
+
+        /* Mécanique des bulles */
+        .btn-bulle {
+            border-radius: 50%;
+            width: 80px; height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            display: inline-flex; justify-content: center; align-items: center;
+        }
+        .btn-bulle:hover { background: rgba(255, 255, 255, 0.3); border-color: #fff; }
+
+        /* Mécanique des filets */
+        .btn-filet {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 150px; height: 120px;
+            border-radius: 15px; border-style: dashed;
+            background: rgba(244, 164, 96, 0.1); border-color: var(--sand);
+        }
+        .btn-filet span { font-size: 2.5rem; margin-bottom: 5px; }
+
+        /* Mécanique du code morse/cliquable */
+        .phrase-cliquable { font-size: 1.5rem; line-height: 2; margin: 20px 0; }
+        .mot-cliquable {
+            display: inline-block; padding: 5px 10px; margin: 0 2px;
+            background: rgba(255,255,255,0.05); border-radius: 5px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(255,255,255,0.2); }
+
+        .emoji-art { font-size: 4rem; display: block; margin-bottom: 15px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-weight: bold; font-size: 1.3rem; }
+        .correct { color: var(--aqua); text-shadow: 0 0 5px var(--aqua); }
+        .wrong { color: var(--coral); text-shadow: 0 0 5px var(--coral); }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--aqua);
+            border-radius: 10px;
+            width: 80%; max-width: 350px;
+            text-align: center;
+            background: var(--ocean-dark);
+            color: #fff;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--sand); box-shadow: 0 0 15px var(--sand); }
+
+        .text-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px; border-radius: 12px; font-style: italic;
+            border-left: 5px solid var(--aqua);
+            margin: 15px auto; width: 85%; font-size: 1.3rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--aqua); color: var(--ocean-dark);
+            padding: 5px 15px; border-radius: 20px; font-size: 1rem; font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 2px dashed var(--aqua); border-radius: 15px;
+            background: rgba(0, 128, 128, 0.1); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(0, 128, 128, 0.3); border-color: var(--sand); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.5s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; }
+
+        .bonus-box {
+            text-align: left; background: rgba(255,255,255,0.05); padding: 25px;
+            border-radius: 12px; border: 2px solid var(--aqua); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--sand); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="background-bubbles"></div>
+
+<div id="game-container">
+    <h1>À la recherche d'Atlantis 🔱</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🤿</span>
+        <h2>Bienvenue, jeune explorateur !</h2>
+        <p>La cité perdue d'Atlantis t'attend au fond de l'océan. Pour ouvrir ses portes secrètes, tu dois comprendre la magie de la lettre "s" (le son /s/ ou le son /z/).</p>
+        <button class="btn btn-large" onclick="nextStep()">Plonger dans l'océan</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Les bulles d'oxygène (1/3)</span>
+        <span class="emoji-art">🫧</span>
+        <h3>La respiration</h3>
+        <p>Éclate la bulle où le "s" chante comme un moustique (le son /z/) :</p>
+        <div>
+            <button class="btn btn-bulle" onclick="checkBtn(1, false)">aspa</button>
+            <button class="btn btn-bulle" onclick="checkBtn(1, false)">osca</button>
+            <button class="btn btn-bulle" onclick="checkBtn(1, true)">ose</button>
+            <button class="btn btn-bulle" onclick="checkBtn(1, false)">usca</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Les bulles d'oxygène (2/3)</span>
+        <span class="emoji-art">🫧</span>
+        <h3>La réserve d'air</h3>
+        <p>Éclate la bulle où le "s" chante comme un serpent (le son /s/) :</p>
+        <div>
+            <button class="btn btn-bulle" onclick="checkBtn(2, false)">asa</button>
+            <button class="btn btn-bulle" onclick="checkBtn(2, false)">isi</button>
+            <button class="btn btn-bulle" onclick="checkBtn(2, true)">assi</button>
+            <button class="btn btn-bulle" onclick="checkBtn(2, false)">oso</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Les bulles d'oxygène (3/3)</span>
+        <span class="emoji-art">🐡</span>
+        <h3>Le langage des poissons</h3>
+        <p>Trouve le faux mot inventé où le "s" fait le son /z/ :</p>
+        <div>
+            <button class="btn btn-bulle" onclick="checkBtn(3, false)">lispo</button>
+            <button class="btn btn-bulle" onclick="checkBtn(3, false)">masca</button>
+            <button class="btn btn-bulle" onclick="checkBtn(3, true)">visu</button>
+            <button class="btn btn-bulle" onclick="checkBtn(3, false)">pisto</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Le tri sélectif (1/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La pêche aux mots</h3>
+        <p>Dans quel filet dois-tu ranger le mot : <br><b style="font-size:2rem; color:var(--sand);">poisson</b> ?</p>
+        <div>
+            <button class="btn btn-filet" onclick="checkBtn(4, true)"><span>🐍</span>Filet du son /s/</button>
+            <button class="btn btn-filet" onclick="checkBtn(4, false)"><span>🦟</span>Filet du son /z/</button>
+        </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 2 - Le tri sélectif (2/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La pêche aux mots</h3>
+        <p>Dans quel filet dois-tu ranger le mot : <br><b style="font-size:2rem; color:var(--sand);">poison</b> ?</p>
+        <div>
+            <button class="btn btn-filet" onclick="checkBtn(5, false)"><span>🐍</span>Filet du son /s/</button>
+            <button class="btn btn-filet" onclick="checkBtn(5, true)"><span>🦟</span>Filet du son /z/</button>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 2 - Le tri sélectif (3/3)</span>
+        <span class="emoji-art">🎣</span>
+        <h3>La pêche aux mots</h3>
+        <p>Dans quel filet dois-tu ranger le mot : <br><b style="font-size:2rem; color:var(--sand);">cousin</b> ?</p>
+        <div>
+            <button class="btn btn-filet" onclick="checkBtn(6, false)"><span>🐍</span>Filet du son /s/</button>
+            <button class="btn btn-filet" onclick="checkBtn(6, true)"><span>🦟</span>Filet du son /z/</button>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - Le sonar brouillé (1/3)</span>
+        <span class="emoji-art">📡</span>
+        <h3>La phrase à réparer</h3>
+        <p>Le sonar a fait une erreur. Clique sur le seul mot qui est mal écrit :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">marin</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">trouve</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">gros</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">poissson</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">bleu.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 3 - Le sonar brouillé (2/3)</span>
+        <span class="emoji-art">📡</span>
+        <h3>La phrase à réparer</h3>
+        <p>Clique sur le mot mal orthographié :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">navire</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, true)">glisssse</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">doucement</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">sur</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">les</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">vagues.</span>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 3 - Le sonar brouillé (3/3)</span>
+        <span class="emoji-art">📡</span>
+        <h3>La phrase à réparer</h3>
+        <p>Trouve l'erreur glissée par le radar :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">Mon</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">amie</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">porte</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">une</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">belle</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, true)">chemisse</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">rose.</span>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 4 - Le coffre-fort (1/3)</span>
+        <span class="emoji-art">🔐</span>
+        <h3>L'énigme du corail</h3>
+        <div class="text-box">"Je suis un fruit rouge et sucré de l'été. Mon nom contient un 's' qui fait le son /z/ comme le moustique."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🍓</span></div><br>
+        <input type="text" id="in-10" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(10, ['fraise', 'fraises'])">Vérifier</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Niveau 4 - Le coffre-fort (2/3)</span>
+        <span class="emoji-art">🗝️</span>
+        <h3>L'énigme de l'algue</h3>
+        <div class="text-box">"Je suis un animal très long qui rampe sur le sol. Je siffle et mon nom commence par un 's'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🐍</span></div><br>
+        <input type="text" id="in-11" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(11, ['serpent', 'serpents'])">Vérifier</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Niveau 4 - Le coffre-fort (3/3)</span>
+        <span class="emoji-art">🪙</span>
+        <h3>L'énigme de la perle</h3>
+        <div class="text-box">"Je suis un meuble avec quatre pieds. Tu t'assois sur moi à l'école. Mon nom contient un 's' qui fait le son /z/."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🪑</span></div><br>
+        <input type="text" id="in-12" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(12, ['chaise', 'chaises'])">Vérifier</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Niveau 5 - Le Kraken (1/3)</span>
+        <span class="emoji-art">🦑</span>
+        <h3>Le défi des tentacules</h3>
+        <p>Pour vaincre le Kraken, résous ceci : "Je brille haut dans le ciel le jour et je te réchauffe. Mon nom contient un 's' qui fait /s/ au début du mot. Qui suis-je ?"</p>
+        <input type="text" id="in-13" placeholder="Mot de passe...">
+        <br><button class="btn btn-large" onclick="checkInput(13, ['soleil', 'soleils'])">Valider</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Niveau 5 - Le Kraken (2/3)</span>
+        <span class="emoji-art">🦑</span>
+        <h3>Le regard du monstre</h3>
+        <p>"Je suis une belle fleur rouge avec des épines. Mon nom s'écrit avec quatre lettres et le 's' fait le son /z/. Qui suis-je ?"</p>
+        <input type="text" id="in-14" placeholder="Mot de passe...">
+        <br><button class="btn btn-large" onclick="checkInput(14, ['rose', 'roses'])">Valider</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Niveau 5 - Boss final</span>
+        <span class="emoji-art">🔱</span>
+        <h3>La porte d'Atlantis</h3>
+        <p>"Je suis un objet tout doux qu'on pose sur le lit pour dormir. Mon nom a besoin de deux 's' pour faire le son /s/ entre des voyelles. Qui suis-je ?"</p>
+        <input type="text" id="in-15" placeholder="Dernier mot de passe...">
+        <br><button class="btn btn-large" style="background:var(--sand); color:var(--ocean-dark);" onclick="checkInput(15, ['coussin', 'coussins'])">Ouvrir la cité !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">🏛️</span>
+        <h2>Tu as découvert Atlantis !</h2>
+        <p>Bravo explorateur ! Tu as vaincu le Kraken et percé le secret de la lettre s.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : La descente</h4>
+            <p>Le <span class="highlight">sous-marin</span> de Sophie descend dans les abysses obscures. À travers la vitre, elle <span class="highlight">observe</span> une belle méduse <span class="highlight">rose</span> et un requin <span class="highlight">soyeux</span> qui nagent près du corail.</p>
+            <hr style="border-top:1px solid var(--aqua); margin: 20px 0;">
+            <small><b>Questions de repérage :</b><br>
+            1. Comment s'appelle la pilote du sous-marin ?<br>
+            2. Quels sont les deux animaux que la pilote observe ?<br>
+            3. De quelle couleur est la méduse ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : La découverte</h4>
+            <p>Au fond de l'océan, un lourd <span class="highlight">trésor</span> repose sur le <span class="highlight">sable</span> gris. Une bande de gros <span class="highlight">poissons</span> curieux tourne autour de la <span class="highlight">caisse</span> en bois cassée.</p>
+            <hr style="border-top:1px solid var(--aqua); margin: 20px 0;">
+            <small><b>Cherche et trouve :</b><br>
+            1. Trouve et écris un mot du texte où la lettre 's' fait le son /z/ comme moustique.<br>
+            2. Trouve et écris deux mots du texte où il a fallu mettre deux 's' (ss) pour faire le son /s/.<br>
+            3. Trouve le mot qui commence par un 's'.
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : Le gardien</h4>
+            <p>Soudain, l'eau devient glaciale. Une ombre <span class="highlight">immense</span> glisse au-dessus de la machine de l'explorateur. L'animal possède huit bras couverts de lourdes <span class="highlight">ventouses</span> gluantes. La créature <span class="highlight">saisit</span> un vieux navire avec une force incroyable.</p>
+            <hr style="border-top:1px solid var(--aqua); margin: 20px 0;">
+            <small><b>Inférence et dessin :</b><br>
+            1. L'animal n'est pas nommé dans le texte. D'après toi, quelle est cette créature marine ? Comment l'as-tu deviné ?<br>
+            2. Mission d'artiste : Dessine sur une feuille la scène décrite dans ce texte ! N'oublie pas le vieux navire et la créature.
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer l'aventure</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 15;
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            // Son d'une bulle qui éclate "plop"
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); 
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        } else {
+            // Son d'une alarme de sous-marin (buzzer grave)
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Bonne manœuvre ! 🫧</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Oups ! Mauvais choix. 🦑</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Cadenas déverrouillé ! 🔓</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Mot de passe incorrect...</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
