@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le grand théâtre : le secret de la lettre e</title>
+    <style>
+        :root {
+            --theatre-dark: #1a0505;
+            --curtain-red: #8b0000;
+            --curtain-light: #b22222;
+            --stage-gold: #ffd700;
+            --spotlight-yellow: #fffacd;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--theatre-dark);
+            background-image: repeating-linear-gradient(
+                90deg,
+                var(--curtain-red) 0px,
+                var(--curtain-red) 20px,
+                var(--curtain-light) 40px,
+                var(--curtain-red) 60px
+            );
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(255, 250, 205, 0.15) 0%, transparent 60%);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: rgba(26, 5, 5, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2);
+            border: 4px solid var(--stage-gold);
+            border-top: 15px solid var(--curtain-red);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 { 
+            color: var(--stage-gold); 
+            margin-top: 0; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-weight: normal;
+        }
+        
+        h2, h3, h4 { color: var(--spotlight-yellow); font-weight: bold; text-shadow: 1px 1px 3px #000; }
+        .bonus-box h4 { color: var(--stage-gold); }
+
+        .progress-bar {
+            width: 100%; height: 15px;
+            background: #000;
+            border-radius: 10px; margin: 20px 0;
+            border: 2px solid var(--stage-gold);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--curtain-red), var(--stage-gold));
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--stage-gold);
+        }
+
+        .step { display: none; animation: fadeIn 0.8s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes fadeIn { 
+            0% { opacity: 0; transform: scale(0.98); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s; border-color: #ff3333 !important; }
+
+        .btn {
+            background: rgba(0,0,0,0.6);
+            color: var(--spotlight-yellow);
+            border: 2px solid var(--stage-gold);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--stage-gold); 
+            color: var(--theatre-dark);
+            box-shadow: 0 0 20px var(--stage-gold);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+
+        .btn-acteur {
+            border-radius: 15px;
+            min-width: 130px; height: 110px;
+            background: rgba(139, 0, 0, 0.4);
+            border: 2px solid var(--curtain-light);
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .btn-acteur span { font-size: 2.5rem; margin-bottom: 5px; }
+        .btn-acteur:hover { background: rgba(139, 0, 0, 0.8); border-color: var(--stage-gold); transform: translateY(-3px); }
+
+        /* Échauffement vocal (20 mots) */
+        .warmup-container { margin: 20px auto; }
+        .flashcard-word {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--spotlight-yellow);
+            font-size: 3.5rem;
+            font-weight: bold;
+            padding: 30px 50px;
+            border-radius: 20px;
+            border: 4px dashed var(--stage-gold);
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        .flashcard-word:active { transform: scale(0.95); background: rgba(255, 215, 0, 0.3); }
+        
+        .dots-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px;
+        }
+        .dot {
+            width: 15px; height: 15px; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid #555;
+            transition: all 0.3s;
+        }
+        .dot.lit { background: var(--stage-gold); border-color: #fff; box-shadow: 0 0 10px var(--stage-gold); }
+
+        .phrase-cliquable { font-size: 1.4rem; line-height: 2.2; margin: 20px 0; text-align: justify; }
+        .mot-cliquable {
+            display: inline-block; padding: 3px 8px; margin: 0 1px;
+            background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;
+            border-bottom: 2px dashed rgba(255,255,255,0.3);
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(255, 215, 0, 0.2); border-bottom-color: var(--stage-gold); }
+
+        .emoji-art { font-size: 4rem; display: block; margin-bottom: 15px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.3rem; }
+        .correct { color: var(--spotlight-yellow); text-shadow: 0 0 5px var(--stage-gold); }
+        .wrong { color: #ff9999; text-shadow: 0 0 5px #ff0000; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--curtain-light);
+            border-radius: 10px;
+            width: 80%; max-width: 350px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            color: #fff; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--stage-gold); box-shadow: 0 0 15px var(--stage-gold); }
+
+        .text-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px; border-radius: 12px; font-style: italic;
+            border-left: 5px solid var(--stage-gold);
+            margin: 15px auto; width: 85%; font-size: 1.3rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--curtain-red); color: #fff;
+            padding: 5px 15px; border-radius: 20px; font-size: 1rem;
+            margin-bottom: 10px; border: 1px solid var(--stage-gold);
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 2px dashed var(--stage-gold); border-radius: 15px;
+            background: rgba(255, 215, 0, 0.1); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(255, 215, 0, 0.3); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.5s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; }
+
+        .bonus-box {
+            text-align: left; background: rgba(255,255,255,0.05); padding: 25px;
+            border-radius: 12px; border: 2px solid var(--curtain-light); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--stage-gold); }
+    </style>
+</head>
+<body>
+
+<div class="spotlight-bg"></div>
+
+<div id="game-container">
+    <h1>Le grand théâtre 🎭</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🎟️</span>
+        <h2>Bienvenue sur scène !</h2>
+        <p>Le spectacle va commencer, mais les acteurs ont un problème. Ils ne savent plus comment lire la lettre "e" quand elle est suivie d'une double consonne (comme <b>erre, elle, ette, enne</b>) ou de <b>ef</b> et <b>ec</b>. Aide-les à faire le son "è" sans utiliser d'accent !</p>
+        <button class="btn btn-large" onclick="nextStep()">Lever le rideau</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Les auditions (1/3)</span>
+        <span class="emoji-art">🎤</span>
+        <h3>Le casting de la princesse</h3>
+        <p>Touche l'actrice qui prononce le mot qui se termine par <b>elle</b> :</p>
+        <div>
+            <button class="btn btn-acteur" onclick="checkBtn(1, false)"><span>👸</span>balle</button>
+            <button class="btn btn-acteur" onclick="checkBtn(1, true)"><span>👸</span>belle</button>
+            <button class="btn btn-acteur" onclick="checkBtn(1, false)"><span>👸</span>bulle</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Les auditions (2/3)</span>
+        <span class="emoji-art">🎤</span>
+        <h3>Le casting du serveur</h3>
+        <p>Touche l'acteur qui prononce le mot contenant <b>erre</b> :</p>
+        <div>
+            <button class="btn btn-acteur" onclick="checkBtn(2, true)"><span>🤵</span>verre</button>
+            <button class="btn btn-acteur" onclick="checkBtn(2, false)"><span>🤵</span>voire</button>
+            <button class="btn btn-acteur" onclick="checkBtn(2, false)"><span>🤵</span>vare</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Les auditions (3/3)</span>
+        <span class="emoji-art">🎤</span>
+        <h3>Le casting de l'oiseau</h3>
+        <p>Lequel de ces mots se termine par les lettres <b>ette</b> ?</p>
+        <div>
+            <button class="btn btn-acteur" onclick="checkBtn(3, false)"><span>🦉</span>chute</button>
+            <button class="btn btn-acteur" onclick="checkBtn(3, false)"><span>🦉</span>chatte</button>
+            <button class="btn btn-acteur" onclick="checkBtn(3, true)"><span>🦉</span>chouette</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - La machine à mots</span>
+        <span class="emoji-art">🗣️</span>
+        <h3>L'échauffement de l'acteur</h3>
+        <p>Lis ce mot à voix haute, puis <b>tape dessus</b> pour allumer un projecteur. Seras-tu assez rapide pour allumer les 20 lumières ?</p>
+        
+        <div class="dots-container" id="warmup-dots">
+            </div>
+        
+        <div class="warmup-container">
+            <div class="flashcard-word" id="current-warmup-word" onclick="clickWarmupWord()">belle</div>
+        </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 3 - La grande répétition (1/3)</span>
+        <span class="emoji-art">🎬</span>
+        <h3>L'erreur de l'auteur</h3>
+        <p>Lis attentivement cette longue phrase. Un mot est mal écrit car il manque une consonne double. Clique sur l'erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">Avant</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">que</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">grand</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">spectacle</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">ne</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">commence,</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">jeune</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">princesse</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">a</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">malheureusement</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">perdu</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">magnifique</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, true)">bèle</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">robe</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">les</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">couloirs.</span>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 3 - La grande répétition (2/3)</span>
+        <span class="emoji-art">🎬</span>
+        <h3>L'erreur de l'auteur</h3>
+        <p>Concentre-toi bien. Trouve le mot mal orthographié dans cette scène :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">Juste</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">après</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">très</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">longue</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">répétition,</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">célèbre</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">comédien</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">épuisé</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">boit</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">grand</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, true)">vère</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">d'eau</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">glacée</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">rafraîchir</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">gorge.</span>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - La grande répétition (3/3)</span>
+        <span class="emoji-art">🎬</span>
+        <h3>L'erreur de l'auteur</h3>
+        <p>Ici, c'est la règle avec la lettre "f" au bout du mot. Trouve l'erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">Dès</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">que</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">public</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">devient</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">complètement</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">silencieux,</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">chèf</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">d'orchestre</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">lève</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">fièrement</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">petite</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">baguette</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">magique.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 4 - La loge (1/3)</span>
+        <span class="emoji-art">🧳</span>
+        <h3>Le décor à trouver</h3>
+        <div class="text-box">"Je suis un objet en bois ou en métal qui sert à monter très haut. Mon nom se termine par 'elle'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🪜</span></div><br>
+        <input type="text" id="in-8" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(8, ['échelle', 'echelle', 'échelles'])">Valider l'objet</button>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 4 - La loge (2/3)</span>
+        <span class="emoji-art">🧳</span>
+        <h3>Le costume à trouver</h3>
+        <div class="text-box">"Je suis l'oiseau de la nuit qui hulule. On m'utilise souvent pour des costumes effrayants. Mon nom contient 'ette'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🦉</span></div><br>
+        <input type="text" id="in-9" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(9, ['chouette', 'chouettes'])">Valider l'oiseau</button>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 4 - La loge (3/3)</span>
+        <span class="emoji-art">🧳</span>
+        <h3>Le masque à trouver</h3>
+        <div class="text-box">"Je suis la partie dure de la bouche d'un oiseau. Pour faire le son 'è', mon nom s'écrit avec un 'e' et un 'c' à la fin."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🦆</span></div><br>
+        <input type="text" id="in-10" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(10, ['bec', 'becs'])">Valider le masque</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="emoji-art">🌟</span>
+        <h2>Sous les applaudissements !</h2>
+        <p>Bravo ! Grâce à toi, la pièce de théâtre est un immense succès. Tu maîtrises parfaitement la lettre "e" sans accent devant les doubles consonnes.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : La chouette et la trompette</h4>
+            <p>Ce soir, le théâtre de la ville présente un drôle de spectacle. Sur la scène, une jeune fille porte un costume de <span class="highlight">chouette</span> avec de fausses <span class="highlight">lunettes</span>. Elle tient dans ses mains une belle <span class="highlight">trompette</span> dorée. Quand elle souffle dedans, le son résonne jusqu'au fond de la salle. Dans le public, une petite <span class="highlight">fillette</span> applaudit de toutes ses forces. À la fin de la représentation, la musicienne descend de son <span class="highlight">échelle</span> pour saluer les spectateurs avec un grand sourire.</p>
+            <hr style="border-top:1px solid var(--stage-gold); margin: 20px 0;">
+            <small><b>Questions de repérage :</b><br>
+            1. De quel animal la jeune fille porte-t-elle le costume ?<br>
+            2. De quel instrument de musique joue-t-elle sur scène ?<br>
+            3. Qui applaudit très fort dans le public ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : Le tour de magie</h4>
+            <p>Le magicien entre sur la scène avec une <span class="highlight">belle</span> cape noire. Il pose un <span class="highlight">verre</span> d'eau sur la table, juste à côté d'une petite <span class="highlight">assiette</span>. Soudain, il sort une baguette magique de sa poche et tape trois fois. Pof ! Un oiseau avec un grand <span class="highlight">bec</span> jaune apparaît dans un nuage de fumée. Pour son deuxième tour, il fait apparaître une adorable petite <span class="highlight">chienne</span> qui saute joyeusement. Le <span class="highlight">chef</span> décorateur est très impressionné par ces illusions.</p>
+            <hr style="border-top:1px solid var(--stage-gold); margin: 20px 0;">
+            <small><b>Questions cherche et trouve :</b><br>
+            1. Trouve et écris deux mots du texte qui se terminent par "elle" ou "ette".<br>
+            2. Trouve un mot qui illustre la règle du "e" devant "rr" (erre).<br>
+            3. Quel animal apparaît dans le nuage de fumée et de quelle couleur est son bec ?
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer la pièce</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 11;
+
+    // --- Mots pour l'échauffement vocal (20 mots) ---
+    const warmupWords = [
+        'belle', 'échelle', 'poubelle', 'ficelle', 
+        'terre', 'verre', 'pierre', 
+        'chouette', 'lunettes', 'trompette', 'poussette', 
+        'antenne', 'chienne', 'renne', 
+        'chef', 'bref', 'sec', 'bec', 'avec', 'échec'
+    ];
+    let currentWarmupIndex = 0;
+
+    // Initialisation des points (projecteurs)
+    window.onload = function() {
+        const dotsContainer = document.getElementById('warmup-dots');
+        for(let i=0; i<20; i++) {
+            let dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = 'dot-' + i;
+            dotsContainer.appendChild(dot);
+        }
+        document.getElementById('current-warmup-word').innerText = warmupWords[0];
+    };
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            // Son de carillon de théâtre (ding dong)
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // Mi
+            osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.2); // La
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        } else if(type === 'pop') {
+            // Petit son court pour chaque mot lu
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(800 + (currentWarmupIndex * 20), audioCtx.currentTime); 
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else {
+            // Son de "couac"
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    // Gestion de l'échauffement
+    function clickWarmupWord() {
+        if(currentWarmupIndex < 20) {
+            playSound('pop');
+            // Allumer le point correspondant
+            document.getElementById('dot-' + currentWarmupIndex).classList.add('lit');
+            
+            currentWarmupIndex++;
+            
+            if(currentWarmupIndex < 20) {
+                // Mot suivant
+                document.getElementById('current-warmup-word').innerText = warmupWords[currentWarmupIndex];
+            } else {
+                // Fini !
+                document.getElementById('current-warmup-word').innerText = "BRAVO !";
+                document.getElementById('current-warmup-word').style.pointerEvents = "none";
+                playSound('win');
+                document.getElementById('f-4').innerHTML = "<span class='correct'>Tous les projecteurs sont allumés ! 🌟</span>";
+                setTimeout(nextStep, 1500);
+            }
+        }
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Silence, ça tourne ! 🎬</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Coupez ! L'erreur n'est pas là. 🎺</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>C'est exactement ça ! 🌟</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Ce n'est pas le bon accessoire...</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
