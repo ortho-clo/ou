@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le château du roi : le secret des sons inverses</title>
+    <style>
+        :root {
+            --stone-dark: #2c3e50;
+            --stone-light: #7f8c8d;
+            --royal-blue: #2980b9;
+            --gold: #f1c40f;
+            --fire-orange: #e67e22;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--stone-dark);
+            /* Motif de mur de briques en fond */
+            background-image: 
+                linear-gradient(335deg, rgba(0,0,0,0.2) 23px, transparent 23px),
+                linear-gradient(155deg, rgba(0,0,0,0.2) 23px, transparent 23px),
+                linear-gradient(335deg, rgba(0,0,0,0.2) 23px, transparent 23px),
+                linear-gradient(155deg, rgba(0,0,0,0.2) 23px, transparent 23px);
+            background-size: 58px 58px;
+            background-color: var(--stone-dark);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ecf0f1;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 900px;
+            background: rgba(44, 62, 80, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+            border: 4px solid var(--stone-light);
+            border-top: 15px solid var(--royal-blue);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            color: var(--gold); 
+            margin-top: 0; 
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+            font-weight: bold;
+            font-size: 2.2rem;
+        }
+        
+        h2, h3 { color: #fff; font-weight: normal; }
+        
+        .progress-bar {
+            width: 100%; height: 12px;
+            background: #1a252f;
+            border-radius: 6px; margin: 20px 0;
+            border: 2px solid var(--stone-light);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--royal-blue), var(--gold));
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .step { display: none; animation: slideUp 0.6s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes slideUp { 
+            0% { opacity: 0; transform: translateY(15px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s; border-color: #e74c3c !important; }
+
+        .btn {
+            background: #1a252f;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--gold); 
+            color: var(--stone-dark);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; margin-top: 20px; }
+
+        /* Boutons blasons pour le niveau 1 */
+        .btn-blason {
+            border-radius: 10px 10px 50px 50px;
+            min-width: 140px; height: 130px;
+            background: rgba(41, 128, 185, 0.3);
+            border: 3px solid var(--stone-light);
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .btn-blason span { font-size: 2.5rem; margin-bottom: 5px; }
+        .btn-blason:hover { background: rgba(241, 196, 15, 0.2); border-color: var(--gold); transform: translateY(-3px); }
+
+        /* Les flambeaux (20 mots) */
+        .torch-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .torch-btn {
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--stone-light);
+            border: 2px solid #555;
+            padding: 12px 15px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            transition: all 0.3s;
+            user-select: none;
+            min-width: 110px;
+        }
+
+        .torch-btn.lit {
+            background: rgba(230, 126, 34, 0.2);
+            color: #fff;
+            border-color: var(--fire-orange);
+            box-shadow: 0 0 15px var(--fire-orange), inset 0 0 10px var(--gold);
+            pointer-events: none;
+            text-shadow: 0 0 5px var(--gold);
+        }
+
+        /* Phrases cliquables */
+        .phrase-cliquable { 
+            font-size: 1.4rem; line-height: 2.2; margin: 25px 0; text-align: justify; 
+            background: #1a252f; padding: 20px; border-radius: 8px; border-left: 4px solid var(--royal-blue);
+        }
+        .mot-cliquable {
+            display: inline-block; padding: 3px 6px; margin: 0 1px;
+            background: rgba(255,255,255,0.05); border-radius: 5px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(241, 196, 15, 0.2); color: var(--gold); }
+
+        .emoji-art { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.2rem; font-weight: bold; }
+        .correct { color: var(--gold); }
+        .wrong { color: #e74c3c; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.3rem;
+            border: 2px solid var(--stone-light);
+            border-radius: 8px;
+            width: 80%; max-width: 350px;
+            text-align: center;
+            background: #1a252f;
+            color: #fff; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(241,196,15,0.3); }
+
+        .text-box {
+            background: #1a252f;
+            padding: 20px; border-radius: 8px; font-style: italic;
+            border-left: 5px solid var(--gold);
+            margin: 15px auto; width: 85%; font-size: 1.2rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--royal-blue); color: #fff;
+            padding: 5px 15px; border-radius: 15px; font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 2px dashed var(--stone-light); border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(241, 196, 15, 0.1); border-color: var(--gold); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.3s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; }
+
+        .bonus-box {
+            text-align: left; background: #1a252f; padding: 25px;
+            border-radius: 8px; border: 2px solid var(--stone-light); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--gold); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Le château du roi 🏰</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🛡️</span>
+        <h2>Bienvenue, jeune chevalier !</h2>
+        <p>Les portes du château sont verrouillées. Pour les ouvrir, tu dois prouver que tu sais lire les sons inverses : <b>ar, or, ir, al, ul, il, os, as, ac, ec...</b> Attention à ne pas les confondre avec ra, ro, la ou lu !</p>
+        <button class="btn btn-large" onclick="nextStep()">Entrer dans la cour</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Épreuve 1 - Le pont-levis (1/3)</span>
+        <span class="emoji-art">🎌</span>
+        <h3>Le blason du dragon</h3>
+        <p>Touche le bouclier qui contient la syllabe <b>ar</b> :</p>
+        <div>
+            <button class="btn btn-blason" onclick="checkBtn(1, false)"><span>🛡️</span>ra</button>
+            <button class="btn btn-blason" onclick="checkBtn(1, true)"><span>🛡️</span>ar</button>
+            <button class="btn btn-blason" onclick="checkBtn(1, false)"><span>🛡️</span>er</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Épreuve 1 - Le pont-levis (2/3)</span>
+        <span class="emoji-art">🎌</span>
+        <h3>Le blason du lion</h3>
+        <p>Touche le bouclier qui possède la syllabe <b>ol</b> :</p>
+        <div>
+            <button class="btn btn-blason" onclick="checkBtn(2, true)"><span>🛡️</span>ol</button>
+            <button class="btn btn-blason" onclick="checkBtn(2, false)"><span>🛡️</span>lo</button>
+            <button class="btn btn-blason" onclick="checkBtn(2, false)"><span>🛡️</span>al</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Épreuve 1 - Le pont-levis (3/3)</span>
+        <span class="emoji-art">🎌</span>
+        <h3>Le faux blason</h3>
+        <p>Lequel de ces faux mots magiques contient le son <b>ur</b> ?</p>
+        <div>
+            <button class="btn btn-blason" onclick="checkBtn(3, false)"><span>🛡️</span>ruto</button>
+            <button class="btn btn-blason" onclick="checkBtn(3, false)"><span>🛡️</span>roubi</button>
+            <button class="btn btn-blason" onclick="checkBtn(3, true)"><span>🛡️</span>murto</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Épreuve 2 - La grande salle</span>
+        <span class="emoji-art">🔥</span>
+        <h3>L'allumage des flambeaux</h3>
+        <p>Le château est dans le noir ! Lis chaque mot à voix haute, puis <b>clique dessus</b> pour allumer son flambeau. Allume les 20 lumières pour y voir clair.</p>
+        
+        <div class="torch-grid" id="torch-grid-container">
+            </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Épreuve 3 - Les parchemins (1/5)</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le message du garde</h3>
+        <p>Le messager a fait une erreur en écrivant. Trouve le mot où la syllabe a été inversée :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">preux</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">chevalier</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">se</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">promène</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">tranquillement</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">grand</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, true)">prac</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">du</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">château.</span>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Épreuve 3 - Les parchemins (2/5)</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le message du fou</h3>
+        <p>Lis bien cette phrase et cherche le mot qui devrait s'écrire avec "es" :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">fou</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">du</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">roi</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">fait</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">drôle</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, true)">gsete</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">avec</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">ses</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">deux</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">mains.</span>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Épreuve 3 - Les parchemins (3/5)</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le message de la princesse</h3>
+        <p>Oh non, le messager s'est trompé avec le son "or". Clique sur le mot mal écrit :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">La</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">belle</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">princesse</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">pleure</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">car</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">elle</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">a</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">perdu</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">jolie</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">bague</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">en</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">ro</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">massif.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Épreuve 3 - Les parchemins (4/5)</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le message de la reine</h3>
+        <p>Ici, un mot qui devrait commencer par "ar" commence par "ra". Trouve-le :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">petit</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">chat</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">gris</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">reine</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">grimpe</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">vite</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">sur</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">cet</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, true)">rabre</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">géant.</span>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Épreuve 3 - Les parchemins (5/5)</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le message du veilleur</h3>
+        <p>Dernière phrase à corriger ! L'erreur se cache dans un mot avec le son "or" :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">Pendant</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">nuit,</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">nouveau</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">garde</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">ferme</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">rapidement</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">très</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">lourde</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, true)">proate</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">en</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">bois.</span>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Épreuve 4 - Les coffres (1/3)</span>
+        <span class="emoji-art">🧰</span>
+        <h3>La devinette de l'écurie</h3>
+        <div class="text-box">"Je suis l'animal très rapide que le chevalier monte pour galoper. Mon nom se termine par 'al'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">🐴</span></div><br>
+        <input type="text" id="in-10" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(10, ['cheval', 'chevals', 'chevaux'])">Ouvrir le coffre</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Épreuve 4 - Les coffres (2/3)</span>
+        <span class="emoji-art">🧰</span>
+        <h3>La devinette du jardin</h3>
+        <div class="text-box">"Je suis un petit animal avec une coquille sur le dos. Mon nom commence par 'es' et contient 'ar'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">🐌</span></div><br>
+        <input type="text" id="in-11" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(11, ['escargot', 'escargots'])">Ouvrir le coffre</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Épreuve 4 - Les coffres (3/3)</span>
+        <span class="emoji-art">🧰</span>
+        <h3>La devinette de l'oiseau</h3>
+        <div class="text-box">"Je suis le bout pointu et dur sur la tête d'un oiseau pour manger. Mon nom s'écrit avec les lettres 'ec'."</div>
+        <div class="zone-magique">Touche ici pour un indice !<span class="indice-cache">🦆</span></div><br>
+        <input type="text" id="in-12" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(12, ['bec', 'becs'])">Ouvrir le coffre</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Épreuve 5 - Le donjon (1/3)</span>
+        <span class="emoji-art">🐲</span>
+        <h3>L'énigme du dragon</h3>
+        <p>Réponds à l'énigme pour endormir le dragon : "Je suis un grand végétal avec un tronc, des branches et des feuilles. Mon nom commence par 'ar'."</p>
+        <input type="text" id="in-13" placeholder="Réponse...">
+        <br><button class="btn" onclick="checkInput(13, ['arbre', 'arbres'])">Valider</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Épreuve 5 - Le donjon (2/3)</span>
+        <span class="emoji-art">🐲</span>
+        <h3>L'énigme du temps</h3>
+        <p>Le dragon te pose une autre question : "Je suis un jour de la semaine. Je viens juste après le lundi. Mon nom commence par 'mar'."</p>
+        <input type="text" id="in-14" placeholder="Réponse...">
+        <br><button class="btn" onclick="checkInput(14, ['mardi'])">Valider</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Épreuve 5 - Le donjon final</span>
+        <span class="emoji-art">👑</span>
+        <h3>L'ultime épreuve</h3>
+        <p>"C'est une carapace très dure sur le dos d'un reptile qui marche très lentement. Ce mot de la famille des reptiles contient 'or'. Qui est-ce ?"</p>
+        <input type="text" id="in-15" placeholder="Dernière réponse...">
+        <br><button class="btn btn-large" style="background:var(--gold); color:var(--stone-dark);" onclick="checkInput(15, ['tortue', 'tortues', 'une tortue'])">Sauver le roi !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">🎆</span>
+        <h2>Tu as sauvé le royaume !</h2>
+        <p>Félicitations chevalier ! Tu as rallumé les flambeaux et réparé les messages. Les lettres n'ont plus le temps de s'inverser avec toi !</p>
+        
+        <div class="bonus-box">
+            <h4>La lecture du roi A : Arthur et son cheval</h4>
+            <p><span class="highlight">Arthur</span> est un chevalier très <span class="highlight">fort</span>. Tous les matins, il met sa <span class="highlight">veste</span> et va dans le <span class="highlight">parc</span> avec son beau <span class="highlight">cheval</span> gris. Ils aiment galoper au <span class="highlight">bord</span> du grand <span class="highlight">lac</span> bleu.</p>
+            <hr style="border-top:1px solid var(--stone-light); margin: 20px 0;">
+            <small style="color:#bdc3c7;"><b>Questions de repérage :</b><br>
+            1. Comment s'appelle le chevalier ?<br>
+            2. De quelle couleur est son cheval ?<br>
+            3. Où aiment-ils galoper ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>La lecture du roi B : Le festin</h4>
+            <p>Ce soir, c'est la fête au château ! Sur la table, on trouve un grand <span class="highlight">bol</span> rempli de bonne <span class="highlight">purée</span> chaude. Il y a aussi une énorme <span class="highlight">tartine</span> de pain pour le roi. Un petit chat noir passe sous la <span class="highlight">porte</span> pour réclamer à manger.</p>
+            <hr style="border-top:1px solid var(--stone-light); margin: 20px 0;">
+            <small style="color:#bdc3c7;"><b>Questions cherche et trouve :</b><br>
+            1. Trouve et écris un mot du texte qui contient le son "or".<br>
+            2. Trouve et écris un mot du texte qui contient le son "ur".<br>
+            3. Trouve et écris un mot du texte qui contient le son "ar".
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>La lecture du roi C : La surprise</h4>
+            <p>Le fou du roi veut faire une blague. Il met un gros <span class="highlight">masque</span> effrayant sur son visage et se cache derrière le <span class="highlight">mur</span> de la cour. Quand le roi passe, le fou saute en faisant un grand <span class="highlight">geste</span> avec ses bras. Quelle <span class="highlight">surprise</span> ! Le roi rigole tellement qu'il en pleure.</p>
+            <hr style="border-top:1px solid var(--stone-light); margin: 20px 0;">
+            <small style="color:#bdc3c7;"><b>Inférence et dessin :</b><br>
+            1. Inférence : Est-ce que le roi s'est mis en colère après la blague ? Comment le sais-tu ?<br>
+            2. Mission de l'apprenti dessinateur : Dessine le fou du roi caché derrière son mur avec son grand masque sur le visage.
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer l'aventure</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 16;
+
+    // --- Mots de 2e année pour les flambeaux ---
+    const torchWords = [
+        'arbre', 'porte', 'carte', 'veste', 
+        'lac', 'bol', 'cheval', 'masque', 
+        'poste', 'parc', 'bal', 'tortue', 
+        'escargot', 'mur', 'mardi', 'barbe', 
+        'bec', 'fil', 'geste', 'animal'
+    ];
+    let litCount = 0;
+
+    window.onload = function() {
+        const grid = document.getElementById('torch-grid-container');
+        // Mélanger les mots
+        const shuffledWords = torchWords.sort(() => Math.random() - 0.5);
+        
+        shuffledWords.forEach((word) => {
+            let btn = document.createElement('div');
+            btn.className = 'torch-btn';
+            btn.innerText = word;
+            btn.onclick = function() { lightTorch(this); };
+            grid.appendChild(btn);
+        });
+    };
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            // Son de réussite (Clochette royale)
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Do
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi
+            osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // Sol
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else if(type === 'torch') {
+            // Son d'allumage (petit sifflement de feu)
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else {
+            // Son d'erreur (Coup d'épée sur du bois)
+            osc.type = 'square'; 
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function lightTorch(btnElement) {
+        if(!btnElement.classList.contains('lit')) {
+            playSound('torch');
+            btnElement.classList.add('lit');
+            litCount++;
+            
+            if(litCount === 20) {
+                playSound('win');
+                document.getElementById('f-4').innerHTML = "<span class='correct'>Tous les flambeaux sont allumés ! 🌟</span>";
+                setTimeout(nextStep, 1500);
+            }
+        }
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Très bien vu ! ✔️</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Mince, ce n'est pas ça ! ❌</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Bravo, c'est le bon mot ! 🗝️</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Le cadenas bloque. Cherche bien !</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
