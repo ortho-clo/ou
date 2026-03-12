@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Détective</title>
+    <style>
+        body { background: #0077ff; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        .robot { font-size: 50px; margin-bottom: 10px; }
+        .mot { font-size: 3rem; color: #0077ff; margin: 20px 0; font-weight: bold; text-transform: uppercase; }
+        .btn-box { display: flex; gap: 15px; justify-content: center; }
+        button { padding: 15px 30px; font-size: 1.2rem; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .oui { background: #27ae60; }
+        .non { background: #e74c3c; }
+        button:active { transform: scale(0.9); }
+        #message { margin-top: 20px; font-weight: bold; min-height: 24px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="robot" id="robot">🤖</div>
+    <div style="color: #666; font-style: italic;">Entends-tu "OU" ?</div>
+    <div id="mot-affiche" class="mot">---</div>
+    <div class="btn-box">
+        <button class="oui" onclick="verifier(true)">OUI</button>
+        <button class="non" onclick="verifier(false)">NON</button>
+    </div>
+    <div id="message"></div>
+</div>
+
+<script>
+    const listeMots = [
+        {m: "Mouton", r: true},
+        {m: "Lapin", r: false},
+        {m: "Fourmi", r: true},
+        {m: "Poule", r: true},
+        {m: "Gâteau", r: false}
+    ];
+    let index = 0;
+
+    function actualiser() {
+        if(index < listeMots.length) {
+            document.getElementById('mot-affiche').innerText = listeMots[index].m;
+            document.getElementById('message').innerText = "";
+            document.getElementById('robot').innerText = "🤖";
+        } else {
+            document.querySelector('.card').innerHTML = "<h1>🏆 BRAVO !</h1><p>Mission accomplie, Détective !</p><p>Code secret : <b>LOUPE22</b></p><button onclick='location.reload()' style='background:#0077ff; color:white; border:none; padding:10px; border-radius:10px;'>Rejouer</button>";
+        }
+    }
+
+    function verifier(reponse) {
+        if(reponse === listeMots[index].r) {
+            document.getElementById('robot').innerText = "🤩";
+            document.getElementById('message').innerHTML = "<span style='color:green'>Excellent !</span>";
+            index++;
+            setTimeout(actualiser, 1000);
+        } else {
+            document.getElementById('robot').innerText = "🧐";
+            document.getElementById('message').innerHTML = "<span style='color:red'>Regarde bien...</span>";
+        }
+    }
+
+    actualiser();
+</script>
+</body>
+</html>
