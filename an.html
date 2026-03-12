@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 5 : Le Son AN</title>
+    <style>
+        body { background: #f39c12; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: 5px solid #e67e22; }
+        .mot { font-size: 3rem; color: #d35400; margin: 15px 0; font-weight: bold; }
+        button { padding: 15px 25px; font-size: 1.2rem; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; margin: 5px; }
+        .oui { background: #27ae60; } .non { background: #c0392b; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div style="font-size: 50px;">🐘</div>
+    <p>Entends-tu <b>"AN"</b> ?</p>
+    <div id="mot" class="mot">---</div>
+    <button class="oui" onclick="check(true)">OUI</button>
+    <button class="non" onclick="check(false)">NON</button>
+</div>
+<script>
+    const quiz = [{m:"Maman", r:true}, {m:"Vélo", r:false}, {m:"Enfant", r:true}, {m:"Banc", r:true}, {m:"Lune", r:false}];
+    let i = 0;
+    function up() {
+        if(i < quiz.length) { document.getElementById('mot').innerText = quiz[i].m; }
+        else { document.querySelector('.card').innerHTML = "<h1>BRAVO !</h1><p>Code secret :</p><h2>VOLANT-55</h2>"; }
+    }
+    function check(c) { if(c === quiz[i].r) { i++; up(); } else { alert("Réessaie !"); } }
+    up();
+</script>
+</body>
+</html>
