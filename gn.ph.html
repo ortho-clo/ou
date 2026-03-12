@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'académie de magie : les secrets du ph et du gn</title>
+    <style>
+        :root {
+            --magic-dark: #1a0b2e;
+            --magic-purple: #4a148c;
+            --magic-gold: #ffd700;
+            --potion-green: #00e676;
+            --scroll-bg: #f5deb3;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--magic-dark);
+            background-image: radial-gradient(circle at 50% 50%, #311b52 0%, #1a0b2e 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Effet de poussière d'étoiles (SVG) */
+        .stars-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><path d="M 10 10 L 15 25 L 30 30 L 15 35 L 10 50 L 5 35 L -10 30 L 5 25 Z" fill="rgba(255, 215, 0, 0.2)" transform="scale(0.3) translate(50, 100)"/><path d="M 10 10 L 15 25 L 30 30 L 15 35 L 10 50 L 5 35 L -10 30 L 5 25 Z" fill="rgba(255, 215, 0, 0.1)" transform="scale(0.5) translate(400, 300)"/></svg>') repeat;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: rgba(49, 27, 82, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.4);
+            border: 4px solid var(--magic-gold);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 { 
+            color: var(--magic-gold); 
+            margin-top: 0; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-weight: normal;
+        }
+        
+        h2, h3, h4 { color: var(--potion-green); font-weight: normal; }
+
+        .progress-bar {
+            width: 100%; height: 15px;
+            background: #000;
+            border-radius: 10px; margin: 20px 0;
+            border: 2px solid var(--magic-gold);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--magic-purple), var(--potion-green));
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--potion-green);
+        }
+
+        .step { display: none; animation: fadeIn 0.8s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes fadeIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s; border-color: #ff3333 !important; }
+
+        .btn {
+            background: rgba(0,0,0,0.3);
+            color: var(--magic-gold);
+            border: 2px solid var(--magic-gold);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--magic-gold); 
+            color: var(--magic-dark);
+            box-shadow: 0 0 15px var(--magic-gold);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+
+        /* Chaudrons */
+        .btn-chaudron {
+            border-radius: 20px;
+            width: 100px; height: 100px;
+            background: rgba(74, 20, 140, 0.5);
+            border: 2px solid var(--potion-green);
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .btn-chaudron span { font-size: 2rem; margin-bottom: 5px; }
+        .btn-chaudron:hover { background: rgba(74, 20, 140, 0.9); transform: translateY(-5px); }
+
+        /* Grimoire */
+        .btn-grimoire {
+            display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 160px; height: 130px;
+            border-radius: 10px; background: var(--scroll-bg); color: var(--magic-dark);
+            border: 3px solid #8b4513; margin: 10px; font-weight: bold; font-size: 1.3rem;
+        }
+        .btn-grimoire:hover { background: #fff8dc; transform: scale(1.05); }
+
+        /* Phrase cliquable (baguette) */
+        .phrase-cliquable { font-size: 1.5rem; line-height: 2; margin: 20px 0; }
+        .mot-cliquable {
+            display: inline-block; padding: 5px 10px; margin: 0 2px;
+            background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;
+            border-bottom: 2px dashed rgba(255,255,255,0.3);
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(255, 215, 0, 0.2); border-bottom-color: var(--magic-gold); }
+
+        .emoji-art { font-size: 4rem; display: block; margin-bottom: 15px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.3rem; }
+        .correct { color: var(--potion-green); text-shadow: 0 0 5px var(--potion-green); }
+        .wrong { color: #ff6b6b; text-shadow: 0 0 5px #ff6b6b; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--magic-purple);
+            border-radius: 10px;
+            width: 80%; max-width: 350px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            color: #fff; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--magic-gold); box-shadow: 0 0 15px var(--magic-gold); }
+
+        .text-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px; border-radius: 12px; font-style: italic;
+            border-left: 5px solid var(--magic-gold);
+            margin: 15px auto; width: 85%; font-size: 1.3rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--magic-purple); color: #fff;
+            padding: 5px 15px; border-radius: 20px; font-size: 1rem;
+            margin-bottom: 10px; border: 1px solid var(--magic-gold);
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 2px dashed var(--potion-green); border-radius: 15px;
+            background: rgba(0, 230, 118, 0.1); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(0, 230, 118, 0.3); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.5s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; }
+
+        .bonus-box {
+            text-align: left; background: rgba(255,255,255,0.05); padding: 25px;
+            border-radius: 12px; border: 2px solid var(--magic-purple); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--magic-gold); }
+    </style>
+</head>
+<body>
+
+<div class="stars-bg"></div>
+
+<div id="game-container">
+    <h1>L'académie de magie 🦉</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🧙‍♂️</span>
+        <h2>Bienvenue, jeune apprenti !</h2>
+        <p>Le grand grimoire de l'école a perdu plusieurs pages. Pour les retrouver et devenir un vrai sorcier, tu dois maîtriser les sortilèges du "ph" et du "gn".</p>
+        <button class="btn btn-large" onclick="nextStep()">Entrer dans l'école</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Les potions (1/3)</span>
+        <span class="emoji-art">🧪</span>
+        <h3>La salle des chaudrons</h3>
+        <p>Touche le chaudron qui contient le son /ɲ/ (comme dans araignée) :</p>
+        <div>
+            <button class="btn btn-chaudron" onclick="checkBtn(1, false)"><span>🫧</span>gia</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(1, false)"><span>🫧</span>nia</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(1, true)"><span>🫧</span>gno</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(1, false)"><span>🫧</span>jin</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Les potions (2/3)</span>
+        <span class="emoji-art">🧪</span>
+        <h3>La salle des chaudrons</h3>
+        <p>Touche le chaudron qui contient le son /f/ écrit avec deux lettres :</p>
+        <div>
+            <button class="btn btn-chaudron" onclick="checkBtn(2, false)"><span>🫧</span>fou</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(2, false)"><span>🫧</span>vou</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(2, false)"><span>🫧</span>pso</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(2, true)"><span>🫧</span>phi</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Les potions (3/3)</span>
+        <span class="emoji-art">🔮</span>
+        <h3>La formule inventée</h3>
+        <p>Lequel de ces faux mots magiques contient les lettres "gn" ?</p>
+        <div>
+            <button class="btn btn-chaudron" onclick="checkBtn(3, false)"><span>✨</span>minou</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(3, true)"><span>✨</span>mignou</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(3, false)"><span>✨</span>migou</button>
+            <button class="btn btn-chaudron" onclick="checkBtn(3, false)"><span>✨</span>milou</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Le grimoire (1/3)</span>
+        <span class="emoji-art">📖</span>
+        <h3>Le livre des créatures</h3>
+        <p>Quel livre dois-tu ouvrir pour ranger l'animal : <br><b style="font-size:2rem; color:var(--potion-green);">éléphant</b> ?</p>
+        <div>
+            <button class="btn btn-grimoire" onclick="checkBtn(4, true)">Livre du ph</button>
+            <button class="btn btn-grimoire" onclick="checkBtn(4, false)">Livre du gn</button>
+        </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 2 - Le grimoire (2/3)</span>
+        <span class="emoji-art">📖</span>
+        <h3>Le livre des plantes</h3>
+        <p>Quel livre dois-tu ouvrir pour ranger la plante : <br><b style="font-size:2rem; color:var(--potion-green);">champignon</b> ?</p>
+        <div>
+            <button class="btn btn-grimoire" onclick="checkBtn(5, false)">Livre du ph</button>
+            <button class="btn btn-grimoire" onclick="checkBtn(5, true)">Livre du gn</button>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 2 - Le grimoire (3/3)</span>
+        <span class="emoji-art">📖</span>
+        <h3>Le livre des objets</h3>
+        <p>Quel livre dois-tu ouvrir pour ranger l'objet : <br><b style="font-size:2rem; color:var(--potion-green);">téléphone</b> ?</p>
+        <div>
+            <button class="btn btn-grimoire" onclick="checkBtn(6, true)">Livre du ph</button>
+            <button class="btn btn-grimoire" onclick="checkBtn(6, false)">Livre du gn</button>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - Coup de baguette (1/3)</span>
+        <span class="emoji-art">🪄</span>
+        <h3>Le sortilège cassé</h3>
+        <p>Une mauvaise fée a mal écrit un mot. Clique sur le mot qui contient une erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">sorcier</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">prend</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">une</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">belle</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">foto</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">du</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">château.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 3 - Coup de baguette (2/3)</span>
+        <span class="emoji-art">🪄</span>
+        <h3>Le sortilège cassé</h3>
+        <p>Touche le mot mal orthographié pour le réparer :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">La</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">petite</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, true)">arainiée</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">tisse</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">toile</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">grise.</span>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 3 - Coup de baguette (3/3)</span>
+        <span class="emoji-art">🪄</span>
+        <h3>Le sortilège cassé</h3>
+        <p>Trouve l'erreur dans la phrase magique :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">Il</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">y</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">a</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">gros</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, true)">daufin</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">l'eau.</span>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 4 - Le tiroir secret (1/3)</span>
+        <span class="emoji-art">🗄️</span>
+        <h3>L'énigme du gardien</h3>
+        <div class="text-box">"Je suis un énorme animal gris. J'ai de grandes oreilles et une longue trompe. Mon nom s'écrit avec un 'ph'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🐘</span></div><br>
+        <input type="text" id="in-10" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(10, ['éléphant', 'elephant', 'éléphants'])">Vérifier</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Niveau 4 - Le tiroir secret (2/3)</span>
+        <span class="emoji-art">🗄️</span>
+        <h3>L'énigme du fantôme</h3>
+        <div class="text-box">"Je suis un objet qui sert à se coiffer les cheveux. J'ai beaucoup de petites dents. Mon nom contient les lettres 'gn'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🪮</span> (un peigne)</div><br>
+        <input type="text" id="in-11" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(11, ['peigne', 'peignes'])">Vérifier</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Niveau 4 - Le tiroir secret (3/3)</span>
+        <span class="emoji-art">🗄️</span>
+        <h3>L'énigme de la sirène</h3>
+        <div class="text-box">"Je suis une grande tour près de la mer. J'envoie de la lumière pour guider les bateaux la nuit. Mon nom commence par 'ph'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🗼</span></div><br>
+        <input type="text" id="in-12" placeholder="Écris ta réponse...">
+        <br><button class="btn" onclick="checkInput(12, ['phare', 'phares'])">Vérifier</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Niveau 5 - Le dragon gardien (1/3)</span>
+        <span class="emoji-art">🐉</span>
+        <h3>Le souffle de feu</h3>
+        <p>Le dragon te bloque le passage. Réponds à ceci : "Je suis un oiseau blanc très élégant avec un long cou. Je nage sur les lacs. Mon nom contient 'gn'. Qui suis-je ?"</p>
+        <input type="text" id="in-13" placeholder="Mot de passe...">
+        <br><button class="btn btn-large" onclick="checkInput(13, ['cygne', 'cygnes'])">Lancer le sort</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Niveau 5 - Le dragon gardien (2/3)</span>
+        <span class="emoji-art">🐉</span>
+        <h3>L'œil du dragon</h3>
+        <p>"Je suis très haute, faite de roche et de terre. En hiver, mon sommet est souvent couvert de neige. Mon nom contient 'gn'. Qui suis-je ?"</p>
+        <input type="text" id="in-14" placeholder="Mot de passe...">
+        <br><button class="btn btn-large" onclick="checkInput(14, ['montagne', 'montagnes'])">Lancer le sort</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Niveau 5 - Boss final</span>
+        <span class="emoji-art">🚪</span>
+        <h3>La grande porte</h3>
+        <p>"Je suis un mot magique qui désigne l'étude des étoiles ou la prise d'une belle image. Je suis l'appareil qui fait *clic*. Mon nom commence par 'ph'. Que suis-je ?"</p>
+        <input type="text" id="in-15" placeholder="Dernier mot de passe...">
+        <br><button class="btn btn-large" style="background:var(--potion-green); color:var(--magic-dark);" onclick="checkInput(15, ['photo', 'photos', 'appareil photo', 'photographie'])">Ouvrir la porte !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">🎓</span>
+        <h2>Tu es un vrai sorcier !</h2>
+        <p>Félicitations ! Tu as reconstitué le grimoire et dompté le dragon. Les secrets du ph et du gn sont à toi.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : Le sortilège d'image</h4>
+            <p>Le jeune sorcier Raphaël étudie dans la grande tour de l'école. Aujourd'hui, son professeur lui a demandé d'utiliser un objet moldu très spécial : un <span class="highlight">appareil photo</span>. Raphaël doit sortir dans la cour pour prendre l'image d'un magnifique <span class="highlight">cygne</span> blanc qui se repose sur le lac magique. Son petit animal de compagnie, un <span class="highlight">agneau</span> très bavard, le suit partout en faisant du bruit. Quand le flash s'allume, l'agneau prend peur et court se cacher derrière un buisson !</p>
+            <hr style="border-top:1px solid var(--potion-green); margin: 20px 0;">
+            <small><b>Questions de repérage classique :</b><br>
+            1. Comment s'appelle le jeune sorcier ?<br>
+            2. Quel animal le garçon doit-il prendre en photo ?<br>
+            3. Quel est l'animal de compagnie du sorcier et comment réagit-il au flash ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : La potion de la sorcière</h4>
+            <p>Dans sa cabane au fond des bois, la vieille sorcière prépare une recette redoutable. Son chaudron bout et fait d'énormes bulles vertes. Elle commence par ajouter trois gros <span class="highlight">champignons</span> tachetés qu'elle a trouvés près d'une flaque d'eau. Ensuite, elle écrase quelques <span class="highlight">châtaignes</span> ramassées en automne. Pour finir, elle jette dans la marmite une grande feuille de <span class="highlight">nénuphar</span> et un poil d'<span class="highlight">éléphant</span>. La potion dégage alors une épaisse fumée violette qui sent la framboise.</p>
+            <hr style="border-top:1px solid var(--potion-green); margin: 20px 0;">
+            <small><b>Questions cherche et trouve :</b><br>
+            1. Trouve et écris deux mots du texte qui contiennent le son /ɲ/ (écrit gn).<br>
+            2. Trouve et écris deux mots du texte qui contiennent le son /f/ écrit avec les lettres "ph".<br>
+            3. D'après le texte, de quelle couleur sont les bulles de la potion et quelle est son odeur à la fin ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : Le gardien du sommet</h4>
+            <p>Tout en haut de la plus haute <span class="highlight">montagne</span> du royaume, vit une créature légendaire. Ce n'est pas un dragon féroce, mais un majestueux <span class="highlight">phénix</span> aux plumes rouges et dorées. Chaque matin, quand le soleil se lève sur la vallée, l'oiseau chante une mélodie merveilleuse, douce comme une <span class="highlight">symphonie</span>. Les habitants du village en bas aiment l'écouter. Mais attention, si un voyageur essaie de voler une de ses plumes, le phénix devient invisible et disparaît dans les nuages.</p>
+            <hr style="border-top:1px solid var(--potion-green); margin: 20px 0;">
+            <small><b>Inférence et mission de dessin :</b><br>
+            1. Inférence : Pourquoi les habitants du village ne voient-ils presque jamais le phénix de près ? Que se passe-t-il si on s'approche avec de mauvaises intentions ?<br>
+            2. Mission de l'apprenti artiste : Dessine sur une feuille le majestueux phénix perched tout en haut de sa montagne, avec le soleil qui se lève derrière lui. N'oublie pas les couleurs de ses plumes !
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer la magie</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 15;
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            // Son de clochette magique
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.1); 
+            osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.2); 
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else {
+            // Son de "boing" (crapaud raté)
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Sortilège réussi ! ✨</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Aïe ! La potion a explosé. 🐸</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>C'est la bonne réponse ! 🗝️</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Le cadenas résiste... Cherche encore !</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
