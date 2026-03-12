@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évasion : Le Chantier Interdit</title>
+    <style>
+        :root {
+            --primary: #f57c00; /* Orange chantier */
+            --accent: #212121; /* Noir béton */
+            --bg: #eceff1;    /* Gris clair */
+            --success: #4caf50;
+            --door-bg: #bf360c; /* Rouge brique */
+        }
+        body { font-family: 'Anton', 'Impact', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; color: #333; }
+        h1, h2 { text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin: 10px 0; }
+        
+        #game-container { max-width: 850px; width: 100%; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-align: center; border: 4px solid var(--accent); position: relative;}
+        #game-container::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 10px; background: repeating-linear-gradient(45deg, #f57c00, #f57c00 10px, #212121 10px, #212121 20px); border-radius: 4px 4px 0 0;}
+
+        #intro-area { background: #fff3e0; padding: 15px; border-radius: 5px; border: 2px dashed var(--primary); margin-bottom: 15px; font-size: 1.1em; line-height: 1.4; text-align: left;}
+        
+        #progress-bar { width: 100%; height: 25px; background: #ddd; border-radius: 5px; overflow: hidden; margin-bottom: 15px; border: 2px solid var(--accent); }
+        #progress-fill { width: 0%; height: 100%; background: var(--primary); transition: 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8em;}
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .door { height: 60px; background: var(--door-bg); border: 3px solid #5d4037; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2em; font-weight: bold; cursor: not-allowed; opacity: 0.6; transition: 0.3s; position: relative; }
+        .door.active { border-color: var(--primary); cursor: pointer; opacity: 1; animation: pulse 1.5s infinite; background: #d84315; }
+        .door.opened { background: var(--success); border-color: #2e7d32; opacity: 1;}
+        .door.opened::after { content: '🚧'; position: absolute; font-size: 1.2em; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        
+        #question-area { background: #fafafa; padding: 15px; border-radius: 8px; border: 3px solid var(--primary); display: none; }
+        #scenario-text { font-size: 1.2em; line-height: 1.5; margin-bottom: 15px; font-style: italic; background: white; padding: 10px; border-radius: 5px; border-left: 5px solid var(--primary); text-align: left;}
+        #scenario-text b { background-color: #fff176; padding: 2px 4px; border-radius: 3px; color: black;}
+        
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        button { padding: 12px 20px; border: 3px solid var(--accent); border-radius: 5px; background: var(--primary); color: white; cursor: pointer; font-size: 1.1rem; font-family: inherit; text-transform: uppercase; transition: 0.2s; }
+        button:hover { background: var(--accent); color: var(--primary); transform: translateY(-2px); }
+        button:active { transform: translateY(1px); }
+
+        #final-screen { display: none; font-size: 2rem; color: var(--success); padding: 30px; border: 5px solid var(--success); background: #e8f5e9; border-radius: 10px;}
+        
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
+            .door { height: 50px; font-size: 1em; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>🚧 Évasion du Chantier 🚧</h1>
+    
+    <div id="intro-area">
+        <p><strong>Ton histoire :</strong> Tu es un jeune apprenti ingénieur. Par accident, tu t'es retrouvé enfermé dans le "Secteur Z", un chantier expérimental hautement sécurisé. Les ingénieurs robotiques ont programmé 30 barrières de sécurité intelligentes. Pour désactiver chaque barrière et t'échapper avant l'activation des robots de surveillance, tu dois analyser le code linguistique des commandes. Identifie la classe du mot en gras dans chaque phrase pour ouvrir le passage ! Bonne chance !</p>
+        <button onclick="startGame()">Commencer l'évasion</button>
+    </div>
+
+    <div id="game-play" style="display:none;">
+        <div id="progress-bar"><div id="progress-fill">0%</div></div>
+        <div class="grid" id="door-grid"></div>
+        <div id="question-area">
+            <p id="scenario-text"></p>
+            <h2>Classe du mot ?</h2>
+            <div class="btn-group" id="options"></div>
+        </div>
+    </div>
+
+    <div id="final-screen">
+        🎉 INCROYABLE ! Tu as débloqué les 30 barrières ! Tu sors enfin du Secteur Z, juste à temps. Ton expertise en grammaire t'a sauvé !
+        <br><br><button onclick="location.reload()">Rejouer</button>
+    </div>
+</div>
+
+<script>
+    // Structure: w = mot cible, c = classe, p = phrase contextuelle (le mot w doit y être en gras)
+    const storyData = [
+        {w: "chantier", c: "Nom", p: "Tu regardes autour de toi : le <b>chantier</b> semble immense et désert."},
+        {w: "Cette", c: "Déterminant", p: "<b>Cette</b> zone est protégée par des détecteurs de mouvement."},
+        {w: "marches", c: "Verbe", p: "Tu <b>marches</b> prudemment vers la première barrière métallique."},
+        {w: "Pied", c: "Nom", p: "Soudain, tu bloques ton <b>pied</b> contre une poutre de fer."},
+        {w: "Il", c: "Pronom", p: "<b>Il</b> faut faire moins de bruit pour ne pas alerter les robots."},
+        {w: "épais", c: "Adjectif", p: "Un <b>épais</b> brouillard de poussière t'empêche de bien voir."},
+        {w: "Le", c: "Déterminant", p: "Tu aperçois <b>le</b> panneau de contrôle de la barrière 7."},
+        {w: "réfléchis", c: "Verbe", p: "Tu <b>réfléchis</b> vite à la classe de mots pour la désactiver."},
+        {w: "Murs", c: "Nom", p: "Les <b>murs</b> de béton semblent impossibles à escalader."},
+        {w: "Nous", c: "Pronom", p: "Tu penses : « <b>Nous</b> n'avons plus beaucoup de temps ! »"},
+        {w: "rouge", c: "Adjectif", p: "Une lumière <b>rouge</b> clignote sur le détecteur suivant."},
+        {w: "La", c: "Déterminant", p: "Tu dois trouver <b>la</b> faille dans le système numérique."},
+        {w: "vibration", c: "Nom", p: "Tu ressens une légère <b>vibration</b> sous tes chaussures."},
+        {w: "cours", c: "Verbe", p: "Tu <b>cours</b> vers l'abri le plus proche."},
+        {w: "Ils", c: "Pronom", p: "<b>Ils</b> arrivent ! Tu entends le bruit des moteurs des drones."},
+        {w: "immense", c: "Adjectif", p: "Une <b>immense</b> grue bloque le passage numéro 16."},
+        {w: "Un", c: "Déterminant", p: "Tu trouves <b>un</b> plan froissé sur le sol."},
+        {w: "caches", c: "Verbe", p: "Tu te <b>caches</b> derrière un pile de briques."},
+        {w: "Bruit", c: "Nom", p: "Un <b>bruit</b> métallique retentit juste derrière toi."},
+        {w: "Elle", c: "Pronom", p: "La porte 20 semble fragile. <b>Elle</b> pourrait céder."},
+        {w: "dangereux", c: "Adjectif", p: "Ce passage semble <b>dangereux</b>, mais tu n'as pas le choix."},
+        {w: "Ma", c: "Déterminant", p: "« <b>Ma</b> seule chance est de réussir ce code », penses-tu."},
+        {w: "grimpes", c: "Verbe", p: "Tu <b>grimpes</b> sur une échelle échafaudage branlante."},
+        {w: "Casque", c: "Nom", p: "Tu ajustes ton <b>casque</b> de protection."},
+        {w: "Vous", c: "Pronom", p: "Tu imagines les gardes : « <b>Vous</b> ne m'attraperez pas ! »"},
+        {w: "dernier", c: "Adjectif", p: "C'est le <b>dernier</b> secteur avant la sortie."},
+        {w: "Ton", c: "Déterminant", p: "<b>Ton</b> cœur bat très vite."},
+        {w: "aperçois", c: "Verbe", p: "Tu <b>aperçois</b> enfin la lumière de la rue."},
+        {w: "Liberté", c: "Nom", p: "La <b>liberté</b> est juste derrière cette ultime barrière."},
+        {w: "Je", c: "Pronom", p: "Tu souris : « <b>Je</b> suis presque sorti ! »"}
+    ];
+
+    const wordClasses = ["Nom", "Verbe", "Adjectif", "Déterminant", "Pronom"];
+    let currentLevel = 0;
+    const totalLevels = storyData.length;
+
+    function startGame() {
+        document.getElementById('intro-area').style.display = 'none';
+        document.getElementById('game-play').style.display = 'block';
+        initGrid();
+    }
+
+    function initGrid() {
+        const grid = document.getElementById('door-grid');
+        for(let i=0; i<totalLevels; i++) {
+            const d = document.createElement('div');
+            d.className = 'door';
+            d.id = `door-${i}`;
+            d.innerText = i + 1;
+            grid.appendChild(d);
+        }
+        updateGameStatus();
+    }
+
+    function updateGameStatus() {
+        if(currentLevel >= totalLevels) {
+            document.getElementById('game-play').style.display = 'none';
+            document.getElementById('final-screen').style.display = 'block';
+            return;
+        }
+        
+        document.querySelectorAll('.door').forEach((d, idx) => {
+            if(idx < currentLevel) d.className = 'door opened';
+            else if(idx === currentLevel) {
+                d.className = 'door active';
+                showScenario();
+            } else {
+                d.className = 'door'; // Reset for rejouer
+            }
+        });
+        
+        const progressPercent = Math.round((currentLevel / totalLevels) * 100);
+        const fill = document.getElementById('progress-fill');
+        fill.style.width = progressPercent + "%";
+        fill.innerText = progressPercent + "%";
+    }
+
+    function showScenario() {
+        const currentData = storyData[currentLevel];
+        document.getElementById('question-area').style.display = 'block';
+        document.getElementById('scenario-text').innerHTML = `Barrière ${currentLevel + 1} : ${currentData.p}`;
+        
+        const opts = document.getElementById('options');
+        opts.innerHTML = '';
+        wordClasses.forEach(className => {
+            const btn = document.createElement('button');
+            btn.innerText = className;
+            btn.onclick = () => checkAnswer(className);
+            opts.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedClass) {
+        if(selectedClass === storyData[currentLevel].c) {
+            currentLevel++;
+            updateGameStatus();
+        } else {
+            // Feedback visuel d'erreur rapide (shake)
+            const qArea = document.getElementById('question-area');
+            qArea.style.animation = 'none';
+            qArea.offsetHeight; // trigger reflow
+            qArea.style.animation = 'shake 0.5s';
+            qArea.style.borderColor = '#f44336';
+            setTimeout(()=> qArea.style.borderColor = 'var(--primary)', 500);
+        }
+    }
+</script>
+
+<style>
+/* Animation d'erreur supplémentaire */
+@keyframes shake {
+  0%, 100% {transform: translateX(0);}
+  10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+  20%, 40%, 60%, 80% {transform: translateX(5px);}
+}
+</style>
+
+</body>
+</html>
