@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu d'Évasion : Le Jardin du Printemps (ill, ail, eil, euil, ouille)</title>
+    <style>
+        :root {
+            --spring-green: #22c55e;
+            --leaf-dark: #15803d;
+            --sun-yellow: #eab308;
+            --sun-light: #fef08a;
+            --bloom-pink: #ec4899;
+            --wood-brown: #78350f;
+            --bg-color: #f0fdf4;
+            --text-dark: #1e293b;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(234, 179, 8, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 950px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            border: 4px solid var(--spring-green);
+            border-top: 25px solid var(--sun-yellow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        h1 { color: var(--leaf-dark); margin-top: 0; font-size: 2.4rem; text-transform: uppercase; letter-spacing: 2px;}
+        h2 { color: var(--bloom-pink); font-weight: bold; font-size: 1.8rem; }
+        p { font-size: 1.25rem; line-height: 1.6; }
+
+        .progress-bar {
+            width: 100%; height: 18px; background: #e2e8f0;
+            border-radius: 9px; margin: 20px 0; border: 2px solid var(--leaf-dark);
+            overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, var(--sun-yellow), var(--spring-green));
+            transition: width 0.5s ease;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        .btn {
+            background: var(--spring-green); color: white;
+            border: 3px solid var(--leaf-dark); padding: 12px 25px;
+            font-size: 1.2rem; border-radius: 12px; cursor: pointer;
+            margin: 10px; font-family: var(--font-main); font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 5px 0 var(--leaf-dark);
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--leaf-dark); filter: brightness(1.1); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+        
+        .btn-pink { background: var(--bloom-pink); border-color: #be185d; box-shadow: 0 5px 0 #be185d; }
+        .btn-yellow { background: var(--sun-yellow); color: #451a03; border-color: #ca8a04; box-shadow: 0 5px 0 #ca8a04; }
+
+        /* Étape 1 */
+        .graine-box {
+            font-size: 2.2rem; font-weight: bold; margin: 20px auto; padding: 20px;
+            background: var(--sun-light); border: 4px dashed var(--sun-yellow); border-radius: 15px;
+            display: inline-block; min-width: 350px; color: var(--wood-brown);
+        }
+        .choix-container { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .btn-graine { font-size: 1.6rem; padding: 15px 30px; width: 150px; }
+
+        /* Étape 2 */
+        .marais-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; max-width: 800px; margin: 20px auto;
+        }
+        .nenouphar {
+            background: #bbf7d0; border: 4px solid var(--spring-green); padding: 15px;
+            border-radius: 50%; font-size: 1.4rem; font-weight: bold; color: var(--leaf-dark);
+            cursor: pointer; transition: all 0.2s; user-select: none;
+            aspect-ratio: 2 / 1; display: flex; align-items: center; justify-content: center;
+        }
+        .nenouphar.selected {
+            background: var(--bloom-pink); border-color: #9d174d; color: white;
+            transform: scale(0.95); box-shadow: inset 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Étape 3 */
+        .mur-texte {
+            background: #fffbeb; padding: 25px; border-radius: 15px; border: 4px solid var(--wood-brown);
+            text-align: left; font-size: 1.6rem; line-height: 2.2; margin-bottom: 20px;
+            color: #451a03;
+        }
+        .input-trou {
+            width: 95px; padding: 5px; font-size: 1.4rem; text-align: center;
+            border: 3px solid var(--bloom-pink); border-radius: 8px; margin: 0 5px;
+            font-family: var(--font-main); font-weight: bold; text-transform: lowercase;
+            background: white; color: var(--bloom-pink);
+        }
+
+        /* Étape 4 & 5 */
+        .devinette-box, .niveau-box {
+            background: #e0f2fe; padding: 15px 25px; border-radius: 15px; margin-bottom: 15px;
+            border-left: 8px solid #0284c7; text-align: left;
+        }
+        .niveau-box { background: #fef3c7; border-left-color: #d97706; }
+        .niveau-box h4 { margin: 0 0 5px 0; color: #b45309; font-size: 1.4rem; }
+        
+        .devinette-box p, .niveau-box p { margin: 0 0 10px 0; font-style: italic; font-size: 1.3rem; }
+        .input-devinette {
+            width: 100%; max-width: 300px; padding: 10px; font-size: 1.3rem;
+            border: 3px solid #0284c7; border-radius: 8px; font-family: var(--font-main);
+        }
+        .niveau-box .input-devinette { border-color: #d97706; }
+
+        /* Textes bonus */
+        .bonus-box {
+            text-align: left; background: white; padding: 30px;
+            border-radius: 15px; border: 3px solid var(--spring-green); margin-top: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .bonus-box h4 { margin-top: 0; color: var(--leaf-dark); font-size: 1.5rem; border-bottom: 2px solid var(--sun-yellow); padding-bottom: 10px; }
+        .bonus-box p { font-size: 1.25rem; line-height: 1.8; }
+        .highlight { font-weight: bold; color: var(--bloom-pink); }
+        .question-box { background: #fdf2f8; padding: 15px; border-radius: 10px; margin-top: 15px; font-size: 1.15rem; border-left: 5px solid var(--bloom-pink); }
+        
+        .feedback { min-height: 35px; margin-top: 15px; font-size: 1.4rem; font-weight: bold; }
+        .correct { color: #15803d; }
+        .wrong { color: #b91c1c; }
+        .emoji-art { font-size: 4.5rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Le Jardin d'Évasion 🌸</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🔐</span>
+        <h2>Évasion du Jardin Secret</h2>
+        <p>Oh non ! Le grand portail du jardin printanier est verrouillé. Pour sortir, tu dois prouver que tu maîtrises parfaitement les sons <b>ill, ail, eil, euil</b> et <b>ouille</b>.<br><br>C'est l'épreuve ultime. Attention aux pièges, le gardien du jardin a caché des mots difficiles ! Es-tu prêt.e pour le niveau final ?</p>
+        <button class="btn btn-large btn-pink" onclick="nextStep()">Commencer l'évasion !</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="emoji-art">🌱</span>
+        <h2>Épreuve 1 : Les deux chemins</h2>
+        <p>Regarde bien le <b>déterminant</b> (un/le ou une/la). S'il est masculin, le son s'écrit avec un seul <b>L</b>. S'il est féminin, il prend <b>LLE</b> ! Choisis la bonne graine pour faire pousser le mot.</p>
+        
+        <div class="graine-box" id="mot-graine">...</div>
+        
+        <div class="choix-container" id="choix-container">
+            <button class="btn btn-graine btn-yellow" id="btn-choix-1" onclick="verifierGraine(1)">choix 1</button>
+            <button class="btn btn-graine btn-pink" id="btn-choix-2" onclick="verifierGraine(2)">choix 2</button>
+        </div>
+        
+        <p id="graine-compteur" style="font-size: 1.2rem; margin-top: 20px; font-weight: bold;">Mots trouvés : 0 / 10</p>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="emoji-art">🐸</span>
+        <h2>Épreuve 2 : Le pont des nénuphars</h2>
+        <p>Attention ! Pour traverser, tu dois cliquer <b>SEULEMENT</b> sur les nénuphars où « ill » fait le son « y » (comme dans <b>coquillage</b>). <br>Évite les mots pièges où « ill » fait le son « L » (comme dans la <i>ville</i>), sinon tu vas tomber à l'eau !</p>
+        
+        <div class="marais-grid">
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="oui">famille</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="non">ville</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="oui">chenille</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="non">mille</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="oui">coquillage</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="non">tranquille</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="oui">fille</div>
+            <div class="nenouphar" onclick="toggleNenuphar(this)" data-valide="non">village</div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierMarais()">Traverser le pont</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="emoji-art">🧱</span>
+        <h2>Épreuve 3 : Le mur de lierre</h2>
+        <p>Écris les lettres manquantes pour réparer le mur. Attention de bien accorder selon le mot (féminin = lle, masculin = l).</p>
+        
+        <div class="mur-texte">
+            "Le matin, le sol<input type="text" class="input-trou" id="t-1" maxlength="6"> (eil/eille) brille. 
+            Une petite ab<input type="text" class="input-trou" id="t-2" maxlength="6"> (eil/eille) se pose sur la 
+            f<input type="text" class="input-trou" id="t-3" maxlength="6"> (euil/euille) d'un arbre. En bas, 
+            un bel écur<input type="text" class="input-trou" id="t-4" maxlength="6"> (euil/euille) cherche à manger."
+        </div>
+        
+        <button class="btn btn-large btn-yellow" onclick="verifierMur()">Réparer le mur</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="emoji-art">🌳</span>
+        <h2>Épreuve 4 : L'énigme du vieux chêne</h2>
+        <p>Trouve les mots cachés derrière ces devinettes. Ils contiennent tous un de nos sons vedettes !</p>
+
+        <div class="devinette-box">
+            <p>1. Je suis l'amie verte du crapaud et je fais "croa" (ouille) :</p>
+            <input type="text" class="input-devinette" id="d-1" placeholder="la ...">
+        </div>
+        <div class="devinette-box">
+            <p>2. Je suis un petit animal roux à la queue touffue qui adore les noisettes (euil) :</p>
+            <input type="text" class="input-devinette" id="d-2" placeholder="l' ...">
+        </div>
+        <div class="devinette-box">
+            <p>3. Je suis le légume qui pique les yeux quand on me coupe (ail) :</p>
+            <input type="text" class="input-devinette" id="d-3" placeholder="l' ...">
+        </div>
+
+        <button class="btn btn-large btn-pink" onclick="verifierDevinettes()">Valider les mots !</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="emoji-art">🏅</span>
+        <h2>Épreuve 5 : Le défi des 3 niveaux</h2>
+        <p>Le gardien te lance un tout dernier défi en trois temps avant d'ouvrir la porte. Prouve que tu es un expert !</p>
+
+        <div class="niveau-box">
+            <h4>Niveau 1 (Facile) - L'anagramme</h4>
+            <p>Remets les lettres dans l'ordre pour trouver un insecte en "eille" : <b>B - I - A - L - E - L - E</b></p>
+            <input type="text" class="input-devinette" id="niv-1" placeholder="une ...">
+        </div>
+
+        <div class="niveau-box">
+            <h4>Niveau 2 (Moyen) - L'intrus</h4>
+            <p>Lequel de ces mots est un piège ? (Celui où le "ill" se prononce "L") <br><i>fille - coquille - ville - chenille</i></p>
+            <input type="text" class="input-devinette" id="niv-2" placeholder="le mot intrus est...">
+        </div>
+
+        <div class="niveau-box">
+            <h4>Niveau 3 (Difficile) - La faute</h4>
+            <p>Un seul de ces mots est <b>mal orthographié</b>. Lequel ? <br><i>un chandail - une feuil - la volaille - un détail</i></p>
+            <input type="text" class="input-devinette" id="niv-3" placeholder="le mot mal écrit est...">
+        </div>
+
+        <button class="btn btn-large btn-yellow" onclick="verifierNiveaux()">Déverrouiller le portail !</button>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+
+    <div id="step-6" class="step">
+        <span class="emoji-art">🎉</span>
+        <h2>Évasion réussie ! </h2>
+        <p>Incroyable ! Tu as déjoué absolument tous les pièges du gardien. Tu es un Maître de l'orthographe ! Le portail s'ouvre sur un magnifique printemps.<br>Voici trois beaux cadeaux de la nature à lire tranquillement pour te reposer.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : Le réveil de la nature</h4>
+            <p>C'est le matin. Le <span class="highlight">soleil</span> brille dans le ciel bleu et ses chauds rayons passent par le grand <span class="highlight">portail</span> du jardin botanique. Sur la branche d'un chêne centenaire, un petit <span class="highlight">écureuil</span> très agile grignote une noisette avec un appétit féroce. Une courageuse <span class="highlight">abeille</span> s'envole de fleur en fleur pour récolter le précieux nectar sucré de la journée. C'est une vraie <span class="highlight">merveille</span> de voir la nature s'éveiller après un long hiver. Plus loin, sous une énorme <span class="highlight">feuille</span> de nénuphar, une petite <span class="highlight">grenouille</span> verte attend patiemment qu'une mouche dodue passe à sa portée pour l'attraper avec sa longue langue. L'air sent bon le gazon frais et la terre humide !</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Quels sont les deux mots masculins (qui se terminent par un seul L) dans ce texte ?<br>
+                2. Que fait l'écureuil sur sa branche ?<br>
+                3. Comment décrirais-tu la feuille sous laquelle se cache la grenouille ?
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : La bataille du jardinier</h4>
+            <p>Aujourd'hui, le vieux jardinier a énormément de <span class="highlight">travail</span> ! Dès l'aube, il enfile son vieux chapeau de paille usé pour se protéger de la chaleur qui s'annonce écrasante. Il doit couper les mauvaises herbes rebelles qui poussent près du grand mur de <span class="highlight">pierres</span>, mais il fait très attention : il ne veut surtout pas écraser la minuscule <span class="highlight">chenille</span> poilue qui s'y promène tranquillement. Soudain, il entend un étrange bruit dans les gros buissons de framboisiers. C'est le jeune chat de la <span class="highlight">famille</span> qui bondit et joue avec un majestueux <span class="highlight">papillon</span> jaune. Le jardinier soupire en voyant les pots renversés et la terre éparpillée partout. Quel <span class="highlight">fouillis</span> dans ce beau jardin ! Il va falloir tout ranger avant la nuit.</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Repère trois mots qui s'écrivent avec "ill" ou "aille".<br>
+                2. Pourquoi le jardinier fait-il attention près du mur de pierres ?<br>
+                3. Avec qui le jeune chat s'amuse-t-il dans les framboisiers ?
+            </div>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : Une soupe étonnante</h4>
+            <p>Ce soir, papa a décidé de préparer sa fameuse soupe printanière spéciale. Sur le comptoir de la cuisine, il coupe du <span class="highlight">fenouil</span> frais et ajoute une très grosse gousse d'<span class="highlight">ail</span> pour donner beaucoup de goût. Dans la cuisinière, maman surveille une belle <span class="highlight">volaille</span> qui rôtit lentement au four avec de l'huile d'olive et quelques branches de thym. Les odeurs délicieuses remplissent toute la maison. Pendant que le repas cuit, je suis installé confortablement : je lis mon gros livre d'aventures sur mon <span class="highlight">fauteuil</span> préféré dans le salon. Notre vieux chat, lui, <span class="highlight">sommeille</span> doucement sur le tapis chaud et ronronne de bonheur. Tout est très calme et <span class="highlight">tranquille</span>... mais oups ! Papa a oublié d'éteindre l'eau de l'évier, et maintenant ça <span class="highlight">mouille</span> tout le plancher de la cuisine ! Vite, il faut des serviettes !</p>
+            <div class="question-box">
+                <b>Questions de compréhension :</b><br>
+                1. Trouve le mot piège dans ce texte, où le "ill" se prononce "L".<br>
+                2. Que rajoute le papa pour donner beaucoup de goût à sa soupe ?<br>
+                3. Quel problème arrive à la toute fin de l'histoire ?
+            </div>
+        </div>
+
+        <button class="btn btn-large btn-spring" style="background:var(--leaf-dark); color:white; margin-top:20px; width:100%;" onclick="location.reload()">Rejouer l'Évasion</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 6; // On a maintenant 6 étapes au total !
+
+    // --- Étape 1 : Le genre ---
+    const motsGraine = [
+        { mot: "un rév___", c1: "eil", c2: "eille", rep: 1 },
+        { mot: "une ab___", c1: "eil", c2: "eille", rep: 2 },
+        { mot: "un écur___", c1: "euil", c2: "euille", rep: 1 },
+        { mot: "une f___", c1: "euil", c2: "euille", rep: 2 },
+        { mot: "un port___", c1: "ail", c2: "aille", rep: 1 },
+        { mot: "une méd___", c1: "ail", c2: "aille", rep: 2 },
+        { mot: "le fen___", c1: "ouil", c2: "ouille", rep: 1 },
+        { mot: "la gren___", c1: "ouil", c2: "ouille", rep: 2 },
+        { mot: "un épouvant___", c1: "ail", c2: "aille", rep: 1 },
+        { mot: "une or___", c1: "eil", c2: "eille", rep: 2 }
+    ];
+    let graineIndex = 0;
+
+    function initGraine() {
+        afficherGraine();
+    }
+
+    function afficherGraine() {
+        if (graineIndex < motsGraine.length) {
+            const data = motsGraine[graineIndex];
+            document.getElementById('mot-graine').innerText = data.mot;
+            document.getElementById('btn-choix-1').innerText = data.c1;
+            document.getElementById('btn-choix-2').innerText = data.c2;
+        } else {
+            document.getElementById('mot-graine').innerText = "Bravo !";
+            document.getElementById('choix-container').style.display = "none";
+            document.getElementById('f-1').innerHTML = "<span class='correct'>Épreuve réussie ! Tu maîtrises le masculin et le féminin. ✅</span>";
+            setTimeout(nextStep, 1500);
+        }
+    }
+
+    function verifierGraine(choix) {
+        if (graineIndex >= motsGraine.length) return;
+        
+        const data = motsGraine[graineIndex];
+        const fb = document.getElementById('f-1');
+
+        if (choix === data.rep) {
+            graineIndex++;
+            document.getElementById('graine-compteur').innerText = `Mots trouvés : ${graineIndex} / 10`;
+            fb.innerHTML = "<span class='correct'>Bonne graine ! 🌱</span>";
+            setTimeout(() => { fb.innerHTML = ""; afficherGraine(); }, 600);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Oups ! Regarde bien si c'est masculin ou féminin !</span>";
+        }
+    }
+
+    // --- Étape 2 : Le Marais ---
+    function toggleNenuphar(el) {
+        el.classList.toggle('selected');
+    }
+
+    function verifierMarais() {
+        const nenuphars = document.querySelectorAll('.nenouphar');
+        let toutBon = true;
+        
+        nenuphars.forEach(n => {
+            const estValide = n.getAttribute('data-valide') === 'oui';
+            const estSelectionne = n.classList.contains('selected');
+            
+            if ((estValide && !estSelectionne) || (!estValide && estSelectionne)) {
+                toutBon = false;
+                if(!estValide && estSelectionne) {
+                    n.style.backgroundColor = "#ef4444"; 
+                    n.style.color = "white";
+                }
+            } else {
+                if(estValide && estSelectionne) {
+                     n.style.backgroundColor = "var(--spring-green)";
+                }
+            }
+        });
+
+        const fb = document.getElementById('f-2');
+        if (toutBon) {
+            fb.innerHTML = "<span class='correct'>Fantastique ! Tu as évité tous les mots pièges ! 🐸</span>";
+            setTimeout(nextStep, 2000);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Le pont tremble ! Tu as oublié des mots ou cliqué sur un piège (ville, mille, etc.) !</span>";
+            setTimeout(() => {
+                nenuphars.forEach(n => { n.style.backgroundColor = ""; n.style.color = ""; });
+            }, 2000);
+        }
+    }
+
+    // --- Étape 3 : Texte à trous ---
+    function verifierMur() {
+        const t1 = document.getElementById('t-1').value.toLowerCase().trim();
+        const t2 = document.getElementById('t-2').value.toLowerCase().trim();
+        const t3 = document.getElementById('t-3').value.toLowerCase().trim();
+        const t4 = document.getElementById('t-4').value.toLowerCase().trim();
+        
+        const fb = document.getElementById('f-3');
+
+        if(t1 === "eil" && t2 === "eille" && t3 === "euille" && t4 === "euil") {
+            fb.innerHTML = "<span class='correct'>Mur réparé à la perfection ! 🧱</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Il y a des erreurs dans ton ciment ! Relis bien.</span>";
+        }
+    }
+
+    // --- Étape 4 : Devinettes (Modifiées) ---
+    function verifierDevinettes() {
+        let d1 = document.getElementById('d-1').value.toLowerCase().trim();
+        let d2 = document.getElementById('d-2').value.toLowerCase().trim();
+        let d3 = document.getElementById('d-3').value.toLowerCase().trim();
+        
+        // Nettoyage des déterminants
+        d1 = d1.replace(/^(la |une )/i, "").trim();
+        d2 = d2.replace(/^(le |l'|un )/i, "").trim();
+        d3 = d3.replace(/^(le |l'|un )/i, "").trim();
+
+        const fb = document.getElementById('f-4');
+
+        // Réponse 2 est maintenant l'écureuil !
+        if (d1 === "grenouille" && (d2 === "écureuil" || d2 === "ecureuil") && (d3 === "ail" || d3 === "ail ")) {
+            fb.innerHTML = "<span class='correct'>Bravo ! Le vieux chêne te laisse passer... 🗝️</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Les esprits de la forêt refusent cette réponse. Cherche encore !</span>";
+        }
+    }
+
+    // --- Étape 5 : Les 3 Niveaux ---
+    function verifierNiveaux() {
+        let n1 = document.getElementById('niv-1').value.toLowerCase().trim();
+        let n2 = document.getElementById('niv-2').value.toLowerCase().trim();
+        let n3 = document.getElementById('niv-3').value.toLowerCase().trim();
+        
+        n1 = n1.replace(/^(la |une )/i, "").trim();
+        n3 = n3.replace(/^(la |une )/i, "").trim();
+
+        const fb = document.getElementById('f-5');
+
+        if (n1 === "abeille" && n2 === "ville" && (n3 === "feuil" || n3 === "une feuil")) {
+            fb.innerHTML = "<span class='correct'>CLIC ! Le grand portail s'ouvre enfin ! 🔓</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Une des trois réponses est fausse ! Revérifie tes niveaux !</span>";
+        }
+    }
+
+    // --- Utilitaires ---
+    function animShake() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = (currentStep / totalSteps) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        if(currentStep === 1) initGraine();
+    }
+</script>
+
+</body>
+</html>
