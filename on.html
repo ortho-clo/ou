@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 2 : Le Son ON</title>
+    <style>
+        body { background: #e67e22; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); border: 4px solid #d35400; }
+        .mot { font-size: 3.5rem; color: #d35400; margin: 20px 0; font-weight: bold; text-transform: uppercase; }
+        .btn-box { display: flex; gap: 20px; justify-content: center; }
+        button { padding: 15px 35px; font-size: 1.3rem; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .oui { background: #27ae60; } .non { background: #c0392b; }
+        #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 30px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div style="font-size: 50px;">🔍</div>
+    <div style="color: #666;">Mission 2 : Entends-tu <b>"ON"</b> ?</div>
+    <div id="mot-affiche" class="mot">---</div>
+    <div class="btn-box">
+        <button class="oui" onclick="repondre(true)">OUI</button>
+        <button class="non" onclick="repondre(false)">NON</button>
+    </div>
+    <div id="feedback"></div>
+</div>
+
+<script>
+    const defis = [
+        {m: "Ballon", r: true},
+        {m: "Maison", r: true},
+        {m: "Château", r: false},
+        {m: "Cochon", r: true},
+        {m: "Lapin", r: false}
+    ];
+    let etape = 0;
+
+    function actualiser() {
+        if(etape < defis.length) {
+            document.getElementById('mot-affiche').innerText = defis[etape].m;
+            document.getElementById('feedback').innerText = "";
+        } else {
+            document.querySelector('.card').innerHTML = "<h1>🎖️ INDICE TROUVÉ !</h1><p>Bravo détective !</p><p>Le mot de passe du badge 2 est :</p><h2 style='color:#d35400'>DRAGON-99</h2>";
+        }
+    }
+
+    function repondre(choix) {
+        if(choix === defis[etape].r) {
+            document.getElementById('feedback').innerHTML = "<span style='color:green'>✅ OUI !</span>";
+            etape++;
+            setTimeout(actualiser, 800);
+        } else {
+            document.getElementById('feedback').innerHTML = "<span style='color:red'>❌ Regarde bien...</span>";
+        }
+    }
+    actualiser();
+</script>
+</body>
+</html>
