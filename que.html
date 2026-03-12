@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La jungle des moustiques : à la chasse au son que</title>
+    <style>
+        :root {
+            --jungle-dark: #0a1f0a;
+            --leaf-green: #2e8b57;
+            --light-green: #98fb98;
+            --wood-brown: #8b4513;
+            --mosquito-red: #e57373;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--jungle-dark);
+            background-image: radial-gradient(circle at 50% 50%, #1a331a 0%, #0a1f0a 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Liane décorative */
+        .lianes-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200"><path d="M 50 0 Q 20 50 50 100 T 50 200" fill="none" stroke="rgba(46, 139, 87, 0.2)" stroke-width="5"/></svg>') repeat-x;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: rgba(10, 31, 10, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(46, 139, 87, 0.5);
+            border: 4px solid var(--leaf-green);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 { 
+            color: var(--light-green); 
+            margin-top: 0; 
+            text-shadow: 0 0 10px rgba(152, 251, 152, 0.5);
+            font-weight: normal;
+        }
+        
+        h2, h3, h4 { color: var(--wood-brown); font-weight: bold; text-shadow: 1px 1px 2px #000; }
+        .bonus-box h4 { color: var(--light-green); }
+
+        .progress-bar {
+            width: 100%; height: 15px;
+            background: #000;
+            border-radius: 10px; margin: 20px 0;
+            border: 2px solid var(--leaf-green);
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--leaf-green), var(--light-green));
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--light-green);
+        }
+
+        .step { display: none; animation: fadeIn 0.8s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes fadeIn { 
+            0% { opacity: 0; transform: translateY(10px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s; border-color: var(--mosquito-red) !important; }
+
+        /* Animation moustique */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(-5deg); }
+        }
+
+        .btn {
+            background: rgba(0,0,0,0.4);
+            color: var(--light-green);
+            border: 2px solid var(--leaf-green);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--leaf-green); 
+            color: #fff;
+            box-shadow: 0 0 15px var(--leaf-green);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+
+        /* Boutons moustiques */
+        .btn-moustique {
+            border-radius: 50%;
+            width: 110px; height: 110px;
+            background: rgba(139, 69, 19, 0.4);
+            border: 3px dashed var(--leaf-green);
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+            animation: float 3s infinite ease-in-out;
+        }
+        .btn-moustique span { font-size: 2.5rem; margin-bottom: 5px; }
+        .btn-moustique:hover { background: rgba(139, 69, 19, 0.8); }
+
+        /* Boutons casse-tête */
+        .puzzle-piece {
+            display: inline-block;
+            background: var(--wood-brown);
+            color: #fff;
+            padding: 15px 25px;
+            margin: 5px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #5c2e0b;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        .puzzle-piece:hover { transform: scale(1.1); background: #a0522d; }
+        .puzzle-piece.hidden { visibility: hidden; }
+
+        .puzzle-answer-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px dashed var(--light-green);
+            min-height: 60px;
+            border-radius: 10px;
+            margin: 20px auto;
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: var(--light-green);
+        }
+
+        .phrase-cliquable { font-size: 1.5rem; line-height: 2; margin: 20px 0; }
+        .mot-cliquable {
+            display: inline-block; padding: 5px 10px; margin: 0 2px;
+            background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;
+            border-bottom: 2px dashed rgba(255,255,255,0.3);
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(152, 251, 152, 0.2); border-bottom-color: var(--light-green); }
+
+        .emoji-art { font-size: 4rem; display: block; margin-bottom: 15px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.3rem; }
+        .correct { color: var(--light-green); text-shadow: 0 0 5px var(--light-green); }
+        .wrong { color: var(--mosquito-red); text-shadow: 0 0 5px var(--mosquito-red); }
+
+        .text-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px; border-radius: 12px; font-style: italic;
+            border-left: 5px solid var(--wood-brown);
+            margin: 15px auto; width: 85%; font-size: 1.3rem; line-height: 1.6;
+        }
+
+        .level-tag {
+            display: inline-block; background: var(--wood-brown); color: #fff;
+            padding: 5px 15px; border-radius: 20px; font-size: 1rem;
+            margin-bottom: 10px; border: 1px solid #5c2e0b;
+        }
+
+        .bonus-box {
+            text-align: left; background: rgba(255,255,255,0.05); padding: 25px;
+            border-radius: 12px; border: 2px solid var(--leaf-green); margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--light-green); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="lianes-bg"></div>
+
+<div id="game-container">
+    <h1>La jungle des moustiques 🌿</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🏕️</span>
+        <h2>Bienvenue dans la jungle !</h2>
+        <p>Prends ton filet à papillons et ta loupe. Pour traverser cette jungle, tu vas devoir chasser les mots qui contiennent le son /k/ écrit avec les lettres "qu" ou "q". Attention aux piqûres !</p>
+        <button class="btn btn-large" onclick="nextStep()">Commencer l'expédition</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Les moustiques (1/3)</span>
+        <span class="emoji-art">🦟</span>
+        <h3>La chasse aux syllabes</h3>
+        <p>Touche le moustique qui porte la syllabe "qui" :</p>
+        <div>
+            <button class="btn btn-moustique" style="animation-delay: 0s;" onclick="checkBtn(1, false)"><span>🦟</span>kri</button>
+            <button class="btn btn-moustique" style="animation-delay: 0.5s;" onclick="checkBtn(1, true)"><span>🦟</span>qui</button>
+            <button class="btn btn-moustique" style="animation-delay: 1s;" onclick="checkBtn(1, false)"><span>🦟</span>cui</button>
+            <button class="btn btn-moustique" style="animation-delay: 1.5s;" onclick="checkBtn(1, false)"><span>🦟</span>gui</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Les moustiques (2/3)</span>
+        <span class="emoji-art">🦜</span>
+        <h3>Les animaux de la jungle</h3>
+        <p>Lequel de ces animaux s'écrit avec les lettres "qu" ?</p>
+        <div>
+            <button class="btn btn-moustique" style="border-radius:15px; width:140px;" onclick="checkBtn(2, false)"><span>🐊</span>crocodile</button>
+            <button class="btn btn-moustique" style="border-radius:15px; width:140px;" onclick="checkBtn(2, true)"><span>🦜</span>perroquet</button>
+            <button class="btn btn-moustique" style="border-radius:15px; width:140px;" onclick="checkBtn(2, false)"><span>🐍</span>serpent</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Les moustiques (3/3)</span>
+        <span class="emoji-art">🦟</span>
+        <h3>La chasse aux mots</h3>
+        <p>Attrape le moustique qui porte un mot bien orthographié :</p>
+        <div>
+            <button class="btn btn-moustique" style="animation-delay: 0s; width:120px;" onclick="checkBtn(3, false)"><span>🦟</span>maske</button>
+            <button class="btn btn-moustique" style="animation-delay: 0.8s; width:120px;" onclick="checkBtn(3, false)"><span>🦟</span>masc</button>
+            <button class="btn btn-moustique" style="animation-delay: 0.4s; width:120px;" onclick="checkBtn(3, true)"><span>🦟</span>masque</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Sur la piste (1/2)</span>
+        <span class="emoji-art">🔍</span>
+        <h3>L'erreur du singe</h3>
+        <p>Un macaque a fait une faute d'orthographe. Clique sur le mot mal écrit :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">Je</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">me</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">suis</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">fait</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, true)">piker</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">par</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(4, false)">insecte.</span>
+        </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 2 - Sur la piste (2/2)</span>
+        <span class="emoji-art">🔍</span>
+        <h3>L'erreur du singe</h3>
+        <p>Touche le mot qui a besoin des lettres "qu" pour être réparé :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">Quatre</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">petits</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">singes</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">sont</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">en</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, true)">panike</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">l'arbre.</span>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 3 - Le casse-tête (1/3)</span>
+        <span class="emoji-art">🧩</span>
+        <h3>Le mot brisé du macaque</h3>
+        <p>Reconstruis le mot <b>MACAQUE</b> en cliquant sur les morceaux dans le bon ordre :</p>
+        
+        <div class="puzzle-answer-box" id="ans-6"></div>
+        
+        <div id="pieces-6">
+            <div class="puzzle-piece" id="p6-1" onclick="playPuzzle(6, 'que', 'p6-1', 'macaque', 3)">que</div>
+            <div class="puzzle-piece" id="p6-2" onclick="playPuzzle(6, 'ma', 'p6-2', 'macaque', 3)">ma</div>
+            <div class="puzzle-piece" id="p6-3" onclick="playPuzzle(6, 'ca', 'p6-3', 'macaque', 3)">ca</div>
+        </div>
+        
+        <button class="btn" onclick="resetPuzzle(6)">Recommencer ce mot</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - Le casse-tête (2/3)</span>
+        <span class="emoji-art">🧩</span>
+        <h3>Le mot brisé du perroquet</h3>
+        <p>Reconstruis le mot <b>MOUSTIQUE</b> en cliquant sur les morceaux :</p>
+        
+        <div class="puzzle-answer-box" id="ans-7"></div>
+        
+        <div id="pieces-7">
+            <div class="puzzle-piece" id="p7-1" onclick="playPuzzle(7, 'ti', 'p7-1', 'moustique', 3)">ti</div>
+            <div class="puzzle-piece" id="p7-2" onclick="playPuzzle(7, 'que', 'p7-2', 'moustique', 3)">que</div>
+            <div class="puzzle-piece" id="p7-3" onclick="playPuzzle(7, 'mous', 'p7-3', 'moustique', 3)">mous</div>
+        </div>
+        
+        <button class="btn" onclick="resetPuzzle(7)">Recommencer ce mot</button>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 3 - Le casse-tête (3/3)</span>
+        <span class="emoji-art">🧩</span>
+        <h3>Le mot brisé de l'explorateur</h3>
+        <p>Reconstruis le mot <b>ÉQUIPE</b> pour continuer l'aventure :</p>
+        
+        <div class="puzzle-answer-box" id="ans-8"></div>
+        
+        <div id="pieces-8">
+            <div class="puzzle-piece" id="p8-1" onclick="playPuzzle(8, 'pe', 'p8-1', 'équipe', 3)">pe</div>
+            <div class="puzzle-piece" id="p8-2" onclick="playPuzzle(8, 'qui', 'p8-2', 'équipe', 3)">qui</div>
+            <div class="puzzle-piece" id="p8-3" onclick="playPuzzle(8, 'é', 'p8-3', 'équipe', 3)">é</div>
+        </div>
+        
+        <button class="btn" onclick="resetPuzzle(8)">Recommencer ce mot</button>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="emoji-art">🏅</span>
+        <h2>Le roi de la jungle !</h2>
+        <p>Bravo ! Tu as évité toutes les piqûres et tu as résolu les casse-têtes des singes. Les mots en "qu" n'ont plus de secrets pour toi.</p>
+        
+        <div class="bonus-box">
+            <h4>Texte 1 : Le perroquet moqueur</h4>
+            <p>Dans la forêt tropicale, un beau <span class="highlight">perroquet</span> bleu s'amuse à faire peur aux autres animaux. Dès qu'un petit <span class="highlight">macaque</span> s'endort sur une branche, le perroquet pousse un grand cri : "Craaaac !". Le singe se réveille en <span class="highlight">panique</span> et manque de tomber. Le perroquet trouve cela très comique. Mais un jour, il s'approche trop près d'un nid de guêpes pour leur faire une blague. Les insectes en colère se mettent à le <span class="highlight">piquer</span> sur le bec. Le perroquet s'enfuit en criant pour de vrai, et cette fois, ce sont les petits singes qui rigolent !</p>
+            <hr style="border-top:1px solid var(--leaf-green); margin: 20px 0;">
+            <small><b>Questions de repérage :</b><br>
+            1. De quelle couleur est le perroquet du texte ?<br>
+            2. Que fait le singe quand il est réveillé en panique ?<br>
+            3. Qui finit par piquer le bec du perroquet ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 2 : La mission de l'équipe</h4>
+            <p>Aujourd'hui, une <span class="highlight">équipe</span> de quatre explorateurs courageux avance dans la jungle avec des sacs à dos. Il fait très chaud sous les grands arbres. Soudain, ils s'arrêtent devant une magnifique fleur rose : c'est une <span class="highlight">orchidée</span> rare. La cheffe du groupe sort délicatement son appareil photo pour garder un souvenir. Mais pendant ce temps, une armée de <span class="highlight">moustiques</span> affamés les repère. "Vite, sortez la crème !" crie un explorateur. Heureusement, ils ont de quoi se protéger sous leur <span class="highlight">casquette</span>.</p>
+            <hr style="border-top:1px solid var(--leaf-green); margin: 20px 0;">
+            <small><b>Questions cherche et trouve :</b><br>
+            1. Trouve et écris trois mots du texte qui contiennent les lettres "qu".<br>
+            2. Combien y a-t-il d'explorateurs dans ce groupe ?<br>
+            3. Comment s'appelle la fleur rare qu'ils ont trouvée ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Texte 3 : Le concert de la forêt</h4>
+            <p>À la tombée de la nuit, la forêt se transforme en salle de <span class="highlight">musique</span>. Près de la grande mare, un énorme crapaud commence à chanter avec sa voix grave. Très vite, il est rejoint par un chœur de petites grenouilles vertes. Pour garder le rythme, un pic-vert frappe son bec contre un vieux tronc de chêne : toc, toc, toc ! Même les <span class="highlight">moustiques</span> participent en faisant vibrer leurs ailes pour créer une petite <span class="highlight">musique</span> aiguë. C'est un spectacle <span class="highlight">magnifique</span> que seuls les animaux connaissent.</p>
+            <hr style="border-top:1px solid var(--leaf-green); margin: 20px 0;">
+            <small><b>Inférence et mission de dessin :</b><br>
+            1. Inférence : D'après toi, est-ce que des humains assistent souvent à ce concert ? Qu'est-ce qui te le fait dire dans le texte ?<br>
+            2. Mission de l'apprenti explorateur : Dessine la scène de ce concert nocturne. N'oublie pas le grand crapaud, le pic-vert et les moustiques !
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer l'expédition</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 9;
+
+    // Variables pour les casse-têtes
+    let puzzleStates = {
+        6: { currentAnswer: [], targetLength: 0, targetWord: "" },
+        7: { currentAnswer: [], targetLength: 0, targetWord: "" },
+        8: { currentAnswer: [], targetLength: 0, targetWord: "" }
+    };
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            // Son type flûte de pan (arpège rapide)
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Do
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi
+            osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // Sol
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        } else {
+            // Son de moustique agaçant + petite tape
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(350, audioCtx.currentTime + 0.2);
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); // tape
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime + 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Bien joué ! 🦋</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Bzzzt ! Ouille, ça pique ! 🦟</span>";
+        }
+    }
+
+    // Fonctions pour le casse-tête
+    function playPuzzle(stepNum, pieceText, pieceId, targetWord, targetLength) {
+        let state = puzzleStates[stepNum];
+        state.targetWord = targetWord;
+        state.targetLength = targetLength;
+        
+        // Ajouter la syllabe à la réponse
+        state.currentAnswer.push(pieceText);
+        
+        // Cacher le bouton cliqué
+        document.getElementById(pieceId).classList.add('hidden');
+        
+        // Mettre à jour l'affichage
+        document.getElementById('ans-' + stepNum).innerText = state.currentAnswer.join('');
+        
+        // Vérifier si toutes les pièces ont été cliquées
+        if(state.currentAnswer.length === state.targetLength) {
+            checkPuzzle(stepNum);
+        }
+    }
+
+    function checkPuzzle(stepNum) {
+        const fb = document.getElementById('f-' + stepNum);
+        let state = puzzleStates[stepNum];
+        let finalWord = state.currentAnswer.join('');
+        
+        if(finalWord === state.targetWord) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Le casse-tête est résolu ! 🧩✨</span>";
+            setTimeout(nextStep, 1200);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Oups ! Les morceaux sont mal placés. Recommence !</span>";
+        }
+    }
+
+    function resetPuzzle(stepNum) {
+        let state = puzzleStates[stepNum];
+        state.currentAnswer = [];
+        document.getElementById('ans-' + stepNum).innerText = "";
+        document.getElementById('f-' + stepNum).innerHTML = "";
+        
+        // Réafficher toutes les pièces de cette étape
+        let container = document.getElementById('pieces-' + stepNum);
+        let pieces = container.getElementsByClassName('puzzle-piece');
+        for(let piece of pieces) {
+            piece.classList.remove('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>
