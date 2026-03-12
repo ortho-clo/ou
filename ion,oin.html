@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panique à la ferme : Le mystère des OIN et ION</title>
+    <style>
+        :root {
+            --farm-green: #4ade80;
+            --dark-green: #166534;
+            --barn-red: #dc2626;
+            --wood-brown: #854d0e;
+            --straw-yellow: #fde047;
+            --sky-blue: #7dd3fc;
+            --font-main: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--sky-blue);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(74, 222, 128, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 80% 90%, rgba(133, 77, 14, 0.2) 0%, transparent 40%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            border: 4px solid var(--wood-brown);
+            border-top: 20px solid var(--barn-red);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 { color: var(--barn-red); margin-top: 0; font-size: 2.2rem; text-shadow: 2px 2px 0px var(--straw-yellow); }
+        h2 { color: var(--dark-green); font-weight: bold; }
+        p { font-size: 1.2rem; line-height: 1.6; }
+
+        .progress-bar {
+            width: 100%; height: 16px; background: #e2e8f0;
+            border-radius: 8px; margin: 20px 0; border: 2px solid var(--wood-brown);
+            overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: var(--farm-green);
+            transition: width 0.5s ease;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        .btn {
+            background: var(--farm-green); color: white;
+            border: 3px solid var(--dark-green); padding: 12px 25px;
+            font-size: 1.2rem; border-radius: 10px; cursor: pointer;
+            margin: 10px; font-family: var(--font-main); font-weight: bold;
+            transition: all 0.2s; box-shadow: 0 4px 0 var(--dark-green);
+        }
+        .btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 var(--dark-green); filter: brightness(1.1); }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; }
+        .btn-red { background: var(--barn-red); border-color: #7f1d1d; box-shadow: 0 4px 0 #7f1d1d; }
+
+        /* Étape 1 : Trieuse */
+        .machine-mot {
+            font-size: 3rem; font-weight: bold; margin: 30px 0; padding: 20px;
+            background: #f8fafc; border: 4px dashed var(--wood-brown); border-radius: 15px;
+            display: inline-block; min-width: 250px;
+        }
+        .btn-tri { font-size: 2rem; padding: 20px 40px; margin: 0 15px; }
+
+        /* Étape 2 : Interrupteurs */
+        .switch-grid { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto; }
+        .switch-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f1f5f9; padding: 10px 20px; border-radius: 10px; border: 2px solid var(--wood-brown);
+            font-size: 1.5rem;
+        }
+        .switch-btn {
+            background: var(--straw-yellow); color: var(--wood-brown); border: 2px solid var(--wood-brown);
+            padding: 5px 15px; font-size: 1.5rem; font-weight: bold; border-radius: 8px; cursor: pointer;
+            min-width: 80px; text-align: center; user-select: none; transition: background 0.2s;
+        }
+        .switch-btn:hover { background: #facc15; }
+
+        /* Étape 3 : Code */
+        .reading-text {
+            background: #ffedd5; padding: 20px; border-radius: 10px; border-left: 6px solid var(--wood-brown);
+            text-align: left; font-size: 1.3rem; margin-bottom: 20px;
+        }
+        .code-inputs { display: flex; justify-content: center; gap: 20px; }
+        .code-box { text-align: center; }
+        .code-box input {
+            width: 60px; height: 60px; font-size: 2rem; text-align: center;
+            border: 3px solid var(--dark-green); border-radius: 10px; font-weight: bold;
+        }
+        
+        /* Général */
+        input[type="text"] {
+            font-family: var(--font-main); padding: 15px; font-size: 1.4rem;
+            border: 3px solid var(--wood-brown); border-radius: 10px;
+            width: 80%; max-width: 300px; text-align: center;
+        }
+        .feedback { min-height: 35px; margin-top: 15px; font-size: 1.3rem; font-weight: bold; }
+        .correct { color: var(--dark-green); }
+        .wrong { color: var(--barn-red); }
+        .emoji-art { font-size: 4rem; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Panique à la ferme 🚜</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🐷</span>
+        <h2>Oh non ! Les cochons ont tout mélangé !</h2>
+        <p>Le fermier Tremblay a besoin de ton aide. Les petits cochons se sont amusés à mélanger les sacs de nourriture. Les sons <b>OIN</b> (comme f<b>oin</b>) et <b>ION</b> (comme cam<b>ion</b>) sont éparpillés partout !<br><br>Prouve que tu as un œil de lynx pour tout remettre en ordre.</p>
+        <button class="btn btn-large" onclick="nextStep()">Entrer dans la grange</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="emoji-art">⚖️</span>
+        <h2>La machine de tri</h2>
+        <p>Regarde bien le mot qui apparaît. Contient-il le son <b>OIN</b> ou <b>ION</b> ? Clique sur le bon bouton ! Attention, tu dois réussir 8 mots.</p>
+        
+        <div class="machine-mot" id="mot-a-trier">...</div>
+        <br>
+        <button class="btn btn-tri btn-red" onclick="trierMot('oin')">OIN 🌾</button>
+        <button class="btn btn-tri" onclick="trierMot('ion')">ION 🚛</button>
+        
+        <p id="tri-compteur">Mots triés : 0 / 8</p>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="emoji-art">🛠️</span>
+        <h2>Le tableau de bord cassé</h2>
+        <p>Pour démarrer le tracteur, tu dois réparer les mots. <b>Clique sur les cases jaunes</b> pour changer la syllabe (OIN ou ION) jusqu'à ce que tous les mots soient bien écrits.</p>
+        
+        <div class="switch-grid">
+            <div class="switch-row">
+                <span>1. Le champ</span>
+                <div class="switch-btn" onclick="toggleSwitch(this)" data-correct="ion">oin</div>
+            </div>
+            <div class="switch-row">
+                <span>2. Le gr</span>
+                <div class="switch-btn" onclick="toggleSwitch(this)" data-correct="oin">ion</div>
+            </div>
+            <div class="switch-row">
+                <span>3. Une quest</span>
+                <div class="switch-btn" onclick="toggleSwitch(this)" data-correct="ion">oin</div>
+            </div>
+            <div class="switch-row">
+                <span>4. J'ai bes</span>
+                <div class="switch-btn" onclick="toggleSwitch(this)" data-correct="oin">ion</div>
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierSwitches()">Démarrer le tracteur</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="emoji-art">🔒</span>
+        <h2>Le cadenas de la grange</h2>
+        <p>Lis ce petit texte. Compte le nombre de fois que tu vois le son <b>OIN</b> et le son <b>ION</b> pour trouver le code secret.</p>
+        
+        <div class="reading-text">
+            "Le fermier fait bien <b>attention</b> de ne pas oublier le <b>foin</b> dans le <b>camion</b>. Il va nourrir le cochon qui cache son <b>groin</b> dans le <b>coin</b> de l'enclos. Quelle belle <b>action</b> !"
+        </div>
+        
+        <div class="code-inputs">
+            <div class="code-box">
+                <label>Combien de <b>OIN</b> ?</label><br>
+                <input type="number" id="code-oin" min="0" max="9">
+            </div>
+            <div class="code-box">
+                <label>Combien de <b>ION</b> ?</label><br>
+                <input type="number" id="code-ion" min="0" max="9">
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-large" onclick="verifierCode()">Déverrouiller</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="emoji-art">🦉</span>
+        <h2>L'énigme du hibou</h2>
+        <p>Dernière épreuve ! Lis la devinette et écris la réponse. <i>Indice : La réponse contient OIN ou ION.</i></p>
+        
+        <div style="background: rgba(0,0,0,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px; font-style: italic;">
+            "Je suis le roi des animaux. J'ai une grande crinière et je rugis très fort. Qui suis-je ?"
+        </div>
+        
+        <input type="text" id="in-enigme" placeholder="Écris la réponse...">
+        <br><button class="btn btn-large btn-red" onclick="verifierEnigme()">Répondre au hibou</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="emoji-art">🏆</span>
+        <h2>Félicitations !</h2>
+        <p>Tu es un vrai <b>champion</b> (ou une vraie championne) ! Grâce à toi, le fermier Tremblay a retrouvé tous ses mots. La ferme est sauvée !</p>
+        <button class="btn btn-large" onclick="location.reload()">Rejouer à la ferme</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 5;
+
+    // --- Logique Étape 1 : Machine de tri ---
+    const motsTri = [
+        { mot: "point", type: "oin" },
+        { mot: "action", type: "ion" },
+        { mot: "moins", type: "oin" },
+        { mot: "attention", type: "ion" },
+        { mot: "soin", type: "oin" },
+        { mot: "région", type: "ion" },
+        { mot: "lointain", type: "oin" },
+        { mot: "potion", type: "ion" }
+    ];
+    let motsMelanges = [];
+    let motActuelIndex = 0;
+    let scoreTri = 0;
+
+    function initTri() {
+        motsMelanges = [...motsTri].sort(() => Math.random() - 0.5);
+        afficherMotTri();
+    }
+
+    function afficherMotTri() {
+        if (motActuelIndex < motsMelanges.length) {
+            document.getElementById('mot-a-trier').innerText = motsMelanges[motActuelIndex].mot;
+        } else {
+            document.getElementById('mot-a-trier').innerText = "Terminé !";
+            document.getElementById('f-1').innerHTML = "<span class='correct'>Bravo ! Le tri est parfait.</span>";
+            setTimeout(nextStep, 1500);
+        }
+    }
+
+    function trierMot(choix) {
+        if (motActuelIndex >= motsMelanges.length) return;
+        
+        const motCourant = motsMelanges[motActuelIndex];
+        const fb = document.getElementById('f-1');
+
+        if (choix === motCourant.type) {
+            scoreTri++;
+            document.getElementById('tri-compteur').innerText = `Mots triés : ${scoreTri} / 8`;
+            fb.innerHTML = "<span class='correct'>Bien joué ! ✅</span>";
+            motActuelIndex++;
+            setTimeout(() => { fb.innerHTML = ""; afficherMotTri(); }, 600);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Oups ! Regarde bien les lettres. ❌</span>";
+        }
+    }
+
+    // --- Logique Étape 2 : Interrupteurs ---
+    function toggleSwitch(element) {
+        element.innerText = element.innerText === "oin" ? "ion" : "oin";
+    }
+
+    function verifierSwitches() {
+        const switches = document.querySelectorAll('.switch-btn');
+        let toutBon = true;
+        
+        switches.forEach(btn => {
+            if (btn.innerText !== btn.getAttribute('data-correct')) {
+                toutBon = false;
+                btn.style.borderColor = "var(--barn-red)";
+            } else {
+                btn.style.borderColor = "var(--farm-green)";
+            }
+        });
+
+        const fb = document.getElementById('f-2');
+        if (toutBon) {
+            fb.innerHTML = "<span class='correct'>Vroum ! Le tracteur démarre ! 🚜</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Moteur bloqué... Corrige les interrupteurs rouges.</span>";
+        }
+    }
+
+    // --- Logique Étape 3 : Code ---
+    function verifierCode() {
+        // Dans le texte :
+        // OIN = foin, groin, coin (3 fois)
+        // ION = attention, camion, action (3 fois)
+        const valOin = document.getElementById('code-oin').value;
+        const valIon = document.getElementById('code-ion').value;
+        const fb = document.getElementById('f-3');
+
+        if (valOin == "3" && valIon == "3") {
+            fb.innerHTML = "<span class='correct'>Clic ! Le cadenas s'ouvre ! 🔓</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Code invalide. Relis bien et compte doucement.</span>";
+        }
+    }
+
+    // --- Logique Étape 4 : Énigme ---
+    function verifierEnigme() {
+        let reponse = document.getElementById('in-enigme').value.toLowerCase().trim();
+        let propre = reponse.replace(/^(un |le |l')/i, "").trim();
+        const fb = document.getElementById('f-4');
+
+        if (propre === "lion") {
+            fb.innerHTML = "<span class='correct'>Exactement ! Le LION ! 🦁</span>";
+            setTimeout(nextStep, 1500);
+        } else {
+            animShake();
+            fb.innerHTML = "<span class='wrong'>Ce n'est pas le bon animal...</span>";
+        }
+    }
+
+    // --- Utilitaires ---
+    function animShake() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : (currentStep / totalSteps) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        if(currentStep === 1) initTri();
+    }
+</script>
+
+</body>
+</html>
