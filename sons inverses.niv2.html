@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'agence secrète : le mystère des sons inverses</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --neon-green: #39ff14;
+            --dark-green: #004d00;
+            --alert-red: #ff003c;
+            --panel-bg: #161b22;
+            --font-main: 'Courier New', Courier, monospace;
+            --font-text: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-text);
+            background-color: var(--bg-color);
+            background-image: linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #c9d1d9;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.1);
+            border: 2px solid #30363d;
+            border-top: 10px solid var(--neon-green);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            color: var(--neon-green); 
+            margin-top: 0; 
+            font-family: var(--font-main);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+            font-weight: bold;
+        }
+        
+        h2, h3 { color: #fff; font-weight: normal; }
+        
+        .progress-bar {
+            width: 100%; height: 10px;
+            background: #000;
+            border-radius: 5px; margin: 20px 0;
+            border: 1px solid #30363d;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%; height: 100%;
+            background: var(--neon-green);
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .step { display: none; animation: scanline 0.8s ease-out forwards; }
+        .step.active { display: block; }
+
+        @keyframes scanline { 
+            0% { opacity: 0; transform: translateY(10px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .glitch { animation: glitch 0.3s; border-color: var(--alert-red) !important; }
+
+        .btn {
+            background: #000;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            transition: all 0.2s;
+            text-transform: lowercase;
+        }
+
+        .btn:hover, .btn:active { 
+            background: var(--neon-green); 
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .btn-large { font-size: 1.4rem; padding: 15px 30px; margin-top: 20px; }
+
+        .btn-dossier {
+            border-radius: 10px;
+            min-width: 150px; height: 120px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #555;
+            display: inline-flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .btn-dossier span { font-size: 2.5rem; margin-bottom: 10px; }
+        .btn-dossier:hover { background: rgba(57, 255, 20, 0.1); border-color: var(--neon-green); }
+
+        /* Clavier de piratage (20 mots) */
+        .hack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .hack-btn {
+            background: #000;
+            color: #888;
+            border: 1px solid #333;
+            padding: 15px 10px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-text);
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .hack-btn.hacked {
+            background: var(--dark-green);
+            color: var(--neon-green);
+            border-color: var(--neon-green);
+            box-shadow: inset 0 0 10px var(--neon-green);
+            pointer-events: none;
+        }
+
+        .phrase-cliquable { 
+            font-size: 1.3rem; line-height: 2.4; margin: 25px 0; text-align: justify; 
+            background: #000; padding: 20px; border-radius: 8px; border-left: 4px solid #555;
+        }
+        .mot-cliquable {
+            display: inline-block; padding: 3px 6px; margin: 0 1px;
+            background: rgba(255,255,255,0.05); border-radius: 5px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mot-cliquable:hover { background: rgba(57, 255, 20, 0.2); color: var(--neon-green); }
+
+        .emoji-art { font-size: 3.5rem; display: block; margin-bottom: 15px; }
+        .feedback { min-height: 30px; margin-top: 15px; font-size: 1.2rem; font-family: var(--font-main); }
+        .correct { color: var(--neon-green); }
+        .wrong { color: var(--alert-red); }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px; font-size: 1.3rem;
+            border: 2px solid #555;
+            border-radius: 5px;
+            width: 80%; max-width: 400px;
+            text-align: center;
+            background: #000;
+            color: var(--neon-green); outline: none;
+            letter-spacing: 1px;
+        }
+        input[type="text"]:focus { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57,255,20,0.3); }
+
+        .text-box {
+            background: #000;
+            padding: 20px; border-radius: 8px; font-style: italic;
+            border-left: 5px solid var(--neon-green);
+            margin: 15px auto; width: 85%; font-size: 1.2rem; line-height: 1.6;
+            color: #aaa;
+        }
+
+        .level-tag {
+            display: inline-block; background: #30363d; color: #fff;
+            padding: 5px 15px; border-radius: 4px; font-size: 0.9rem;
+            margin-bottom: 15px; font-family: var(--font-main);
+        }
+
+        .zone-magique {
+            display: inline-block; margin: 15px 0; padding: 10px 20px;
+            border: 1px dashed #888; border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05); cursor: help; transition: all 0.3s;
+        }
+        .zone-magique:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--neon-green); }
+        .indice-cache {
+            opacity: 0; transition: opacity 0.3s ease; font-size: 2.5rem;
+            display: block; margin-top: 5px;
+        }
+        .zone-magique:hover .indice-cache { opacity: 1; }
+
+        .bonus-box {
+            text-align: left; background: #000; padding: 25px;
+            border-radius: 8px; border: 1px solid #333; margin-top: 20px;
+        }
+        .bonus-box p { font-size: 1.2rem; line-height: 1.8; }
+        .highlight { color: var(--neon-green); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Mission secrète 🕵️‍♂️</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">📁</span>
+        <h2>Bonjour agent.</h2>
+        <p>L'ennemi a brouillé nos communications en inversant les lettres de nos mots de passe. Tu vas devoir faire très attention aux sons inverses qui se cachent dans les grands mots : <b>ar, or, al, ul, as, es, ac...</b> Il ne faut surtout pas les confondre avec ra, ro, la, lu !</p>
+        <button class="btn btn-large" onclick="nextStep()">Accepter la mission</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Dossier 1 - Repérage (1/3)</span>
+        <span class="emoji-art">🔍</span>
+        <h3>La cible "ar"</h3>
+        <p>Touche le suspect qui prononce correctement un mot contenant le son <b>ar</b> :</p>
+        <div>
+            <button class="btn btn-dossier" onclick="checkBtn(1, false)"><span>👤</span>cravate</button>
+            <button class="btn btn-dossier" onclick="checkBtn(1, true)"><span>👤</span>architecte</button>
+            <button class="btn btn-dossier" onclick="checkBtn(1, false)"><span>👤</span>travail</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Dossier 1 - Repérage (2/3)</span>
+        <span class="emoji-art">🔍</span>
+        <h3>La cible "al"</h3>
+        <p>Touche le suspect qui possède un mot avec le son <b>al</b> :</p>
+        <div>
+            <button class="btn btn-dossier" onclick="checkBtn(2, true)"><span>💼</span>calculatrice</button>
+            <button class="btn btn-dossier" onclick="checkBtn(2, false)"><span>💼</span>clavier</button>
+            <button class="btn btn-dossier" onclick="checkBtn(2, false)"><span>💼</span>placebo</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Dossier 1 - Repérage (3/3)</span>
+        <span class="emoji-art">🔍</span>
+        <h3>La cible "or"</h3>
+        <p>Lequel de ces équipements contient le son <b>or</b> ?</p>
+        <div>
+            <button class="btn btn-dossier" onclick="checkBtn(3, false)"><span>🔬</span>promenade</button>
+            <button class="btn btn-dossier" onclick="checkBtn(3, false)"><span>🔬</span>crocodile</button>
+            <button class="btn btn-dossier" onclick="checkBtn(3, true)"><span>🔬</span>formidable</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Dossier 2 - Le pare-feu</span>
+        <span class="emoji-art">💻</span>
+        <h3>Piratage du coffre-fort</h3>
+        <p>Pour déverrouiller le système, tu dois lire chaque mot à voix haute puis appuyer dessus pour injecter le code. Il faut désactiver les 20 blocs !</p>
+        
+        <div class="hack-grid" id="hack-grid-container">
+            </div>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Dossier 3 - Décodage (1/5)</span>
+        <span class="emoji-art">📡</span>
+        <h3>Le message intercepté</h3>
+        <p>L'espion ennemi a fait une erreur en inversant une syllabe. Trouve et clique sur le mot mal orthographié :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">Pendant</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">mission</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">très</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">dangereuse</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">grand</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">potager,</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">notre</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">agent</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">secret</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">arrache</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">énorme</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, true)">ratichaut</span>
+            <span class="mot-cliquable" onclick="checkBtn(5, false)">vert.</span>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Dossier 3 - Décodage (2/5)</span>
+        <span class="emoji-art">📡</span>
+        <h3>Le rapport du laboratoire</h3>
+        <p>Scanne cette longue phrase et clique sur le mot qui contient une inversion de voyelle/consonne :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">Dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">ce</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">laboratoire</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">ultramoderne,</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">scientifique</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">utilise</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">une</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">puissante</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, true)">claculatrice</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">résoudre</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">ce</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">problème</span>
+            <span class="mot-cliquable" onclick="checkBtn(6, false)">compliqué.</span>
+        </div>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Dossier 3 - Décodage (3/5)</span>
+        <span class="emoji-art">📡</span>
+        <h3>La poursuite</h3>
+        <p>Un mot se cache mal. Il devrait s'écrire avec "es" mais l'ennemi a écrit "se". Clique dessus :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">Pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">échapper</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">discrètement</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">aux</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">méchants,</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">notre</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">héros</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">grimpe</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">rapidement</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">grand</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, true)">secalier</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">en</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">colimaçon</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">la</span>
+            <span class="mot-cliquable" onclick="checkBtn(7, false)">tour.</span>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Dossier 3 - Décodage (4/5)</span>
+        <span class="emoji-art">📡</span>
+        <h3>L'équipement spécial</h3>
+        <p>Ici, c'est le son "or" qui a été transformé en "ro". Trouve l'erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">pilote</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">cet</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">avion</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">supersonique</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">porte</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">un</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">costume</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">vraiment</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, true)">fromidable</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">se</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">protéger</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">du</span>
+            <span class="mot-cliquable" onclick="checkBtn(8, false)">froid.</span>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Dossier 3 - Décodage (5/5)</span>
+        <span class="emoji-art">📡</span>
+        <h3>La cachette</h3>
+        <p>Dernière phrase à corriger ! "as" ou "sa" ? Clique sur l'erreur :</p>
+        <div class="phrase-cliquable">
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">Le</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">nouveau</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">gardien</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">du</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">musée</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">allume</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">sa</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">lampe</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">de</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">poche</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">pour</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">chercher</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">le</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, true)">satronaute</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">caché</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">dans</span>
+            <span class="mot-cliquable" onclick="checkBtn(9, false)">l'obscurité.</span>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Dossier 4 - Les mots de passe (1/3)</span>
+        <span class="emoji-art">🔐</span>
+        <h3>L'animal mystère</h3>
+        <div class="text-box">"Je suis un petit animal qui avance très lentement en portant sa maison sur son dos. Mon nom contient les sons 'es' et 'ar'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🐌</span></div><br>
+        <input type="text" id="in-10" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(10, ['escargot', 'escargots'])">Valider l'accès</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Dossier 4 - Les mots de passe (2/3)</span>
+        <span class="emoji-art">🔐</span>
+        <h3>Le meuble mystère</h3>
+        <div class="text-box">"Je suis un grand meuble avec des portes où l'on range les vêtements. Mon nom commence par le son 'ar'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🚪</span></div><br>
+        <input type="text" id="in-11" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(11, ['armoire', 'armoires'])">Valider l'accès</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Dossier 4 - Les mots de passe (3/3)</span>
+        <span class="emoji-art">🔐</span>
+        <h3>Le lieu mystère</h3>
+        <div class="text-box">"Je suis une montagne très dangereuse qui peut parfois cracher du feu et de la lave. Mon nom commence par le son 'ol'."</div>
+        <div class="zone-magique">Passe ta souris ici pour un indice !<span class="indice-cache">🌋</span></div><br>
+        <input type="text" id="in-12" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(12, ['volcan', 'volcans'])">Valider l'accès</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="emoji-art">🏆</span>
+        <h2>Mission accomplie !</h2>
+        <p>Félicitations agent ! Tu as réussi à déjouer tous les pièges de l'ennemi. Ton cerveau lit maintenant les longues syllabes inverses à la vitesse de la lumière.</p>
+        
+        <div class="bonus-box">
+            <h4>Dossier final A : L'invention du professeur</h4>
+            <p>Dans un coin de l'atelier <span class="highlight">obscur</span>, le vieux professeur termine la fabrication de sa nouvelle machine. C'est une invention <span class="highlight">spectaculaire</span> capable de transformer le plastique en <span class="highlight">or</span> massif. Pour la faire fonctionner, il doit taper un algorithme secret sur le petit clavier de sa <span class="highlight">calculatrice</span>. Malheureusement, un <span class="highlight">moustique</span> géant entre par la fenêtre ouverte et vient se poser sur le bouton rouge. Le professeur tente de l'attraper avec une <span class="highlight">passoire</span>, mais l'insecte est beaucoup trop rapide pour lui !</p>
+            <hr style="border-top:1px solid #333; margin: 20px 0;">
+            <small style="color:#aaa;"><b>Questions d'agent :</b><br>
+            1. Que fabrique le professeur dans son atelier ?<br>
+            2. Que tape-t-il sur sa calculatrice pour la faire fonctionner ?<br>
+            3. Avec quel objet étrange essaie-t-il d'attraper le moustique ?
+            </small>
+        </div>
+
+        <div class="bonus-box">
+            <h4>Dossier final B : Le sauvetage dans l'espace</h4>
+            <p>L'<span class="highlight">astronaute</span> dérive lentement dans l'espace infini, loin de sa station orbitale. Sa combinaison est équipée d'un minuscule <span class="highlight">microphone</span>, mais il n'arrive plus à contacter le <span class="highlight">directeur</span> de l'agence spatiale. Soudain, il aperçoit un vaisseau de <span class="highlight">secours</span> qui approche à toute vitesse. À l'intérieur, le pilote porte une écharpe rouge et une drôle de <span class="highlight">moustache</span>. Il lance une corde solide pour rattraper notre héros <span class="highlight">cascadeur</span>. C'est une opération vraiment <span class="highlight">formidable</span> qui finit bien.</p>
+            <hr style="border-top:1px solid #333; margin: 20px 0;">
+            <small style="color:#aaa;"><b>Questions d'agent :</b><br>
+            1. Trouve dans le texte le mot de 4 syllabes qui veut dire "voyageur de l'espace".<br>
+            2. Que porte le pilote du vaisseau de secours (deux choses) ?<br>
+            3. Inférence : Pourquoi l'astronaute a-t-il besoin d'une corde solide ?
+            </small>
+        </div>
+
+        <button class="btn btn-large" style="margin-top:25px; width:100%;" onclick="location.reload()">Rejouer la mission</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 13;
+
+    // --- Mots longs corrigés pour le piratage ---
+    const hackWords = [
+        'spectaculaire', 'algorithme', 'absurde', 'orchestre', 
+        'cascadeur', 'cosmonaute', 'escargot', 'architecte', 
+        'volcanique', 'plastique', 'calculatrice', 'escalier', 
+        'festival', 'aspirateur', 'directeur', 'responsable', 
+        'minuscule', 'armoire', 'parcours', 'formidable'
+    ];
+    let hackedCount = 0;
+
+    window.onload = function() {
+        const grid = document.getElementById('hack-grid-container');
+        const shuffledWords = hackWords.sort(() => Math.random() - 0.5);
+        
+        shuffledWords.forEach((word) => {
+            let btn = document.createElement('button');
+            btn.className = 'hack-btn';
+            btn.innerText = word;
+            btn.onclick = function() { hackWord(this); };
+            grid.appendChild(btn);
+        });
+    };
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            osc.type = 'square'; 
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else if(type === 'hack') {
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else {
+            osc.type = 'sawtooth'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('glitch');
+        void box.offsetWidth;
+        box.classList.add('glitch');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function hackWord(btnElement) {
+        if(!btnElement.classList.contains('hacked')) {
+            playSound('hack');
+            btnElement.classList.add('hacked');
+            hackedCount++;
+            
+            if(hackedCount === 20) {
+                playSound('win');
+                document.getElementById('f-4').innerHTML = "<span class='correct'>Piratage terminé ! Accès autorisé. 🔓</span>";
+                setTimeout(nextStep, 1500);
+            }
+        }
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Cible confirmée ! Beau travail. ✔️</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Erreur système. Analyse annulée. ❌</span>";
+        }
+    }
+
+    function checkInput(stepNum, validAnswersArray) {
+        let inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        let cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        let normalizedVal = cleanVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let normalizedAnswers = validAnswersArray.map(ans => ans.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        const fb = document.getElementById('f-' + stepNum);
+        
+        if(normalizedAnswers.includes(normalizedVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Code accepté ! Accès déverrouillé. 🔓</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Code incorrect. Le système vous bloque.</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
