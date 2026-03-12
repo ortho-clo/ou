@@ -3,50 +3,511 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission 4 : Le Son CH</title>
+    <title>Évasion : Le Trésor de la Plage</title>
     <style>
-        body { background: #27ae60; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); border: 4px solid #2ecc71; }
-        .mot { font-size: 3.5rem; color: #27ae60; margin: 20px 0; font-weight: bold; text-transform: uppercase; }
-        .btn-box { display: flex; gap: 20px; justify-content: center; }
-        button { padding: 15px 35px; font-size: 1.3rem; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; }
-        .oui { background: #27ae60; } .non { background: #c0392b; }
-        #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 30px; }
+        :root {
+            --primary: #008080; /* Bleu sarcelle / Océan */
+            --secondary: #f39c12; /* Jaune soleil */
+            --accent: #e67e22; /* Orange crabe */
+            --dark: #2c3e50;
+            --bg: #fdf2e9; /* Sable clair */
+            --font-main: 'Century Gothic', sans-serif;
+            --box-shadow: 0 10px 25px rgba(0, 128, 128, 0.2);
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            background-image: linear-gradient(to bottom, #aed6f1 0%, #fdf2e9 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 750px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--box-shadow);
+            border: 6px solid var(--secondary);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            margin-top: 0; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 0px #fff, 2px 2px 0px var(--secondary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid #bdc3c7;
+        }
+
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #e74c3c, var(--primary));
+            transition: width 0.4s ease-out;
+        }
+
+        .step { display: none; animation: slideUp 0.5s ease forwards; }
+        .step.active { display: block; }
+
+        @keyframes slideUp { 
+            0% { opacity: 0; transform: translateY(20px); } 
+            100% { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .shake { animation: shake 0.4s; border-color: #c0392b !important; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 6px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 5px 0px #005959;
+        }
+
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn:hover { background: #009999; }
+        
+        .btn-large {
+            font-size: 1.5rem;
+            padding: 15px 25px;
+        }
+
+        .syllable-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .emoji-art { font-size: 3.5rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 4px 2px rgba(0,0,0,0.1)); }
+
+        .feedback { min-height: 25px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
+        .correct { color: var(--primary); }
+        .wrong { color: #c0392b; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 15px;
+            font-size: 1.3rem;
+            border: 3px solid var(--primary);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            background: #fff;
+            outline: none;
+            color: var(--dark);
+        }
+        input[type="text"]:focus { border-color: var(--secondary); background: #fffde7; }
+
+        .text-box {
+            background: #eaf2f8;
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            border-left: 5px solid var(--primary);
+            margin: 15px auto;
+            text-align: left;
+            width: 90%;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .level-tag {
+            display: inline-block;
+            background: var(--dark);
+            color: var(--secondary);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* --- LE CODE POUR LA LOUPE MAGIQUE EST PLACÉ ICI DANS LE CSS --- */
+        .zone-magique {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 10px 20px;
+            border: 2px dashed var(--secondary);
+            border-radius: 15px;
+            background: #fff9e6;
+            cursor: help; /* Petite main avec point d'interrogation */
+            transition: background 0.3s;
+        }
+        .zone-magique:hover, .zone-magique:active {
+            background: #fdebd0;
+        }
+        .indice-cache {
+            opacity: 0; /* Invisible au départ */
+            transition: opacity 0.5s ease; /* Apparition fluide */
+            font-size: 2.5rem;
+            display: block;
+            margin-top: 5px;
+        }
+        /* Apparaît quand on passe la souris (:hover) ou qu'on touche l'écran (:active) */
+        .zone-magique:hover .indice-cache, 
+        .zone-magique:active .indice-cache {
+            opacity: 1; 
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="font-size: 50px;">🎩</div>
-    <div style="color: #666;">Mission 4 : Entends-tu <b>"CH"</b> ?</div>
-    <div id="mot-affiche" class="mot">---</div>
-    <div class="btn-box">
-        <button class="oui" onclick="repondre(true)">OUI</button>
-        <button class="non" onclick="repondre(false)">NON</button>
+
+<div id="game-container">
+    <h1>🏖️ Le Trésor de la Plage 🦀</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🗺️</span>
+        <h2>Mission : Capitaine des Sables !</h2>
+        <p>Un vieux pirate a enterré son trésor sur cette plage. Pour trouver la carte, tu dois résoudre les 15 épreuves du son <b>"ch"</b> !</p>
+        <button class="btn btn-large" style="background:var(--accent); box-shadow: 0 5px 0px #ba4a00;" onclick="nextStep()">Commencer l'exploration</button>
     </div>
-    <div id="feedback"></div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 1/3</span>
+        <span class="emoji-art">🐚</span>
+        <h3>Le ramasseur de coquillages</h3>
+        <p>Quel coquillage fait le son <b>"cho"</b> ? Cherche bien !</p>
+        <div class="syllable-grid">
+            <button class="btn" onclick="checkBtn(1, false)">co</button>
+            <button class="btn" onclick="checkBtn(1, false)">so</button>
+            <button class="btn" onclick="checkBtn(1, false)">clo</button>
+            <button class="btn" onclick="checkBtn(1, true)">cho</button>
+            <button class="btn" onclick="checkBtn(1, false)">cro</button>
+        </div>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 2/3</span>
+        <span class="emoji-art">🐠</span>
+        <h3>Le poisson sauteur</h3>
+        <p>Attrape la bulle qui contient la syllabe <b>"chu"</b> :</p>
+        <div class="syllable-grid">
+            <button class="btn" style="border-radius:50%; width:70px; height:70px;" onclick="checkBtn(2, false)">cu</button>
+            <button class="btn" style="border-radius:50%; width:70px; height:70px;" onclick="checkBtn(2, true)">chu</button>
+            <button class="btn" style="border-radius:50%; width:70px; height:70px;" onclick="checkBtn(2, false)">su</button>
+            <button class="btn" style="border-radius:50%; width:70px; height:70px;" onclick="checkBtn(2, false)">clu</button>
+            <button class="btn" style="border-radius:50%; width:70px; height:70px;" onclick="checkBtn(2, false)">tru</button>
+        </div>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 3/3</span>
+        <span class="emoji-art">🌊</span>
+        <h3>La grande vague</h3>
+        <p>Trouve la syllabe magique pour faire reculer l'eau : <b>"chan"</b></p>
+        <div class="syllable-grid">
+            <button class="btn" onclick="checkBtn(3, false)">can</button>
+            <button class="btn" onclick="checkBtn(3, false)">san</button>
+            <button class="btn" onclick="checkBtn(3, false)">clan</button>
+            <button class="btn" onclick="checkBtn(3, false)">fran</button>
+            <button class="btn" onclick="checkBtn(3, true)">chan</button>
+        </div>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 1/3</span>
+        <span class="emoji-art">⛱️</span>
+        <h3>L'intrus du parasol</h3>
+        <p>Lequel de ces mots <b>N'A PAS</b> le son "ch" ?</p>
+        <button class="btn" onclick="checkBtn(4, false)">Un chat 🐈</button>
+        <button class="btn" onclick="checkBtn(4, true)">Un crabe 🦀</button>
+        <button class="btn" onclick="checkBtn(4, false)">Chaud 🌡️</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 2/3</span>
+        <span class="emoji-art">🧳</span>
+        <h3>Le sac de plage</h3>
+        <p>Quel objet vas-tu apporter à la plage ? (Indice : il contient le son <b>"ch"</b>)</p>
+        <button class="btn" onclick="checkBtn(5, false)">Ma serviette</button>
+        <button class="btn" onclick="checkBtn(5, true)">Mon chapeau</button>
+        <button class="btn" onclick="checkBtn(5, false)">Mes lunettes</button>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 3/3</span>
+        <span class="emoji-art">🔍</span>
+        <h3>L'association visuelle</h3>
+        <p>Quel mot correspond exactement à cette image : 🏰 ?</p>
+        <button class="btn" onclick="checkBtn(6, false)">Bateau</button>
+        <button class="btn" onclick="checkBtn(6, true)">Château</button>
+        <button class="btn" onclick="checkBtn(6, false)">Gâteau</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 1/3</span>
+        <span class="emoji-art">📖</span>
+        <h3>Lis et trouve l'image</h3>
+        <p class="text-box">"L'animal avec des moustaches regarde les vagues arriver."</p>
+        <p>Quel émoji illustre le mot de la phrase qui contient <b>"ch"</b> ?</p>
+        <div class="syllable-grid">
+            <button class="btn btn-large" onclick="checkBtn(7, true)">🐈</button>
+            <button class="btn btn-large" onclick="checkBtn(7, false)">🦀</button>
+            <button class="btn btn-large" onclick="checkBtn(7, false)">🐕</button>
+        </div>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 2/3</span>
+        <span class="emoji-art">📖</span>
+        <h3>Lis et trouve l'image</h3>
+        <p class="text-box">"Je me protège la tête du soleil avec mon bel accessoire jaune."</p>
+        <p>Quel émoji illustre le mot en <b>"ch"</b> de cette phrase ?</p>
+        <div class="syllable-grid">
+            <button class="btn btn-large" onclick="checkBtn(8, false)">👕</button>
+            <button class="btn btn-large" onclick="checkBtn(8, true)">👒</button>
+            <button class="btn btn-large" onclick="checkBtn(8, false)">🕶️</button>
+        </div>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 3/3</span>
+        <span class="emoji-art">📖</span>
+        <h3>Lis et trouve l'image</h3>
+        <p class="text-box">"Le petit crabe a peur, alors il se glisse sous une grosse pierre grise."</p>
+        <p>Quel émoji correspond au mot avec <b>"ch"</b> où le crabe va aller ?</p>
+        <div class="syllable-grid">
+            <button class="btn btn-large" onclick="checkBtn(9, false)">🌊</button>
+            <button class="btn btn-large" onclick="checkBtn(9, false)">🐚</button>
+            <button class="btn btn-large" onclick="checkBtn(9, true)">🪨</button>
+        </div>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 1/3</span>
+        <span class="emoji-art">🌡️</span>
+        <h3>La météo parfaite</h3>
+        <p>Quel mot se cache sous l'étoile ⭐ ?</p>
+        <div class="text-box">"Je suis bien sous mon parasol. Le soleil brille fort, on dit qu'il fait très ⭐ aujourd'hui."</div>
+        
+        <div class="zone-magique">
+            🔍 Survole-moi pour un indice !
+            <span class="indice-cache">🔥</span>
+        </div>
+        <br>
+        
+        <input type="text" id="in-10" placeholder="Écris le mot...">
+        <br><button class="btn" style="background:var(--accent); box-shadow: 0 5px 0px #ba4a00;" onclick="checkInput(10, ['chaud'])">Vérifier</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 2/3</span>
+        <span class="emoji-art">🪣</span>
+        <h3>L'architecte</h3>
+        <p>Trouve le mot sous l'étoile ⭐.</p>
+        <div class="text-box">"Avec mon seau et ma pelle, je fais une grande maison en sable. C'est un beau ⭐ !"</div>
+        
+        <div class="zone-magique">
+            🔍 Besoin d'aide ? Touche-moi !
+            <span class="indice-cache">🏰</span>
+        </div>
+        <br>
+
+        <input type="text" id="in-11" placeholder="Écris le mot...">
+        <br><button class="btn" style="background:var(--accent); box-shadow: 0 5px 0px #ba4a00;" onclick="checkInput(11, ['château', 'chateau', 'chateaux', 'châteaux'])">Vérifier</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 3/3</span>
+        <span class="emoji-art">🐕</span>
+        <h3>Le compagnon</h3>
+        <p>Devine le mot caché !</p>
+        <div class="text-box">"Le petit garçon lance une balle dans l'eau. Son ⭐ court très vite pour la ramener."</div>
+        
+        <div class="zone-magique">
+            🔍 Un petit indice caché...
+            <span class="indice-cache">🦴</span>
+        </div>
+        <br>
+
+        <input type="text" id="in-12" placeholder="Écris le mot...">
+        <br><button class="btn" style="background:var(--accent); box-shadow: 0 5px 0px #ba4a00;" onclick="checkInput(12, ['chien', 'chiens'])">Vérifier</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Niveau 5 - BOSS 1/3</span>
+        <span class="emoji-art">🪨</span>
+        <h3>L'énigme de pierre</h3>
+        <p><b>Résous l'énigme :</b> "Je suis très dur. Je suis sur la plage ou dans l'eau. Les crabes aiment se cacher sous moi. Mon nom s'écrit avec <b>ch</b>. Qui suis-je ?"</p>
+        
+        <div class="zone-magique">
+            🔍 L'indice du crabe...
+            <span class="indice-cache">🗻</span>
+        </div>
+        <br>
+
+        <input type="text" id="in-13" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(13, ['rocher', 'rochers'])">Valider</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Niveau 5 - BOSS 2/3</span>
+        <span class="emoji-art">🎣</span>
+        <h3>L'énigme de l'océan</h3>
+        <p><b>Résous l'énigme :</b> "Je suis une activité qu'on fait avec un filet ou une canne pour attraper des poissons. Mon nom contient <b>ch</b>. Que suis-je ?"</p>
+        <input type="text" id="in-14" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(14, ['pêche', 'peche', 'la pêche', 'la peche'])">Valider</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Niveau 5 - BOSS FINAL</span>
+        <span class="emoji-art">🏴‍☠️</span>
+        <h3>Le mot de passe du pirate</h3>
+        <p><b>L'ultime énigme :</b> "Quand on joue à cache-cache, c'est ce que l'on fait pour trouver son ami. Ça rime avec 'mer', et ça s'écrit avec DEUX fois le son <b>ch</b> ! Que fais-tu ?"</p>
+        <input type="text" id="in-15" placeholder="Dernier mot de passe...">
+        <br><button class="btn btn-large" style="background:var(--secondary); color:var(--dark); box-shadow: 0 5px 0px #d4ac0d;" onclick="checkInput(15, ['chercher', 'je cherche', 'cherche'])">Déterrer le trésor !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">💎</span>
+        <h2>Trésor Trouvé !</h2>
+        <p>Bravo ! Tu es un véritable expert du son <b>"ch"</b> !</p>
+        
+        <div style="text-align: left; background: white; padding: 20px; border-radius: 12px; border: 4px solid var(--primary); margin-top: 15px;">
+            <h3 style="color:var(--primary); margin-top:0;">📖 Une belle journée (Bonus)</h3>
+            <p>Sur la plage, le petit <b>chien</b> blanc <b>cherche</b> un os près du grand <b>rocher</b>. Il fait très <b>chaud</b> aujourd'hui ! Un gros crabe rouge se <b>cache</b> vite dans le sable. Finalement, le <b>chien</b> met son <b>chapeau</b> de paille pour s'endormir à l'ombre d'un beau <b>château</b> de sable.</p>
+            <hr style="border-top:2px dashed #ccc;">
+            <small><b>Questions pour l'enseignante :</b><br>
+            1. (C) De quelle couleur est le chien ?<br>
+            2. (C) Près de quoi le chien cherche-t-il son os ?<br>
+            3. (C) Trouve quatre mots avec le son "ch" dans ce texte.<br>
+            4. (I) À ton avis, pourquoi le crabe se cache-t-il si vite dans le sable ?<br>
+            5. (I) Est-ce possible dans la vraie vie qu'un chien mette un chapeau de paille tout seul ? Pourquoi ?</small>
+        </div>
+        <button class="btn" style="margin-top:20px; width:100%;" onclick="location.reload()">Rejouer l'aventure</button>
+    </div>
 </div>
+
 <script>
-    const defis = [
-        {m: "Chat", r: true}, {m: "Sapin", r: false}, {m: "Chausson", r: true}, {m: "Vache", r: true}, {m: "Soleil", r: false}
-    ];
-    let etape = 0;
-    function actualiser() {
-        if(etape < defis.length) {
-            document.getElementById('mot-affiche').innerText = defis[etape].m;
-            document.getElementById('feedback').innerText = "";
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 15;
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1); 
+            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.2); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         } else {
-            document.querySelector('.card').innerHTML = "<h1>🎖️ INDICE DÉCODÉ !</h1><p>Le mot de passe du badge 4 est :</p><h2 style='color:#27ae60'>CHAPEAU-11</h2>";
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         }
     }
-    function repondre(choix) {
-        if(choix === defis[etape].r) {
-            document.getElementById('feedback').innerHTML = "<span style='color:green'>✅ OUI !</span>";
-            etape++; setTimeout(actualiser, 800);
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>C'est la bonne réponse ! 🏴‍☠️</span>";
+            setTimeout(nextStep, 1100);
         } else {
-            document.getElementById('feedback').innerHTML = "<span style='color:red'>❌ Regarde bien...</span>";
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Plouf ! Essaie encore. 🌊</span>";
         }
     }
-    actualiser();
+
+    /* Le CSS a été retiré de cette fonction pour le placer dans la balise <style> ! */
+    function checkInput(stepNum, validAnswersArray) {
+        const inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        const fb = document.getElementById('f-' + stepNum);
+        
+        const cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|des |de |d'|mon |ton |son )/i, "").trim(); 
+        
+        if(validAnswersArray.includes(cleanVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Super, le mot est bon ! 🗝️</span>";
+            setTimeout(nextStep, 1100);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Ce n'est pas le bon mot... cherche bien !</span>";
+        }
+    }
 </script>
+
 </body>
 </html>
