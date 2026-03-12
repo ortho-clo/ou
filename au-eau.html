@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Safari de l'Eau (Les sons AU et EAU)</title>
+    <style>
+        /* CONTRAINTE TECHNIQUE : Police Century Gothic stricte pour un 'a' rond */
+        body, button, input, select {
+            font-family: 'Century Gothic', AppleGothic, sans-serif;
+        }
+        
+        body {
+            background-color: #e0f7fa; /* Bleu eau clair */
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #game-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 139, 139, 0.2);
+            max-width: 800px;
+            width: 100%;
+            border: 5px solid #00acc1;
+        }
+
+        h1 { color: #00838f; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        h2 { color: #d35400; }
+        
+        .title-inline { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .big-emoji { font-size: 70px; margin: 10px 0; display: block; }
+        
+        /* Gestion des écrans de niveau */
+        .level { display: none; }
+        .level.active { display: block; animation: slideIn 0.5s ease-out; }
+
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Boutons d'action généraux */
+        .btn-action {
+            background-color: #00acc1;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.1s, background-color 0.3s;
+            box-shadow: 0 4px 0 #00838f;
+        }
+        .btn-action:hover { background-color: #26c6da; }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Niveau 1 : Boutons Syllabes */
+        .grid-syllabes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+        .btn-syllabe {
+            background-color: #b2ebf2;
+            color: #006064;
+            border: 3px solid transparent;
+            font-size: 1.5em;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-syllabe.selected { background-color: #ffb74d; border-color: #e65100; transform: scale(1.05); }
+
+        /* Niveau 2 : Boutons Intrus */
+        .grid-intrus { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
+        .btn-intrus {
+            background-color: #fff3e0;
+            border: 2px solid #ffb74d;
+            font-size: 1.2em;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Niveau 3 : Radios (Vrai/Faux) */
+        .radio-group { margin: 15px 0; background: #f1f8e9; padding: 15px; border-radius: 10px; text-align: left; }
+        .radio-group label { font-size: 1.2em; cursor: pointer; margin-right: 20px; }
+        .radio-group input[type="radio"] { transform: scale(1.5); margin-right: 10px; }
+
+        /* Niveau 4 & 5 : Zone de texte et input */
+        .text-box { background-color: #e8f5e9; padding: 20px; border-left: 5px solid #4caf50; border-radius: 5px; text-align: left; font-size: 1.1em; line-height: 1.6; margin: 20px 0; }
+        input[type="text"] {
+            font-size: 1.2em; padding: 10px; border-radius: 10px; border: 2px solid #00acc1; text-align: center; width: 60%; max-width: 300px; outline: none;
+        }
+
+        /* Feedbacks */
+        #feedback { font-weight: bold; font-size: 1.3em; margin-top: 20px; min-height: 1.5em; }
+        .correct { color: #2ecc71; }
+        .wrong { color: #e74c3c; animation: shake 0.3s; }
+
+        /* Bonus Enseignante */
+        .teacher-section { background-color: #fdfefe; border: 2px dashed #bdc3c7; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: left;}
+        .teacher-section h3 { color: #7f8c8d; margin-top: 0;}
+
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-10px);} 75% {transform: translateX(10px);} }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>🌊 Le Safari de l'Eau 🛶</h1>
+
+    <div id="level-0" class="level active">
+        <span class="big-emoji">🐘 💧 🐊</span>
+        <h2>Prêt pour l'expédition ?</h2>
+        <p>Les animaux du safari ont besoin de toi pour traverser la grande rivière.</p>
+        <p>Pour avancer, tu devras résoudre les énigmes qui cachent les lettres <strong>AU</strong> et <strong>EAU</strong>.</p>
+        <button class="btn-action" onclick="startAdventure()">Commencer le Safari</button>
+    </div>
+
+    <div id="level-1" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">🐸</span> Niveau 1 : Les nénuphars</h2>
+        <p>Sélectionne <strong>tous les nénuphars</strong> qui contiennent les lettres <strong>AU</strong> ou <strong>EAU</strong>, puis valide pour faire sauter la grenouille.</p>
+        <div class="grid-syllabes">
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="true">peau</button>
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="false">po</button>
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="true">fau</button>
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="false">lo</button>
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="true">veau</button>
+            <button class="btn-syllabe" onclick="toggleSyllable(this)" data-correct="false">mot</button>
+        </div>
+        <button class="btn-action" onclick="checkLevel1()">Sauter !</button>
+    </div>
+
+    <div id="level-2" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">🦊</span> Niveau 2 : L'intrus de la forêt</h2>
+        <p>Un de ces animaux s'est perdu ! Trouve l'animal dont le nom ne s'écrit <strong>PAS</strong> avec <strong>AU</strong> ou <strong>EAU</strong>. Clique dessus.</p>
+        <div class="grid-intrus">
+            <button class="btn-intrus" onclick="checkLevel2(false)">un blaireau 🦡</button>
+            <button class="btn-intrus" onclick="checkLevel2(true)">un renard 🦊</button> <button class="btn-intrus" onclick="checkLevel2(false)">un crapaud 🐸</button>
+            <button class="btn-intrus" onclick="checkLevel2(false)">un chameau 🐪</button>
+        </div>
+    </div>
+
+    <div id="level-3" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">🐂</span> Niveau 3 : Les affirmations</h2>
+        <p>Coche la bonne réponse pour chaque phrase.</p>
+        
+        <div class="radio-group">
+            <p><strong>1. Le taureau porte des grandes cornes.</strong></p>
+            <label><input type="radio" name="q1" value="vrai"> Vrai</label>
+            <label><input type="radio" name="q1" value="faux"> Faux</label>
+        </div>
+        
+        <div class="radio-group">
+            <p><strong>2. Le chameau vit toujours dans l'eau.</strong></p>
+            <label><input type="radio" name="q2" value="vrai"> Vrai</label>
+            <label><input type="radio" name="q2" value="faux"> Faux</label>
+        </div>
+
+        <button class="btn-action" onclick="checkLevel3()">Vérifier</button>
+    </div>
+
+    <div id="level-4" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">🐦</span> Niveau 4 : L'oiseau gourmand</h2>
+        <p>Lis le texte et réponds à la question en écrivant le mot juste.</p>
+        <div class="text-box">
+            Le petit moineau a faim. Il se pose sur un poteau, puis il picore des graines sur le grand plateau posé près de l'eau.
+        </div>
+        <p>Quel est l'animal qui picore des graines ?</p>
+        <input type="text" id="input-l4" placeholder="Écris l'animal ici">
+        <br>
+        <button class="btn-action" onclick="checkLevel4()">Valider</button>
+    </div>
+
+    <div id="level-5" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">👑</span> Niveau 5 : Le gardien noir</h2>
+        <p>Pour finir ton safari, résous l'énigme de cet oiseau mystérieux :</p>
+        <div class="text-box" style="font-style: italic; background-color: #fce4ec; border-left-color: #c2185b;">
+            "Je suis un oiseau très intelligent. Mes plumes sont toutes noires. Je vole haut et mon nom finit par les lettres E-A-U. Qui suis-je ?"
+        </div>
+        <input type="text" id="input-l5" placeholder="Le nom de l'oiseau">
+        <br>
+        <button class="btn-action" onclick="checkLevel5()">Donner la réponse !</button>
+    </div>
+
+    <div id="level-6" class="level">
+        <span class="big-emoji">🏆 🛶 🐾</span>
+        <h2>Mission Accomplie !</h2>
+        <p>Bravo ! Tu as aidé tous les animaux. Tu es un champion ou une championne des sons AU et EAU !</p>
+        
+        <div class="teacher-section">
+            <h3>📖 Coin de l'Enseignante</h3>
+            <p><strong>Texte de lecture :</strong><br>
+            Au bord du ruisseau, un jeune blaireau boit de l'eau claire. Un beau corbeau se pose sur un rameau pour l'observer. Le blaireau n'a pas peur, il fait un petit saut et s'en va dans les grands roseaux pour se coucher.</p>
+            
+            <p><strong>Questions concrètes :</strong></p>
+            <ol>
+                <li>Quel animal boit de l'eau ? (Un blaireau)</li>
+                <li>Où le blaireau boit-il ? (Au bord du ruisseau)</li>
+                <li>Où se pose le corbeau ? (Sur un rameau)</li>
+            </ol>
+
+            <p><strong>Questions d'inférence (abstraites) :</strong></p>
+            <ol start="4">
+                <li>Pourquoi le corbeau vient-il se poser près du blaireau, à ton avis ? (Il est curieux, il a soif aussi, il cherche à manger...)</li>
+                <li>D'après la fin du texte, quel moment de la journée cela pourrait-il être ? (La fin de la journée ou la nuit, car le blaireau part se coucher dans les roseaux).</li>
+            </ol>
+        </div>
+    </div>
+
+    <div id="feedback"></div>
+</div>
+
+<script>
+    /* =========================================================
+       API AUDIOCONTEXT : SONS DE RÉUSSITE ET D'ERREUR (SANS MP3)
+       ========================================================= */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(isCorrect) {
+        if (!audioCtx) return;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (isCorrect) {
+            // Mélodie douce et montante
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Do
+            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.2); // Do aigu
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } else {
+            // Son grave et plat
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    /* =========================================================
+       MOTEUR DE JEU ET LOGIQUE DE NAVIGATION
+       ========================================================= */
+    const feedbackEl = document.getElementById('feedback');
+
+    function showLevel(levelNum) {
+        document.querySelectorAll('.level').forEach(el => el.classList.remove('active'));
+        document.getElementById('level-' + levelNum).classList.add('active');
+        feedbackEl.textContent = '';
+        feedbackEl.className = '';
+        document.getElementById('game-container').scrollTop = 0;
+    }
+
+    function displayFeedback(message, isSuccess) {
+        feedbackEl.textContent = message;
+        feedbackEl.className = isSuccess ? 'correct' : 'wrong';
+        playSound(isSuccess);
+    }
+
+    function startAdventure() {
+        // Le clic utilisateur débloque l'AudioContext du navigateur
+        audioCtx.resume().then(() => {
+            showLevel(1);
+        });
+    }
+
+    /* --- LOGIQUE DU NIVEAU 1 --- */
+    function toggleSyllable(btn) {
+        btn.classList.toggle('selected');
+        playSound(true); // Petit bip neutre/positif au clic
+    }
+
+    function checkLevel1() {
+        const buttons = document.querySelectorAll('.btn-syllabe');
+        let hasError = false;
+        let correctSelectedCount = 0;
+        
+        buttons.forEach(btn => {
+            const isSelected = btn.classList.contains('selected');
+            const isCorrect = btn.getAttribute('data-correct') === 'true';
+            
+            if (isSelected && !isCorrect) hasError = true;
+            if (!isSelected && isCorrect) hasError = true;
+        });
+
+        if (!hasError) {
+            displayFeedback("Super ! Les nénuphars sont sûrs.", true);
+            setTimeout(() => showLevel(2), 1500);
+        } else {
+            displayFeedback("Oh non ! Il manque des syllabes ou tu en as choisi des mauvaises.", false);
+        }
+    }
+
+    /* --- LOGIQUE DU NIVEAU 2 --- */
+    function checkLevel2(isIntrus) {
+        if (isIntrus) {
+            displayFeedback("Exact ! Renard ne s'écrit ni avec AU, ni avec EAU.", true);
+            setTimeout(() => showLevel(3), 2000);
+        } else {
+            displayFeedback("Non, cet animal contient bien le son de l'eau.", false);
+        }
+    }
+
+    /* --- LOGIQUE DU NIVEAU 3 --- */
+    function checkLevel3() {
+        const q1 = document.querySelector('input[name="q1"]:checked');
+        const q2 = document.querySelector('input[name="q2"]:checked');
+
+        if (!q1 || !q2) {
+            displayFeedback("N'oublie pas de répondre aux deux phrases !", false);
+            return;
+        }
+
+        if (q1.value === "vrai" && q2.value === "faux") {
+            displayFeedback("Bravo ! Excellente lecture.", true);
+            setTimeout(() => showLevel(4), 1500);
+        } else {
+            displayFeedback("Il y a une erreur dans tes réponses. Relis bien.", false);
+        }
+    }
+
+    /* --- LOGIQUE DU NIVEAU 4 --- */
+    function checkLevel4() {
+        const answer = document.getElementById('input-l4').value.toLowerCase().trim();
+        // Normalisation pour enlever les accents si l'élève se trompe (bonne pratique)
+        const cleanAnswer = answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        if (cleanAnswer === "moineau" || cleanAnswer === "le moineau" || cleanAnswer === "un moineau") {
+            displayFeedback("Parfait ! Le moineau est bien là.", true);
+            setTimeout(() => showLevel(5), 1500);
+        } else {
+            displayFeedback("Ce n'est pas le bon animal. Cherche dans le texte !", false);
+        }
+    }
+
+    /* --- LOGIQUE DU NIVEAU 5 --- */
+    function checkLevel5() {
+        const answer = document.getElementById('input-l5').value.toLowerCase().trim();
+        const cleanAnswer = answer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        if (cleanAnswer === "corbeau" || cleanAnswer === "un corbeau" || cleanAnswer === "le corbeau") {
+            displayFeedback("Incroyable ! Tu as trouvé la bonne réponse !", true);
+            setTimeout(() => showLevel(6), 2000);
+        } else {
+            displayFeedback("Ce n'est pas ce gardien. Pense à un oiseau tout noir !", false);
+        }
+    }
+</script>
+
+</body>
+</html>
