@@ -3,50 +3,432 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission 3 : Le Son OI</title>
+    <title>Évasion : Le Manoir d'Halloween</title>
     <style>
-        body { background: #8e44ad; font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); border: 4px solid #9b59b6; }
-        .mot { font-size: 3.5rem; color: #8e44ad; margin: 20px 0; font-weight: bold; text-transform: uppercase; }
-        .btn-box { display: flex; gap: 20px; justify-content: center; }
-        button { padding: 15px 35px; font-size: 1.3rem; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; }
-        .oui { background: #27ae60; } .non { background: #c0392b; }
-        #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 30px; }
+        :root {
+            --primary: #d35400; /* Orange citrouille */
+            --secondary: #8e44ad; /* Violet mystique */
+            --dark: #2c3e50; /* Nuit */
+            --bg: #111;
+            --parchment: #fdfaf0;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at top right, #2c003e 0%, #000000 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 700px;
+            background: rgba(30, 30, 40, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(211, 84, 0, 0.4);
+            border: 4px solid var(--primary);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            margin-top: 0; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: #444;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 2px solid #222;
+        }
+
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            transition: width 0.4s ease-out;
+        }
+
+        .step { display: none; animation: popIn 0.5s ease forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .shake { animation: shake 0.4s; border-color: #e74c3c !important; }
+
+        .btn {
+            background: var(--dark);
+            color: white;
+            border: 2px solid var(--secondary);
+            padding: 12px 22px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn:active { transform: translateY(4px); }
+        .btn:hover { background: var(--secondary); border-color: #fff; }
+
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .emoji-art { font-size: 3.5rem; display: block; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        .feedback { min-height: 25px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
+        .correct { color: #2ecc71; text-shadow: 0 0 5px #000; }
+        .wrong { color: #e74c3c; text-shadow: 0 0 5px #000; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 12px;
+            font-size: 1.3rem;
+            border: 3px solid var(--secondary);
+            border-radius: 8px;
+            width: 80%;
+            max-width: 250px;
+            text-align: center;
+            background: #222;
+            color: #fff;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--primary); background: #333; }
+
+        .text-box {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            font-style: italic;
+            border-left: 5px solid var(--primary);
+            margin: 15px auto;
+            text-align: left;
+            width: 90%;
+            font-size: 1.1rem;
+            color: #ecf0f1;
+        }
+
+        .level-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <div style="font-size: 50px;">🦉</div>
-    <div style="color: #666;">Mission 3 : Entends-tu <b>"OI"</b> ?</div>
-    <div id="mot-affiche" class="mot">---</div>
-    <div class="btn-box">
-        <button class="oui" onclick="repondre(true)">OUI</button>
-        <button class="non" onclick="repondre(false)">NON</button>
+
+<div id="game-container">
+    <h1>🎃 Le Manoir d'Halloween 🎃</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🦇</span>
+        <h2>Bienvenue dans le manoir !</h2>
+        <p>Les portes se sont refermées. Pour sortir avant minuit, tu dois résoudre les 15 mystères du son <b>"oi"</b>.</p>
+        <button class="btn" style="background:var(--primary); border-color:#fff;" onclick="nextStep()">Ouvrir la première porte</button>
     </div>
-    <div id="feedback"></div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 1/3</span>
+        <span class="emoji-art">👻</span>
+        <h3>Le fantôme bavard</h3>
+        <p>Quel fantôme fait le son <b>"oi"</b> ?</p>
+        <button class="btn" onclick="checkBtn(1, false)">rou</button>
+        <button class="btn" onclick="checkBtn(1, true)">roi</button>
+        <button class="btn" onclick="checkBtn(1, false)">rui</button>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 2/3</span>
+        <span class="emoji-art">🧪</span>
+        <h3>La potion magique</h3>
+        <p>Choisis la fiole avec le son <b>"oi"</b> :</p>
+        <button class="btn" onclick="checkBtn(2, false)">sou</button>
+        <button class="btn" onclick="checkBtn(2, false)">sau</button>
+        <button class="btn" onclick="checkBtn(2, true)">soi</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 3/3</span>
+        <span class="emoji-art">🕷️</span>
+        <h3>La toile d'araignée</h3>
+        <p>Quelle syllabe contient les bonnes lettres ?</p>
+        <button class="btn" onclick="checkBtn(3, true)">bloi</button>
+        <button class="btn" onclick="checkBtn(3, false)">blou</button>
+        <button class="btn" onclick="checkBtn(3, false)">blan</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 1/3</span>
+        <span class="emoji-art">🧛‍♂️</span>
+        <h3>L'intrus du vampire</h3>
+        <p>Trouve l'intrus ! Lequel de ces mots <b>N'A PAS</b> le son "oi" ?</p>
+        <button class="btn" onclick="checkBtn(4, false)">Un miroir 🪞</button>
+        <button class="btn" onclick="checkBtn(4, false)">Une armoire 🚪</button>
+        <button class="btn" onclick="checkBtn(4, true)">Une lune 🌕</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 2/3</span>
+        <span class="emoji-art">🧠</span>
+        <h3>Mini-Quiz d'Halloween</h3>
+        <p>Lequel de ces mots fait peur ET contient le son <b>"oi"</b> ?</p>
+        <div class="quiz-grid">
+            <button class="btn" onclick="checkBtn(5, false)">Un loup</button>
+            <button class="btn" onclick="checkBtn(5, true)">L'effroi</button>
+            <button class="btn" onclick="checkBtn(5, false)">La nuit</button>
+            <button class="btn" onclick="checkBtn(5, false)">Le sang</button>
+        </div>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 3/3</span>
+        <span class="emoji-art">👑</span>
+        <h3>L'image mystère</h3>
+        <p>Comment s'écrit la fin de ce mot ? (Le r___ des monstres)</p>
+        <button class="btn" onclick="checkBtn(6, true)">roi</button>
+        <button class="btn" onclick="checkBtn(6, false)">rou</button>
+        <button class="btn" onclick="checkBtn(6, false)">ré</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 1/3</span>
+        <span class="emoji-art">🐈‍⬛</span>
+        <h3>Vrai ou Faux ?</h3>
+        <p>Le mot souligné est-il bien orthographié avec "oi" ?</p>
+        <p class="text-box">"Le chat <u>nouar</u> se promène dans la ruelle."</p>
+        <button class="btn" onclick="checkBtn(7, false)">Vrai</button>
+        <button class="btn" onclick="checkBtn(7, true)">Faux (c'est noir)</button>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 2/3</span>
+        <span class="emoji-art">🦇</span>
+        <h3>La phrase incomplète</h3>
+        <p>Choisis la bonne fin pour le mot de la phrase :</p>
+        <p class="text-box">"La chauve-souris vole seulement dans le s____."</p>
+        <button class="btn" onclick="checkBtn(8, false)">our</button>
+        <button class="btn" onclick="checkBtn(8, true)">oir</button>
+        <button class="btn" onclick="checkBtn(8, false)">ar</button>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 3/3</span>
+        <span class="emoji-art">🥶</span>
+        <h3>Le frisson</h3>
+        <p>Sélectionne la bonne orthographe pour compléter l'idée :</p>
+        <p class="text-box">"Le vent souffle fort, il fait très fr____."</p>
+        <button class="btn" onclick="checkBtn(9, true)">oid</button>
+        <button class="btn" onclick="checkBtn(9, false)">oi</button>
+        <button class="btn" onclick="checkBtn(9, false)">oix</button>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 1/3</span>
+        <span class="emoji-art">🏠</span>
+        <h3>Le fantôme perdu</h3>
+        <p>Quel mot se cache sous l'étoile ⭐ ? (Indice : le haut d'une maison, avec <b>oi</b>)</p>
+        <div class="text-box">"Le petit fantôme cherche sa maison. Il regarde le ciel par-dessus le ⭐ de la grange."</div>
+        <input type="text" id="in-10" placeholder="Écris le mot...">
+        <br><button class="btn" onclick="checkInput(10, ['toit', 'toits'])">Vérifier</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 2/3</span>
+        <span class="emoji-art">🍲</span>
+        <h3>Le bouillon maudit</h3>
+        <p>Trouve le mot sous l'étoile ⭐. (Indice : un grand oiseau blanc, avec <b>oi</b>)</p>
+        <div class="text-box">"La sorcière prépare son chaudron bouillonnant. Elle y met une patte d'⭐."</div>
+        <input type="text" id="in-11" placeholder="Écris le mot...">
+        <br><button class="btn" onclick="checkInput(11, ['oie', 'oies'])">Vérifier</button>
+        <p id="f-11" class="feedback"></p>
+    </div>
+
+    <div id="step-12" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 3/3</span>
+        <span class="emoji-art">🧊</span>
+        <h3>La soif du monstre</h3>
+        <p>Devine le mot caché ! (Indice : contraire de chaud, avec <b>oi</b>)</p>
+        <div class="text-box">"Le monstre du marais a soif. Il veut boire quelque chose de très ⭐."</div>
+        <input type="text" id="in-12" placeholder="Écris le mot...">
+        <br><button class="btn" onclick="checkInput(12, ['froid'])">Vérifier</button>
+        <p id="f-12" class="feedback"></p>
+    </div>
+
+    <div id="step-13" class="step">
+        <span class="level-tag">Niveau 5 - BOSS 1/3</span>
+        <span class="emoji-art">🌙</span>
+        <h3>L'énigme de l'ombre</h3>
+        <p><b>Résous l'énigme :</b> "Je suis très sombre. J'arrive à la fin de la journée. Mon nom s'écrit avec <b>oi</b>. Qui suis-je ?"</p>
+        <input type="text" id="in-13" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(13, ['soir'])">Valider</button>
+        <p id="f-13" class="feedback"></p>
+    </div>
+
+    <div id="step-14" class="step">
+        <span class="level-tag">Niveau 5 - BOSS 2/3</span>
+        <span class="emoji-art">🍐</span>
+        <h3>L'énigme du verger maudit</h3>
+        <p><b>Résous l'énigme :</b> "Je suis un fruit jaune ou vert d'automne. Mon nom rime avec 'soir'. Qui suis-je ?"</p>
+        <input type="text" id="in-14" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(14, ['poire', 'poires'])">Valider</button>
+        <p id="f-14" class="feedback"></p>
+    </div>
+
+    <div id="step-15" class="step">
+        <span class="level-tag">Niveau 5 - BOSS FINAL</span>
+        <span class="emoji-art">🐺</span>
+        <h3>L'ultime mystère</h3>
+        <p><b>La dernière énigme :</b> "Je pousse sur la peau des chats ou des loups-garous. Je suis tout doux, et mon nom s'écrit avec <b>oi</b>. Que suis-je ?"</p>
+        <input type="text" id="in-15" placeholder="Dernier mot de passe...">
+        <br><button class="btn" style="background:var(--primary); border-color:#fff;" onclick="checkInput(15, ['poil', 'poils'])">Déverrouiller la sortie !</button>
+        <p id="f-15" class="feedback"></p>
+    </div>
+
+    <div id="step-16" class="step">
+        <span class="emoji-art">🔓</span>
+        <h2>Évasion Réussie !</h2>
+        <p>Tu as vaincu les mystères du manoir grâce au son <b>"oi"</b>.</p>
+        
+        <div style="text-align: left; background: #fff; color: #222; padding: 20px; border-radius: 8px; border: 3px solid var(--primary); margin-top: 15px;">
+            <h3 style="color:var(--primary); margin-top:0;">📖 La nuit du Roi (Bonus)</h3>
+            <p>C'est le <b>mois</b> d'octobre. Un chat <b>noir</b> marche prudemment sur le <b>toit</b> d'une vieille maison en <b>bois</b>. Il n'a pas <b>froid</b>. Soudain, il <b>voit</b> une ombre dans le couloir. C'est le <b>roi</b> des fantômes qui <b>boit</b> une potion magique à la <b>poire</b> !</p>
+            <hr style="border-top:2px dashed #ccc;">
+            <small><b>Questions pour la classe :</b><br>
+            1. (C) Quel mois sommes-nous dans l'histoire ?<br>
+            2. (C) Sur quoi marche le chat ?<br>
+            3. (C) Trouve trois mots avec "oi" dans ce texte.<br>
+            4. (I) À ton avis, quelle heure est-il dans cette histoire ?<br>
+            5. (I) Comment se sent le chat noir à la fin selon toi ?</small>
+        </div>
+        <button class="btn" style="background:var(--secondary); margin-top:20px; width:100%;" onclick="location.reload()">Rejouer l'aventure</button>
+    </div>
 </div>
+
 <script>
-    const defis = [
-        {m: "Poisson", r: true}, {m: "Bateau", r: false}, {m: "Voiture", r: true}, {m: "Étoile", r: true}, {m: "Pantin", r: false}
-    ];
-    let etape = 0;
-    function actualiser() {
-        if(etape < defis.length) {
-            document.getElementById('mot-affiche').innerText = defis[etape].m;
-            document.getElementById('feedback').innerText = "";
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+    const totalSteps = 15;
+
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        
+        if(type === 'win') {
+            osc.type = 'sine';
+            // Un petit son cristallin "magique"
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(1108.73, audioCtx.currentTime + 0.1); 
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         } else {
-            document.querySelector('.card').innerHTML = "<h1>🎖️ INDICE DÉCODÉ !</h1><p>Le mot de passe du badge 3 est :</p><h2 style='color:#8e44ad'>MIROIR-22</h2>";
+            osc.type = 'sine';
+            // Un son grave type "gong" fantomatique
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         }
     }
-    function repondre(choix) {
-        if(choix === defis[etape].r) {
-            document.getElementById('feedback').innerHTML = "<span style='color:green'>✅ OUI !</span>";
-            etape++; setTimeout(actualiser, 800);
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth;
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        let progress = currentStep > totalSteps ? 100 : ((currentStep - 1) / totalSteps) * 100;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Mystère résolu !</span>";
+            setTimeout(nextStep, 1000);
         } else {
-            document.getElementById('feedback').innerHTML = "<span style='color:red'>❌ Réessaie...</span>";
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Bouh ! Mauvaise réponse.</span>";
         }
     }
-    actualiser();
+
+    function checkInput(stepNum, validAnswersArray) {
+        const inputVal = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        const fb = document.getElementById('f-' + stepNum);
+        
+        // Anti-bogue : on nettoie les déterminants souvent rajoutés par les élèves
+        const cleanVal = inputVal.replace(/^(un |une |le |la |les |l'|du |des |de |d')/i, "").trim(); 
+        
+        if(validAnswersArray.includes(cleanVal)) {
+            playSound('win');
+            fb.innerHTML = "<span class='correct'>Mot de passe accepté !</span>";
+            setTimeout(nextStep, 1000);
+        } else {
+            playSound('fail');
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>La porte reste verrouillée...</span>";
+        }
+    }
 </script>
+
 </body>
 </html>
