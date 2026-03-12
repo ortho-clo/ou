@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évasion : La Magie des Fées (Version Longue)</title>
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --secondary: #f39c12;
+            --accent: #ff9ff3;
+            --bg: #f8f4ff;
+            --font-main: 'Century Gothic', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at top left, #fff0f5, transparent);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 650px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(142, 68, 173, 0.2);
+            border: 4px solid var(--primary);
+            text-align: center;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+
+        h1 { color: var(--primary); margin-top: 0; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: #e0d6eb;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            border-radius: 10px;
+            transition: width 0.4s ease-out;
+        }
+
+        .step { display: none; animation: popIn 0.4s ease forwards; }
+        .step.active { display: block; }
+
+        @keyframes popIn { 
+            0% { opacity: 0; transform: scale(0.95); } 
+            100% { opacity: 1; transform: scale(1); } 
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .shake {
+            animation: shake 0.4s;
+            border-color: #e74c3c !important;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0px #6c3483;
+        }
+
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn:hover { background: #9b59b6; }
+
+        .emoji-art { font-size: 3rem; display: block; margin-bottom: 5px; }
+
+        .feedback { 
+            min-height: 25px; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            font-size: 1.1rem;
+        }
+        .correct { color: #27ae60; }
+        .wrong { color: #e74c3c; }
+
+        input[type="text"] {
+            font-family: var(--font-main);
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 3px solid var(--accent);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 250px;
+            text-align: center;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        .text-box {
+            background: #fff9db;
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            border-left: 5px solid var(--secondary);
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .level-tag {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>✨ La Magie des Fées ✨</h1>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="step-0" class="step active">
+        <span class="emoji-art">🧚‍♀️</span>
+        <p>Le grimoire secret comporte désormais <b>10 serrures magiques</b> ! Prouve que tu connais les secrets des lettres <b>é, è, ai, ei</b> et <b>er</b> pour les ouvrir une par une.</p>
+        <button class="btn" onclick="nextStep()">Commencer la mission</button>
+    </div>
+
+    <div id="step-1" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 1/2</span>
+        <span class="emoji-art">🧪</span>
+        <h3>La potion des sons</h3>
+        <p>Quelle bulle magique chante le son <b>"è"</b> (comme dans <i>forêt</i>) ?</p>
+        <button class="btn" onclick="checkBtn(1, false)">flé</button>
+        <button class="btn" onclick="checkBtn(1, true)">trai</button>
+        <button class="btn" onclick="checkBtn(1, false)">mer</button>
+        <p id="f-1" class="feedback"></p>
+    </div>
+
+    <div id="step-2" class="step">
+        <span class="level-tag">Niveau 1 - Épreuve 2/2</span>
+        <span class="emoji-art">🫧</span>
+        <h3>La deuxième potion</h3>
+        <p>Et maintenant, quelle bulle chante le son <b>"é"</b> (comme dans <i>fée</i>) ?</p>
+        <button class="btn" onclick="checkBtn(2, false)">blè</button>
+        <button class="btn" onclick="checkBtn(2, false)">pein</button>
+        <button class="btn" onclick="checkBtn(2, true)">cher</button>
+        <p id="f-2" class="feedback"></p>
+    </div>
+
+    <div id="step-3" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 1/2</span>
+        <span class="emoji-art">🍄</span>
+        <h3>Le cercle des champignons</h3>
+        <p>Un seul de ces objets se termine par le son <b>"è"</b>. Trouve-le !</p>
+        <button class="btn" onclick="checkBtn(3, false)">Un panier 🧺</button>
+        <button class="btn" onclick="checkBtn(3, false)">Un rocher 🪨</button>
+        <button class="btn" onclick="checkBtn(3, true)">Un balai 🧹</button>
+        <p id="f-3" class="feedback"></p>
+    </div>
+
+    <div id="step-4" class="step">
+        <span class="level-tag">Niveau 2 - Épreuve 2/2</span>
+        <span class="emoji-art">🌲</span>
+        <h3>L'intrus de la forêt</h3>
+        <p>Trouve l'intrus ! Quel mot <b>NE SE TERMINE PAS</b> par le son "è" ?</p>
+        <button class="btn" onclick="checkBtn(4, false)">Le secret 🤫</button>
+        <button class="btn" onclick="checkBtn(4, true)">Le boulanger 🥖</button>
+        <button class="btn" onclick="checkBtn(4, false)">La paix 🕊️</button>
+        <p id="f-4" class="feedback"></p>
+    </div>
+
+    <div id="step-5" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 1/2</span>
+        <span class="emoji-art">📜</span>
+        <h3>Le premier parchemin</h3>
+        <p>Le mot souligné est-il bien écrit ?</p>
+        <p class="text-box">"La <u>rène</u> du royaume porte une couronne."</p>
+        <button class="btn" onclick="checkBtn(5, false)">Vrai !</button>
+        <button class="btn" onclick="checkBtn(5, true)">Faux !</button>
+        <p id="f-5" class="feedback"></p>
+    </div>
+
+    <div id="step-6" class="step">
+        <span class="level-tag">Niveau 3 - Épreuve 2/2</span>
+        <span class="emoji-art">❄️</span>
+        <h3>Le deuxième parchemin</h3>
+        <p>Choisis les bonnes lettres pour compléter le mot :</p>
+        <p class="text-box">"Il tombe de la n____ge magique sur les arbres."</p>
+        <button class="btn" onclick="checkBtn(6, false)">ège</button>
+        <button class="btn" onclick="checkBtn(6, true)">eige</button>
+        <button class="btn" onclick="checkBtn(6, false)">aige</button>
+        <p id="f-6" class="feedback"></p>
+    </div>
+
+    <div id="step-7" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 1/2</span>
+        <span class="emoji-art">🦅</span>
+        <h3>L'ami de la forêt</h3>
+        <p>Devine le mot caché par l'étoile ⭐. (Indice : il contient <b>ai</b>)</p>
+        <div class="text-box">"Le lutin demande l'aide d'un oiseau avec de grandes ailes. C'est un ⭐ royal."</div>
+        <input type="text" id="in-7" placeholder="Écris le mot...">
+        <br><button class="btn" onclick="checkInput(7, 'aigle')">Vérifier</button>
+        <p id="f-7" class="feedback"></p>
+    </div>
+
+    <div id="step-8" class="step">
+        <span class="level-tag">Niveau 4 - Épreuve 2/2</span>
+        <span class="emoji-art">✨</span>
+        <h3>Le cercle de lumière</h3>
+        <p>Trouve le mot sous l'étoile ⭐. (Indice : il contient les lettres <b>ai</b> et <b>è</b>)</p>
+        <div class="text-box">"Pour organiser leur grande fête, les fées cherchent un espace magique sans arbres, baigné par la lumière de la lune. Elles se posent au centre de la ⭐."</div>
+        <input type="text" id="in-8" placeholder="Écris le mot...">
+        <br><button class="btn" onclick="checkInput(8, 'clairière', 'clairiere')">Vérifier</button>
+        <p id="f-8" class="feedback"></p>
+    </div>
+
+    <div id="step-9" class="step">
+        <span class="level-tag">Niveau 5 - BOSS 1/2</span>
+        <span class="emoji-art">🌩️</span>
+        <h3>Le gardien céleste</h3>
+        <p><b>Énigme :</b> "Je suis une lumière vive pendant l'orage. Mon nom s'écrit avec <b>é</b> et <b>ai</b>. Qui suis-je ?"</p>
+        <input type="text" id="in-9" placeholder="Mot de passe...">
+        <br><button class="btn" onclick="checkInput(9, 'éclair', 'eclair')">Valider</button>
+        <p id="f-9" class="feedback"></p>
+    </div>
+
+    <div id="step-10" class="step">
+        <span class="level-tag">Niveau 5 - BOSS FINAL</span>
+        <span class="emoji-art">🕸️</span>
+        <h3>Le gardien tisserand</h3>
+        <p><b>Énigme finale :</b> "Je tisse des fils d'argent entre les branches. Mon nom contient <b>ai</b> et se termine par <b>ée</b>. Qui suis-je ?"</p>
+        <input type="text" id="in-10" placeholder="Dernier mot de passe...">
+        <br><button class="btn" onclick="checkInput(10, 'araignée', 'araignee')">Briser le sort !</button>
+        <p id="f-10" class="feedback"></p>
+    </div>
+
+    <div id="step-11" class="step">
+        <span class="emoji-art">👑</span>
+        <h2>Sortilège brisé !</h2>
+        <p>Bravo ! Tu as ouvert les 10 serrures du grimoire.</p>
+        
+        <div style="text-align: left; background: #fdfaff; padding: 20px; border-radius: 15px; border: 2px dashed var(--primary); font-size: 0.95rem;">
+            <h3>📖 Lecture Finale (Bonus)</h3>
+            <p>La fée <b>Éléonore</b> se promène dans la <b>forêt</b> <b>épaisse</b>. Elle porte un <b>panier</b> rempli de <b>fraises</b>. Soudain, un <b>éclair</b> illumine le ciel ! Elle se cache sous un <b>rocher</b> pour se protéger avec la <b>reine</b> des papillons.</p>
+            <hr>
+            <small><b>Questions de compréhension :</b><br>
+            1. (C) Comment s'appelle la fée ?<br>
+            2. (C) Qu'y a-t-il dans son panier ?<br>
+            3. (C) Relève un mot avec "ai", "ei", et "er".<br>
+            4. (I) Quel temps fait-il à la fin ?<br>
+            5. (I) Pourquoi le rocher est-il une bonne cachette ?</small>
+        </div>
+        <button class="btn" onclick="location.reload()" style="margin-top:20px;">Rejouer</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentStep = 0;
+
+    function playSuccess() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Do
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Mi
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function playError() {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function shakeScreen() {
+        const box = document.getElementById('game-container');
+        box.classList.remove('shake');
+        void box.offsetWidth; // Force reflow
+        box.classList.add('shake');
+    }
+
+    function nextStep() {
+        document.getElementById('step-' + currentStep).classList.remove('active');
+        currentStep++;
+        document.getElementById('step-' + currentStep).classList.add('active');
+        
+        // Progress bar (10 questions = 10% each)
+        let progress = currentStep > 10 ? 100 : (currentStep - 1) * 10;
+        if(currentStep === 0) progress = 0;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function checkBtn(stepNum, isCorrect) {
+        const fb = document.getElementById('f-' + stepNum);
+        if(isCorrect) {
+            playSuccess();
+            fb.innerHTML = "<span class='correct'>Excellent !</span>";
+            setTimeout(nextStep, 1200);
+        } else {
+            playError();
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Oops, ce n'est pas ça !</span>";
+        }
+    }
+
+    function checkInput(stepNum, valid1, valid2 = "") {
+        const val = document.getElementById('in-' + stepNum).value.toLowerCase().trim();
+        const fb = document.getElementById('f-' + stepNum);
+        // Enlève l'article éventuel pour être souple
+        const valClean = val.replace(/^un |^une |^le |^la |^l'/g, ""); 
+        
+        if(valClean === valid1 || (valid2 !== "" && valClean === valid2)) {
+            playSuccess();
+            fb.innerHTML = "<span class='correct'>Mot de passe accepté !</span>";
+            setTimeout(nextStep, 1200);
+        } else {
+            playError();
+            shakeScreen();
+            fb.innerHTML = "<span class='wrong'>Le grimoire résiste... cherche encore !</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
