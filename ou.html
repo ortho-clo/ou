@@ -3,546 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le mystère du monstre Anselm</title>
+    <title>Le Défi du Chevalier : La Quête du Son OU</title>
     <style>
-        :root {
-            --fond: #f0f8ff;
-            --texte: #2c3e50;
-            --primaire: #3498db;
-            --secondaire: #9b59b6;
-            --succes: #2ecc71;
-            --erreur: #e74c3c;
-            --carte: #ffffff;
-        }
-
+        /* CONTRAINTE TECHNIQUE STRICTE : Police Century Gothic pour le 'a' rond */
         body {
-            /* LA FAMEUSE POLICE AVEC LE "A" ROND ! */
-            font-family: 'Century Gothic', 'Tw Cen MT', Futura, sans-serif;
-            background-color: var(--fond);
-            color: var(--texte);
+            font-family: 'Century Gothic', AppleGothic, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
             margin: 0;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        #jeu-conteneur {
-            width: 100%;
-            max-width: 700px;
-            background: var(--carte);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border: 3px solid var(--primaire);
-            position: relative;
-            z-index: 10;
-        }
-
-        h1, h2, h3 {
-            color: var(--secondaire);
             text-align: center;
         }
 
-        .niveau-titre {
-            background: var(--primaire);
-            color: white;
-            display: inline-block;
-            padding: 5px 15px;
+        #game-container {
+            background-color: #34495e;
+            padding: 40px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .ecran {
-            display: none;
-            animation: fondu 0.4s ease-in-out;
-        }
-
-        .ecran.actif {
-            display: block;
-        }
-
-        @keyframes fondu {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .anselm-entete {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 15px;
-            border-left: 5px solid var(--primaire);
-        }
-
-        .anselm-avatar {
-            font-size: 50px; 
-            animation: flotter 3s ease-in-out infinite;
-        }
-
-        @keyframes flotter {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        .bulle-anselm {
-            font-size: 1.1rem;
-            flex-grow: 1;
-        }
-
-        .image-salle {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 800px;
             width: 100%;
-            height: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 80px; 
-            background-color: #ecf0f1;
-            border-radius: 15px;
-            margin-bottom: 15px;
+            border: 4px solid #f1c40f;
         }
 
-        .grille-boutons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        h1 { color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        h2 { color: #e74c3c; }
+
+        /* Alignement sur la même ligne pour les titres avec émojis */
+        .title-inline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 15px;
-            margin-top: 20px;
         }
+        .title-inline .emoji-inline { font-size: 1.5em; }
+
+        .big-emoji { font-size: 80px; margin: 20px 0; display: block; }
+        
+        .level { display: none; }
+        .level.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         button {
-            background-color: var(--primaire);
+            background-color: #e74c3c;
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-family: inherit; /* Hérite de Century Gothic */
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-family: 'Century Gothic', sans-serif;
+            border-radius: 50px;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 0 #2980b9;
-            font-weight: bold;
+            margin: 10px;
+            transition: transform 0.1s, background-color 0.3s;
+            box-shadow: 0 4px 0 #c0392b;
         }
 
-        button:hover {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #2980b9;
-        }
+        button:hover:not(:disabled) { background-color: #ff6b6b; }
+        button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c0392b; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; box-shadow: none;}
 
-        button:disabled {
-            background-color: #bdc3c7;
-            box-shadow: 0 4px 0 #95a5a6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        /* Styles spécifiques aux mécaniques */
+        .logatomes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        .logatome-btn { background-color: #3498db; box-shadow: 0 4px 0 #2980b9; }
+        .logatome-btn.selected { background-color: #f1c40f; color: #2c3e50; box-shadow: 0 4px 0 #f39c12; }
 
-        .texte-lecture {
-            background-color: #fffde7;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px dashed #f1c40f;
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .retroaction {
-            text-align: center;
-            font-weight: bold;
-            margin-top: 15px;
-            min-height: 24px;
-            font-size: 1.2rem;
-        }
-
-        .confetti {
-            position: fixed;
-            top: -50px;
-            font-size: 30px;
-            z-index: 9999;
-            animation: tomber 3s linear forwards;
-        }
-
-        @keyframes tomber {
-            to { transform: translateY(120vh) rotate(360deg); }
-        }
-
-        /* Style spécifique pour la section bonus */
-        .boite-bonus {
-            background-color: #e8f8f5;
-            border: 3px solid #1abc9c;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            text-align: left;
-        }
+        .intrus-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
         
-        .boite-questions {
-            background-color: #fdf2e9;
-            border-left: 5px solid #e67e22;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 0 10px 10px 0;
-            text-align: left;
+        .hole-sentence { font-size: 1.3em; margin: 20px 0; line-height: 1.8; }
+        select {
+            font-size: 1em;
+            padding: 5px 10px;
+            font-family: 'Century Gothic', sans-serif;
+            border-radius: 10px;
+            background: #ecf0f1;
+            color: #2c3e50;
         }
+
+        .text-box { background-color: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: left; margin: 20px 0; line-height: 1.6;}
+
+        input[type="text"] {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            font-family: 'Century Gothic', sans-serif;
+            border-radius: 50px;
+            border: 2px solid #f1c40f;
+            background: #ecf0f1;
+            color: #2c3e50;
+            margin: 10px;
+            text-align: center;
+        }
+
+        #feedback { font-weight: bold; font-size: 1.2em; margin-top: 20px; min-height: 1.5em;}
+        #feedback.correct { color: #2ecc71; animation: popIn 0.3s; }
+        #feedback.wrong { color: #e74c3c; animation: shake 0.3s; }
+
+        .teacher-section { background-color: #ecf0f1; color: #2c3e50; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: left;}
+        .teacher-section h3 { color: #2c3e50; border-bottom: 2px solid #2c3e50;}
+
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-10px);} 75% {transform: translateX(10px);} }
+        @keyframes popIn { 0% {transform: scale(0.8); opacity: 0;} 100% {transform: scale(1); opacity: 1;} }
     </style>
 </head>
 <body>
 
-<div id="jeu-conteneur">
-    
-    <div id="ecran-intro" class="ecran actif">
-        <h1>Le Mystère d'Anselm</h1>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">
-                "Bonjour ! Je suis Anselm le détective. Le son <strong>[an]</strong> a disparu ! Aide-moi à fouiller les 5 salles pour le retrouver."
-            </div>
+<div id="game-container">
+    <h1>⚔️ La Quête du Chevalier OU 🛡️</h1>
+
+    <div id="level-0" class="level active">
+        <span class="big-emoji">🏰</span>
+        <h2>Bienvenue, jeune écuyer !</h2>
+        <p>Le méchant dragon a volé la couronne du roi et s'est caché dans la tour.</p>
+        <p>Pour l'atteindre, tu dois prouver que tu maîtrises le son <strong>[ou]</strong>.</p>
+        <p>Relèveras-tu le défi pour devenir Chevalier ?</p>
+        <button onclick="startFirstLevel()">Je commence la quête !</button>
+    </div>
+
+    <div id="level-1" class="level">
+        <h2>Niveau 1 : Le Pont-Levis ⛓️</h2>
+        <p>Pour faire baisser le pont, clique sur tous les blasons qui contiennent le son <strong>[ou]</strong>.</p>
+        <div class="logatomes-grid">
+            <button class="logatome-btn" onclick="toggleSyllable(this, true)">rou</button>
+            <button class="logatome-btn" onclick="toggleSyllable(this, false)">lo</button>
+            <button class="logatome-btn" onclick="toggleSyllable(this, false)">ma</button>
+            <button class="logatome-btn" onclick="toggleSyllable(this, true)">chou</button>
+            <button class="logatome-btn" onclick="toggleSyllable(this, false)">toi</button>
+            <button class="logatome-btn" onclick="toggleSyllable(this, true)">nou</button>
         </div>
-        <div class="image-salle">🚪</div>
-        <div style="text-align: center;">
-            <button onclick="changerEcran('ecran-salle1a')">Ouvrir la porte !</button>
+        <button id="validate-1" onclick="checkLevel1()">Ouvrir la porte</button>
+    </div>
+
+    <div id="level-2" class="level">
+        <h2>Niveau 2 : L'Écurie Royale 🐎</h2>
+        <p>Trouve le mot qui ne contient <strong>PAS</strong> le son [ou] pour calmer les chevaux.</p>
+        <div class="intrus-flex">
+            <button onclick="handleLvl2Choice(this, false)">un genou 🦵</button>
+            <button onclick="handleLvl2Choice(this, true)">une épée 🗡️</button> <button onclick="handleLvl2Choice(this, false)">une souris 🐭</button>
+            <button onclick="handleLvl2Choice(this, false)">la soupe 🥣</button>
         </div>
     </div>
 
-    <div id="ecran-salle1a" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 1 : Non-mots (1/2)</span></div>
-        <h2>Le Laboratoire</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Trouve le faux-mot qui contient le son <strong>[an]</strong> ou <strong>[en]</strong>.</div>
+    <div id="level-3" class="level">
+        <h2>Niveau 3 : La Salle des Gardes 👥</h2>
+        <p>Choisis la bonne orthographe pour compléter la phrase.</p>
+        <div class="hole-sentence">
+            Le chevalier est très m<select id="select-3-1">
+                <option value="o">o</option>
+                <option value="ou" data-correct="true">ou</option>
+                <option value="oi">oi</option>
+            </select>mou. Il a perdu son d<select id="select-3-2">
+                <option value="ou" data-correct="true">ou</option>
+                <option value="u">u</option>
+                <option value="on">on</option>
+            </select>dou au pied de la t<select id="select-3-3">
+                <option value="u">u</option>
+                <option value="eu">eu</option>
+                <option value="ou" data-correct="true">ou</option>
+            </select>r.
         </div>
-        <div class="image-salle">🧪</div>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-1a')">Pir</button>
-            <button onclick="verifierReponse(this, true, 'retro-1a', 'ecran-salle1b')">Lan</button>
-            <button onclick="verifierReponse(this, false, 'retro-1a')">Mot</button>
-            <button onclick="verifierReponse(this, false, 'retro-1a')">Sur</button>
-        </div>
-        <div id="retro-1a" class="retroaction"></div>
+        <button onclick="checkLevel3()">Passer les gardes</button>
     </div>
 
-    <div id="ecran-salle1b" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 1 : Non-mots (2/2)</span></div>
-        <h2>Le Laboratoire</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Trouve le faux-mot avec le son <strong>[em]</strong> ou <strong>[am]</strong>.</div>
+    <div id="level-4" class="level">
+        <h2>Niveau 4 : L'Armurerie Secrète 🛡️</h2>
+        <p>Lis ce texte et écris le mot de l'armure qui contient le son [ou].</p>
+        <div class="text-box">
+            Le chevalier prend sa grande lance. Il met son casque brillant et son bouclier solide. Le voilà prêt pour le combat.
         </div>
-        <div class="image-salle">🔬</div>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-1b')">Pou</button>
-            <button onclick="verifierReponse(this, false, 'retro-1b')">Fil</button>
-            <button onclick="verifierReponse(this, true, 'retro-1b', 'ecran-salle2a', true)">Tem</button>
-            <button onclick="verifierReponse(this, false, 'retro-1b')">Rac</button>
-        </div>
-        <div id="retro-1b" class="retroaction"></div>
+        <p>Quel est l'objet caché dans le texte ?</p>
+        <input type="text" id="input-4" placeholder="Tape le mot ici">
+        <br>
+        <button onclick="checkLevel4()">Ouvrir le coffre</button>
     </div>
 
-    <div id="ecran-salle2a" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 2 : Mots (1/2)</span></div>
-        <h2>Le Marché</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Je suis chaud et je couvre ton dos. Mon nom contient <strong>[an]</strong>. Qui suis-je ?</div>
-        </div>
-        <div class="image-salle">🛒</div>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-2a')">Un chapeau</button>
-            <button onclick="verifierReponse(this, true, 'retro-2a', 'ecran-salle2b')">Un manteau</button>
-            <button onclick="verifierReponse(this, false, 'retro-2a')">Un pull</button>
-            <button onclick="verifierReponse(this, false, 'retro-2a')">Un foulard</button>
-        </div>
-        <div id="retro-2a" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle2b" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 2 : Mots (2/2)</span></div>
-        <h2>Le Marché</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Je sers à éclairer la pièce. Mon nom contient <strong>[am]</strong>. Qui suis-je ?</div>
-        </div>
-        <div class="image-salle">🛍️</div>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, true, 'retro-2b', 'ecran-salle3a', true)">Une lampe</button>
-            <button onclick="verifierReponse(this, false, 'retro-2b')">Une bougie</button>
-            <button onclick="verifierReponse(this, false, 'retro-2b')">Une chaise</button>
-            <button onclick="verifierReponse(this, false, 'retro-2b')">Une table</button>
-        </div>
-        <div id="retro-2b" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle3a" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 3 : Phrases (1/2)</span></div>
-        <h2>L'École</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Complète la phrase avec un mot contenant le son <strong>[en]</strong>.</div>
-        </div>
-        <div class="image-salle">🏫</div>
-        <p class="texte-lecture">L'_____ mange une banane.</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, true, 'retro-3a', 'ecran-salle3b')">Enfant</button>
-            <button onclick="verifierReponse(this, false, 'retro-3a')">Oiseau</button>
-            <button onclick="verifierReponse(this, false, 'retro-3a')">Ourson</button>
-            <button onclick="verifierReponse(this, false, 'retro-3a')">Ami</button>
-        </div>
-        <div id="retro-3a" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle3b" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 3 : Phrases (2/2)</span></div>
-        <h2>L'École</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Il manque un mot avec le son <strong>[en]</strong> !</div>
-        </div>
-        <div class="image-salle">🎒</div>
-        <p class="texte-lecture">Le facteur dépose une _____ .</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-3b')">Boîte</button>
-            <button onclick="verifierReponse(this, false, 'retro-3b')">Pomme</button>
-            <button onclick="verifierReponse(this, false, 'retro-3b')">Lettre</button>
-            <button onclick="verifierReponse(this, true, 'retro-3b', 'ecran-salle4a', true)">Enveloppe</button>
-        </div>
-        <div id="retro-3b" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle4a" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 4 : Textes (1/2)</span></div>
-        <h2>La Bibliothèque</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Trouve le mot qui cache le son <strong>[en]</strong> !</div>
-        </div>
-        <div class="image-salle">📚</div>
-        <p class="texte-lecture">Le vent souffle. Maman installe la tente.</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-4a')">Souffle</button>
-            <button onclick="verifierReponse(this, true, 'retro-4a', 'ecran-salle4b')">Tente</button>
-            <button onclick="verifierReponse(this, false, 'retro-4a')">Vent</button>
-            <button onclick="verifierReponse(this, false, 'retro-4a')">Maman</button>
-        </div>
-        <div id="retro-4a" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle4b" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 4 : Textes (2/2)</span></div>
-        <h2>La Bibliothèque</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Cherche le mot avec le son <strong>[am]</strong>.</div>
-        </div>
-        <div class="image-salle">📖</div>
-        <p class="texte-lecture">Le renard observe le campement des voyageurs.</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-4b')">Observe</button>
-            <button onclick="verifierReponse(this, true, 'retro-4b', 'ecran-salle5a', true)">Campement</button>
-            <button onclick="verifierReponse(this, false, 'retro-4b')">Renard</button>
-            <button onclick="verifierReponse(this, false, 'retro-4b')">Voyageurs</button>
-        </div>
-        <div id="retro-4b" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle5a" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 5 : Le Mystère (1/2)</span></div>
-        <h2>Le Château</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Trouve la personne dont le nom contient le son <strong>[an]</strong>.</div>
-        </div>
-        <div class="image-salle">🏰</div>
-        <p class="texte-lecture">Le vieux marchand vend des bonbons géants au village.</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-5a')">Vieux</button>
-            <button onclick="verifierReponse(this, true, 'retro-5a', 'ecran-salle5b')">Marchand</button>
-            <button onclick="verifierReponse(this, false, 'retro-5a')">Village</button>
-            <button onclick="verifierReponse(this, false, 'retro-5a')">Géants</button>
-        </div>
-        <div id="retro-5a" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-salle5b" class="ecran">
-        <div style="text-align: center;"><span class="niveau-titre">Niveau 5 : Le Mystère (2/2)</span></div>
-        <h2>Le Château</h2>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">Mot de passe final : il contient <strong>trois fois</strong> le son [an/en/am/em] !</div>
-        </div>
-        <div class="image-salle">👑</div>
-        <p class="texte-lecture">Le fantôme se promène en chantant. Le paysage est vraiment enchantant !</p>
-        <div class="grille-boutons">
-            <button onclick="verifierReponse(this, false, 'retro-5b')">Fantôme</button>
-            <button onclick="verifierReponse(this, false, 'retro-5b')">Chantant</button>
-            <button onclick="verifierReponse(this, true, 'retro-5b', 'ecran-victoire', false, true)">Enchantant</button>
-            <button onclick="verifierReponse(this, false, 'retro-5b')">Vraiment</button>
-        </div>
-        <div id="retro-5b" class="retroaction"></div>
-    </div>
-
-    <div id="ecran-victoire" class="ecran">
-        <h2 style="font-size: 2.5rem; color: var(--succes);">Mission Accomplie !</h2>
-        <div style="font-size: 5rem; text-align: center; margin: 10px 0;">🏆</div>
-        <div class="anselm-entete">
-            <div class="anselm-avatar">🕵️‍♂️</div>
-            <div class="bulle-anselm">
-                "MERCI ! Grâce à toi, le son <strong>[an]</strong> est de retour."
-            </div>
-        </div>
-        <p style="text-align: center; font-size: 1.4rem; color: var(--primaire);"><strong>Badge obtenu : Détective d'Élite !</strong></p>
-        <div class="grille-boutons" style="margin-top: 30px;">
-            <button onclick="location.reload()" style="background-color: #7f8c8d;">Jouer à nouveau 🔄</button>
-            <button onclick="changerEcran('ecran-bonus')" style="background-color: #1abc9c;">Aller au Bonus 📖</button>
-        </div>
-    </div>
-
-    <div id="ecran-bonus" class="ecran">
-        <h2>Bonus de Lecture : La Tempête</h2>
-        <div class="image-salle" style="font-size: 60px;">🐼🍂</div>
-        <div class="boite-bonus">
-            <strong>À lire ensemble (repérez les sons AN / EN / AM / EM) :</strong><br><br>
-            Le grand panda blanc, nommé Armand, se promène lentement. Soudain, le vent se lève sur le campement. En entendant le bruit, il tremble et s'enfuit vers une grande branche pour se mettre à l'abri. Dans son immense cachette, il mange des pampres de bambou en attendant que le temps se calme.
+    <div id="level-5" class="level">
+        <h2 class="title-inline"><span class="emoji-inline">🐲</span> Niveau 5 : Le Sommet de la Tour</h2>
+        <p>Le dragon te bloque la route. Pour le vaincre, devine le mot de passe mystère.</p>
+        
+        <div class="text-box" style="font-style: italic;">
+            "Je vis dans la sombre forêt et je hurle à la lune. Les chevaliers me craignent la nuit. Mon nom contient le son [ou]. Qui suis-je ?"
         </div>
         
-        <div class="boite-questions">
-            <strong style="color: #d35400;">Questions concrètes (dans le texte) :</strong>
-            <ul>
-                <li>Comment s'appelle le panda ?</li>
-                <li>Où s'enfuit-il quand il entend le bruit ?</li>
-                <li>Que mange Armand dans sa cachette ?</li>
-            </ul>
+        <input type="text" id="input-5" placeholder="Le code secret">
+        <br>
+        <button onclick="checkLevel5()">Vaincre le dragon !</button>
+    </div>
+
+    <div id="level-6" class="level">
+        <span class="big-emoji">👑</span>
+        <h2>Félicitations, Chevalier ! 🎉</h2>
+        <p>Tu as vaincu le dragon et récupéré la couronne.</p>
+        <p>Tu es un expert du son [ou] !</p>
+        
+        <div class="teacher-section">
+            <h3>📖 Coin Lecture & Questions (Pour l'enseignante)</h3>
+            <p><strong>Texte de lecture :</strong></p>
+            <p>Le petit écuyer Barnabé est devenu un vrai chevalier. Il monte sur sa pouliche rousse pour faire le tour du château. Dans son sac, il cache une gourde d'eau et des petits morceaux de nougat pour la route. Il est très courageux !</p>
             
-            <strong style="color: #d35400;">Questions abstraites / Inférences :</strong>
+            <p><strong>Questions concrètes :</strong></p>
             <ul>
-                <li>Comment se sent Armand quand le vent se lève ? (Qu'est-ce qui te fait dire ça ?)</li>
-                <li>D'après toi, est-ce qu'Armand est un animal courageux ou plutôt peureux ? Pourquoi ?</li>
+                <li>Comment s'appelle l'écuyer ? (Barnabé)</li>
+                <li>Sur quoi monte-t-il ? (Une pouliche rousse)</li>
+                <li>Que cache-t-il dans son sac ? (Une gourde et du nougat)</li>
             </ul>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button onclick="location.reload()">Recommencer le jeu 🔄</button>
+
+            <p><strong>Questions d'inférence (plus difficiles) :</strong></p>
+            <ul>
+                <li>D'après le texte, comment Barnabé se sent-il à la fin de son aventure ? (Fier, courageux, content).</li>
+                <li>Pourquoi Barnabé emporte-t-il une gourde et de la nourriture pour faire le tour du château, d'après toi ? (C'est peut-être un grand château, le tour est long, il veut être prévoyant).</li>
+            </ul>
         </div>
     </div>
 
+    <div id="feedback"></div>
 </div>
 
 <script>
-    // --- MAGIE AUDIO : SONS SYNTHÉTISÉS (100% Anti-Blocage) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
+    /* SONS - Web Audio API */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new AudioContext();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
-
-    function jouerSon(type) {
-        initAudio();
-        const t = audioCtx.currentTime;
+    function playSound(type) {
+        if (!audioCtx) return;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
         
-        if (type === 'clic-ok') {
-            // Un petit "Ding" joyeux !
-            creerBip(880, 'sine', 0.1, t); // La
-            creerBip(1108.73, 'sine', 0.2, t + 0.1); // Do# aigu
-        } 
-        else if (type === 'niveau-up') {
-            // Une petite musique de victoire (arpège magique)
-            creerBip(523.25, 'triangle', 0.15, t); // Do
-            creerBip(659.25, 'triangle', 0.15, t + 0.15); // Mi
-            creerBip(783.99, 'triangle', 0.15, t + 0.3); // Sol
-            creerBip(1046.50, 'triangle', 0.4, t + 0.45); // Do aigu
-        }
-    }
-
-    function creerBip(frequence, type, duree, debut) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(frequence, debut);
-        
-        // Pour un son doux qui s'estompe
-        gain.gain.setValueAtTime(0.1, debut);
-        gain.gain.exponentialRampToValueAtTime(0.001, debut + duree);
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        osc.start(debut);
-        osc.stop(debut + duree);
-    }
-    // -----------------------------------------------------------
-
-    function lancerConfettis() {
-        const emojis = ['🎉', '✨', '🎈', '⭐'];
-        for (let i = 0; i < 40; i++) {
-            let confetti = document.createElement('div');
-            confetti.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            confetti.classList.add('confetti');
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
-            document.body.appendChild(confetti);
-        }
-    }
-
-    function changerEcran(idEcranCible, estVictoire = false) {
-        document.querySelectorAll('.ecran').forEach(function(ecran) {
-            ecran.classList.remove('actif');
-        });
-        document.getElementById(idEcranCible).classList.add('actif');
-
-        if (estVictoire) {
-            jouerSon('niveau-up'); // Grande musique de victoire
-            lancerConfettis();
-        }
-    }
-
-    function verifierReponse(bouton, estCorrect, idRetro, idEcranSuivant = null, changementDeNiveau = false, estVictoireFinale = false) {
-        initAudio(); // Assure que le son est prêt au premier clic
-        const zoneRetro = document.getElementById(idRetro);
-        
-        if (estCorrect) {
-            // Si c'est un changement de niveau (activité B vers A de la salle suivante)
-            if (changementDeNiveau) {
-                jouerSon('niveau-up');
-            } else {
-                jouerSon('clic-ok');
-            }
-
-            bouton.style.backgroundColor = 'var(--succes)';
-            if (zoneRetro) {
-                zoneRetro.style.color = 'var(--succes)';
-                zoneRetro.innerText = "Excellent ! ✅";
-            }
-            
-            const boutonsFreres = bouton.parentElement.querySelectorAll('button');
-            boutonsFreres.forEach(function(b) { b.disabled = true; });
-
-            if (idEcranSuivant) {
-                setTimeout(function() {
-                    changerEcran(idEcranSuivant, estVictoireFinale);
-                }, 1500);
-            }
+        if (type === 'correct') {
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
         } else {
-            bouton.style.backgroundColor = 'var(--erreur)';
-            if (zoneRetro) {
-                zoneRetro.style.color = 'var(--erreur)';
-                zoneRetro.innerText = "Essaie encore ! ❌";
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
+    /* NAVIGATION */
+    let currentLevel = 0;
+    const feedbackEl = document.getElementById('feedback');
+
+    function hideAllLevels() {
+        document.querySelectorAll('.level').forEach(lvl => lvl.classList.remove('active'));
+    }
+
+    function showLevel(num) {
+        hideAllLevels();
+        document.getElementById('level-' + num).classList.add('active');
+        feedbackEl.textContent = "";
+        feedbackEl.className = "";
+        currentLevel = num;
+        document.getElementById('game-container').scrollTop = 0;
+    }
+
+    function setFeedback(text, type) {
+        feedbackEl.textContent = text;
+        feedbackEl.className = type;
+        playSound(type);
+    }
+
+    function startFirstLevel() {
+        audioCtx.resume().then(() => {
+            showLevel(1);
+        });
+    }
+
+    /* NIVEAU 1 */
+    let selectedBtnCount = 0;
+    
+    function toggleSyllable(btn, isCorrect) {
+        if(btn.classList.contains('selected')) {
+            btn.classList.remove('selected');
+        } else {
+            btn.classList.add('selected');
+        }
+        playSound('correct'); 
+    }
+
+    function checkLevel1() {
+        const allButtons = document.querySelectorAll('.logatome-btn');
+        let error = false;
+        let correctCount = 0;
+        
+        allButtons.forEach(btn => {
+            const isCorrect = btn.getAttribute('onclick').includes('true');
+            const isSelected = btn.classList.contains('selected');
+
+            if((isSelected && !isCorrect) || (!isSelected && isCorrect)) {
+                error = true;
             }
-            
-            setTimeout(function() {
-                bouton.style.backgroundColor = 'var(--primaire)';
-                if (zoneRetro) zoneRetro.innerText = "";
+        });
+
+        if(!error) {
+            setFeedback("Bien joué ! Le pont s'abaisse.", "correct");
+            setTimeout(() => showLevel(2), 1500);
+        } else {
+            setFeedback("Raté ! Essaie encore de trouver les bons blasons.", "wrong");
+        }
+    }
+
+    /* NIVEAU 2 */
+    function handleLvl2Choice(btn, isCorrectIntrus) {
+        const buttons = document.querySelectorAll('#level-2 button');
+        buttons.forEach(b => b.disabled = true);
+
+        if(isCorrectIntrus) {
+            btn.style.backgroundColor = "#2ecc71";
+            setFeedback("C'est ça ! Épée n'a pas le son [ou].", "correct");
+            setTimeout(() => showLevel(3), 1500);
+        } else {
+            btn.style.backgroundColor = "#95a5a6";
+            setFeedback("Ce mot contient le son [ou] !", "wrong");
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    b.disabled = false;
+                    b.removeAttribute('style');
+                });
             }, 1000);
+        }
+    }
+
+    /* NIVEAU 3 */
+    function checkLevel3() {
+        const s1 = document.getElementById('select-3-1');
+        const s2 = document.getElementById('select-3-2');
+        const s3 = document.getElementById('select-3-3');
+
+        if(s1.value === "ou" && s2.value === "ou" && s3.value === "ou") {
+            setFeedback("Bravo ! La phrase est correcte, les gardes te laissent passer.", "correct");
+            setTimeout(() => showLevel(4), 1500);
+        } else {
+            setFeedback("Erreur ! Vérifie tes choix.", "wrong");
+        }
+    }
+
+    /* NIVEAU 4 */
+    function checkLevel4() {
+        const inputVal = document.getElementById('input-4').value.trim().toLowerCase();
+        
+        if(inputVal === "bouclier" || inputVal === "le bouclier" || inputVal === "un bouclier") {
+            setFeedback("C'est exact ! Le coffre s'ouvre.", "correct");
+            setTimeout(() => showLevel(5), 1500);
+        } else {
+            setFeedback("Ce n'est pas le bon mot caché.", "wrong");
+        }
+    }
+
+    /* NIVEAU 5 - MODIFIÉ POUR "LOUP" */
+    function checkLevel5() {
+        let inputVal = document.getElementById('input-5').value.trim().toLowerCase();
+        // Retire les accents si jamais l'élève en met
+        inputVal = inputVal.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+        
+        if(inputVal === "loup" || inputVal === "un loup" || inputVal === "le loup") {
+            setFeedback("Le dragon s'enfuit ! Tu as gagné !", "correct");
+            setTimeout(() => showLevel(6), 1500);
+        } else {
+            setFeedback("Ce n'est pas la bonne réponse à l'énigme.", "wrong");
         }
     }
 </script>
