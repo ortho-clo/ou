@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 6 : Le Son AU</title>
+    <style>
+        body { background: #e74c3c; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 25px; text-align: center; width: 300px; border: 5px solid #c0392b; }
+        .mot { font-size: 3rem; color: #c0392b; margin: 15px 0; font-weight: bold; }
+        button { padding: 15px 25px; font-size: 1.2rem; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; }
+        .oui { background: #27ae60; } .non { background: #c0392b; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div style="font-size: 50px;">🐸</div>
+    <p>Entends-tu <b>"AU"</b> ?</p>
+    <div id="mot" class="mot">---</div>
+    <button class="oui" onclick="check(true)">OUI</button>
+    <button class="non" onclick="check(false)">NON</button>
+</div>
+<script>
+    const quiz = [{m:"Auto", r:true}, {m:"Petit", r:false}, {m:"Épaule", r:true}, {m:"Crapaud", r:true}, {m:"Matin", r:false}];
+    let i = 0;
+    function up() {
+        if(i < quiz.length) { document.getElementById('mot').innerText = quiz[i].m; }
+        else { document.querySelector('.card').innerHTML = "<h1>TOP !</h1><p>Code secret :</p><h2>SAUT-66</h2>"; }
+    }
+    function check(c) { if(c === quiz[i].r) { i++; up(); } else { alert("Regarde bien !"); } }
+    up();
+</script>
+</body>
+</html>
