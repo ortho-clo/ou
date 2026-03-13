@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Aventure des Restaurants - Accords</title>
+    <style>
+        :root {
+            --primary: #c0392b; 
+            --secondary: #f39c12; 
+            --bg: #fdf2e9;
+            --text: #2c3e50;
+            --chic: #8e44ad; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: manipulation;
+        }
+
+        h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .subtitle { text-align: center; margin-bottom: 30px; font-weight: bold; color: #7f8c8d; }
+        
+        #story-screen {
+            max-width: 800px; background: white; padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 5px solid var(--secondary);
+            font-size: 1.2rem; line-height: 1.6;
+        }
+
+        .story-characters { display: flex; justify-content: space-around; margin: 20px 0; text-align: center; font-weight: bold; }
+        .char-box { background: #fff9e6; padding: 15px; border-radius: 10px; width: 40%; border: 2px dashed var(--primary); }
+        .char-box-chic { background: #f4ecf7; padding: 15px; border-radius: 10px; width: 40%; border: 2px dashed var(--chic); }
+
+        .btn-start {
+            display: block; width: 100%; background: var(--secondary); color: #7f6000;
+            border: none; padding: 15px; font-size: 1.3rem; font-weight: bold;
+            border-radius: 10px; cursor: pointer; margin-top: 20px; transition: transform 0.2s;
+        }
+        .btn-start:hover { transform: scale(1.02); }
+
+        #menu-screen, #game-screen { display: none; max-width: 900px; width: 100%; }
+        
+        #game-screen {
+            background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
+            border: 5px solid var(--primary); margin: 0 auto;
+        }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
+
+        .door-card {
+            background: white; border: 4px solid var(--secondary); border-radius: 15px;
+            padding: 20px 10px; text-align: center; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .door-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+        .door-card.completed { background: #d5f5e3; border-color: #27ae60; }
+        .door-icon { font-size: 3rem; margin-bottom: 10px; }
+        .door-title { font-weight: bold; font-size: 1.1rem; }
+
+        .header-game { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-back { background: #95a5a6; color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        
+        .progress-bar { width: 100%; height: 15px; background: #eee; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+        #progress-fill { width: 0%; height: 100%; background: var(--secondary); transition: width 0.3s; }
+
+        .question-box { background: #fff9e6; padding: 25px; border-radius: 10px; font-size: 1.4rem; margin-bottom: 20px; line-height: 1.6; border-left: 5px solid var(--primary); }
+        .options-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        
+        .btn-option {
+            background: var(--text); color: white; border: none; padding: 15px 25px;
+            font-size: 1.2rem; border-radius: 8px; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-option:hover { background: var(--primary); }
+        .btn-option:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .feedback { min-height: 35px; font-weight: bold; margin-top: 20px; font-size: 1.3rem; }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+    </style>
+</head>
+<body>
+
+<div id="story-screen">
+    <h1 style="font-size: 2.5rem;">⚓ Escale Gourmande ! 🍔</h1>
+    <p>L'équipage du navire grammatical a faim ! Tannés de manger des biscuits de marin très secs, <strong>Dédé</strong> (le déterminant), <strong>N.C.</strong> (le nom commun) et <strong>Adji</strong> (l'adjectif) ont accosté près du McDo le plus proche. Ils t'invitent à partager un fameux <strong>Trio Big Mac</strong> avec eux !</p>
+    
+    <div class="story-characters">
+        <div class="char-box">
+            🍟 <strong>Le McDo (Le GN)</strong><br>
+            Le Trio Big Mac s'accorde en <em>genre et en nombre</em> !<br>
+            <small>(Dédé, N.C., Adji)</small>
+        </div>
+        <div class="char-box-chic">
+            🍷 <strong>Le Resto Chic (Le GV)</strong><br>
+            Le verbe prend la terminaison dictée par son sujet !<br>
+            <small>(Viking le verbe & La Pro des Noms)</small>
+        </div>
+    </div>
+
+    <p>Pendant ce temps, un peu plus haut dans la ville, <strong>Viking le Verbe</strong> et la <strong>Pro des Noms</strong> mangent dans un restaurant chic avec des règles de terminaison très différentes.</p>
+    <p><strong>Ta mission :</strong> Aide tout le monde à bien faire ses accords le temps d'une pause bien méritée ! Attention, à partir de la porte 3, tu devras voyager entre les deux restaurants !</p>
+
+    <button class="btn-start" onclick="startGame()">🍔 J'accepte la mission ! 🍽️</button>
+</div>
+
+<div id="menu-screen">
+    <h1>🗺️ Le Plan de la Ville 🗺️</h1>
+    <p class="subtitle">Porte 1 : Au McDo (GN) | Porte 2 : Au Resto Chic (GV) | Portes 3-10 : Voyage (Mix)</p>
+    <div class="menu-grid" id="doors-container"></div>
+</div>
+
+<div id="game-screen">
+    <div class="header-game">
+        <button class="btn-back" onclick="returnToMenu()">⬅ Carte</button>
+        <h2 id="current-door-title">Porte</h2>
+        <div id="counter" style="font-weight:bold; font-size:1.2rem; color:var(--primary);">0 / 10</div>
+    </div>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <div class="question-box" id="question-text"></div>
+    <div class="options-grid" id="options-container"></div>
+    <div class="feedback" id="feedback-msg"></div>
+</div>
+
+<script>
+    const menuData = [
+        {
+            id: 0, title: "Au McDo 1 (GN)", icon: "🍟", completed: false,
+            questions: [
+                { q: "Dédé commande de [?] frites bien croustillantes pour tout le monde.", options: ["belle", "belles", "beaux"], correct: "belles" },
+                { q: "N.C. choisit un [?] hamburger double avec beaucoup de fromage.", options: ["gros", "grosse", "grosses"], correct: "gros" },
+                { q: "Adji préfère ajouter une [?] sauce sur son repas.", options: ["nouveau", "nouvelle", "nouveaux"], correct: "nouvelle" },
+                { q: "Ces [?] rondelles d'oignon frites sont absolument délicieuses.", options: ["petit", "petite", "petites"], correct: "petites" },
+                { q: "Une [?] boisson glacée accompagne parfaitement le Trio Big Mac.", options: ["grand", "grande", "grands"], correct: "grande" },
+                { q: "Les [?] cuisiniers du restaurant préparent les commandes très rapidement.", options: ["jeune", "jeunes", "jeune"], correct: "jeunes" },
+                { q: "Dédé échappe quelques gouttes [?] de ketchup sur son chandail neuf.", options: ["rouge", "rouges", "rougeauds"], correct: "rouges" },
+                { q: "Cette [?] poutine réchauffe le cœur de nos trois amis.", options: ["fameux", "fameuse", "fameuses"], correct: "fameuse" },
+                { q: "Les pains briochés [?] sont tendres et légèrement sucrés.", options: ["moelleux", "moelleuse", "moelleuses"], correct: "moelleux" },
+                { q: "Adji croque dans un cornichon [?] très vinaigré.", options: ["délicieux", "délicieuse", "délicieuses"], correct: "délicieux" }
+            ]
+        },
+        {
+            id: 1, title: "Resto Chic (GV)", icon: "🍷", completed: false,
+            questions: [
+                { q: "Au resto chic, Viking le verbe [?] un toast à ses amis. (GV)", options: ["lève", "lèves", "lèvent"], correct: "lève" },
+                { q: "La Pro des Noms et le cuisinier [?] de la fameuse recette secrète. (GV)", options: ["discute", "discutes", "discutent"], correct: "discutent" },
+                { q: "Les serveurs élégants [?] les plats sous des cloches en argent. (GV)", options: ["amène", "amènes", "amènent"], correct: "amènent" },
+                { q: "Ce restaurant prestigieux [?] des plats extraordinaires tous les soirs. (GV)", options: ["sert", "sers", "servent"], correct: "sert" },
+                { q: "Les petites chandelles [?] doucement sur la grande table ronde. (GV)", options: ["brille", "brilles", "brillent"], correct: "brillent" },
+                { q: "Viking [?] la délicieuse soupe aux fruits de mer avec sa cuillère. (GV)", options: ["savoure", "savoures", "savourent"], correct: "savoure" },
+                { q: "Les clients très satisfaits [?] d'énormes pourboires en sortant. (GV)", options: ["laisse", "laisses", "laissent"], correct: "laissent" },
+                { q: "La longue nappe de soie [?] presque le sol en marbre propre. (GV)", options: ["touche", "touches", "touchent"], correct: "touche" },
+                { q: "Le chef et son assistant [?] le dessert flamboyant devant les clients. (GV)", options: ["prépare", "prépares", "préparent"], correct: "préparent" },
+                { q: "Nous [?] toujours de nouvelles saveurs incroyables à cet endroit. (GV)", options: ["découvre", "découvrons", "découvrent"], correct: "découvrons" }
+            ]
+        },
+        {
+            id: 2, title: "Voyage 1 (Mix)", icon: "🚕", completed: false,
+            questions: [
+                { q: "Pendant ce temps, Dédé avale ses [?] frites salées au McDo. (GN)", options: ["dernier", "derniers", "dernières"], correct: "dernières" },
+                { q: "La Pro des Noms et le Viking [?] le menu gastronomique cinq étoiles. (GV)", options: ["observe", "observes", "observent"], correct: "observent" },
+                { q: "N.C. trouve que cette [?] sauce secrète est la meilleure du monde. (GN)", options: ["fameux", "fameuse", "fameuses"], correct: "fameuse" },
+                { q: "Les serveurs en smoking du resto chic [?] les assiettes en porcelaine. (GV)", options: ["apporte", "apportes", "apportent"], correct: "apportent" },
+                { q: "Adji a les doigts [?] à cause du sirop de sa boisson gazeuse. (GN)", options: ["collant", "collants", "collantes"], correct: "collants" },
+                { q: "La Pro des Noms [?] son verre de cristal en riant avec Viking. (GV)", options: ["soulève", "soulèves", "soulèvent"], correct: "soulève" },
+                { q: "Les chaises [?] du restaurant rapide sont très confortables. (GN)", options: ["rembourré", "rembourrée", "rembourrées"], correct: "rembourrées" },
+                { q: "Viking le verbe [?] toujours la bonne terminaison à la fin du mot. (GV)", options: ["choisit", "choisissez", "choisissent"], correct: "choisit" },
+                { q: "Les [?] amis marins repartiront bientôt vers de nouvelles aventures. (GN)", options: ["trois", "troie", "trois"], correct: "trois" },
+                { q: "Une crème glacée [?] termine bien le repas de Dédé. (GN)", options: ["doux", "douce", "douces"], correct: "douce" }
+            ]
+        },
+        {
+            id: 3, title: "Voyage 2 (Mix)", icon: "🥂", completed: false,
+            questions: [
+                { q: "Au McDo, les [?] hamburgers doubles rassasient l'équipage affamé. (GN)", options: ["gros", "grosse", "grosses"], correct: "gros" },
+                { q: "Au resto chic, le chef étoilé [?] les plats avec une grande précision. (GV)", options: ["décore", "décores", "décorent"], correct: "décore" },
+                { q: "Dédé commande de [?] boissons fraîches pour étancher la soif de N.C. (GN)", options: ["grand", "grande", "grandes"], correct: "grandes" },
+                { q: "Les musiciens du restaurant luxueux [?] une douce mélodie au piano. (GV)", options: ["joue", "joues", "jouent"], correct: "jouent" },
+                { q: "Adji laisse une [?] trace de moutarde sur la table propre. (GN)", options: ["petit", "petite", "petites"], correct: "petite" },
+                { q: "Viking et la Pro des Noms [?] silencieusement le dessert spectaculaire. (GV)", options: ["admire", "admires", "admirent"], correct: "admirent" },
+                { q: "Les rondelles d'oignon [?] piquent un peu la langue. (GN)", options: ["épicé", "épicée", "épicées"], correct: "épicées" },
+                { q: "La nappe en tissu blanc [?] parfaitement la table du resto chic. (GV)", options: ["recouvre", "recouvres", "recouvrent"], correct: "recouvre" },
+                { q: "N.C. dévore une portion [?] de croquettes bien chaudes. (GN)", options: ["délicieux", "délicieuse", "délicieuses"], correct: "délicieuse" },
+                { q: "Les clients distingués [?] le service impeccable du serveur poli. (GV)", options: ["félicite", "félicites", "félicitent"], correct: "félicitent" }
+            ]
+        },
+        { id: 4, title: "Voyage 3 (Mix)", icon: "🍔", completed: false, questions: [
+            { q: "La crème glacée [?] fond sous la chaleur de la friteuse au McDo. (GN)", options: ["froid", "froide", "froides"], correct: "froide" },
+            { q: "Le serveur du resto chic [?] délicatement le vin dans la coupe. (GV)", options: ["verse", "verses", "versent"], correct: "verse" },
+            { q: "Les cuisiniers [?] emballent les commandes à emporter. (GN)", options: ["rapide", "rapides", "rapide"], correct: "rapides" },
+            { q: "Viking le verbe [?] élégamment sa serviette de table en tissu. (GV)", options: ["plie", "plies", "plient"], correct: "plie" },
+            { q: "Des piments [?] décorent la poutine spéciale de N.C. (GN)", options: ["fort", "forte", "forts"], correct: "forts" },
+            { q: "La Pro des Noms et ses invités [?] bruyamment dans la salle privée. (GV)", options: ["discute", "discutes", "discutent"], correct: "discutent" },
+            { q: "Ces [?] pailles en carton écologique sont une belle initiative. (GN)", options: ["long", "longue", "longues"], correct: "longues" },
+            { q: "L'odeur des crevettes à l'ail [?] l'attention de Viking le verbe. (GV)", options: ["attire", "attires", "attirent"], correct: "attire" },
+            { q: "Dédé choisit des quartiers de pommes [?] pour son dessert santé. (GN)", options: ["vert", "verte", "verts"], correct: "verts" },
+            { q: "Les chandelles sur la table [?] une lumière très romantique. (GV)", options: ["produit", "produisons", "produisent"], correct: "produisent" }
+        ]},
+        { id: 5, title: "Voyage 4 (Mix)", icon: "🍽️", completed: false, questions: [
+            { q: "Une [?] équipe nettoie la salle à manger du restaurant rapide. (GN)", options: ["nouveau", "nouvelle", "nouveaux"], correct: "nouvelle" },
+            { q: "Les huîtres fraîches [?] Viking le verbe, qui n'a jamais goûté. (GV)", options: ["intimide", "intimides", "intimident"], correct: "intimident" },
+            { q: "N.C. collectionne les [?] gobelets colorés offerts avec les repas. (GN)", options: ["beau", "beaux", "belles"], correct: "beaux" },
+            { q: "La Pro des Noms [?] son steak avec un couteau bien aiguisé. (GV)", options: ["coupe", "coupes", "coupent"], correct: "coupe" },
+            { q: "Les lumières [?] éclairent fort l'intérieur du McDo. (GN)", options: ["blanc", "blanche", "blanches"], correct: "blanches" },
+            { q: "Les cuisiniers étoilés [?] des épices rares dans leurs recettes secrètes. (GV)", options: ["ajoute", "ajoutes", "ajoutent"], correct: "ajoutent" },
+            { q: "Adji a besoin d'une [?] lingette humide pour s'essuyer les mains. (GN)", options: ["petit", "petite", "petites"], correct: "petite" },
+            { q: "Le valet du resto chic [?] la voiture de luxe de la Pro des Noms. (GV)", options: ["stationne", "stationnes", "stationnent"], correct: "stationne" },
+            { q: "Les [?] sachets de sel sont rangés près de la caisse enregistreuse. (GN)", options: ["petit", "petite", "petits"], correct: "petits" },
+            { q: "Viking le verbe [?] la facture salée du repas gastronomique. (GV)", options: ["paie", "paies", "paient"], correct: "paie" }
+        ]},
+        { id: 6, title: "Voyage 5 (Mix)", icon: "🍕", completed: false, questions: [
+            { q: "Dédé trouve les banquettes [?] très confortables pour se reposer. (GN)", options: ["rouge", "rouges", "rougeaudes"], correct: "rouges" },
+            { q: "La douce musique classique [?] les invités de la Pro des noms. (GV)", options: ["calme", "calmes", "calment"], correct: "calme" },
+            { q: "Les [?] écrans tactiles permettent de commander sans attendre. (GN)", options: ["grand", "grande", "grands"], correct: "grands" },
+            { q: "Le Viking et son ami [?] le poivre moulu frais sur leur salade. (GV)", options: ["saupoudre", "saupoudres", "saupoudrent"], correct: "saupoudrent" },
+            { q: "N.C. regarde sa [?] montre avant de finir son Trio Big Mac. (GN)", options: ["nouveau", "nouvelle", "nouveaux"], correct: "nouvelle" },
+            { q: "Le sommelier du restaurant [?] un jus de raisin exceptionnel. (GV)", options: ["sert", "sers", "servent"], correct: "sert" },
+            { q: "Adji porte un manteau [?] malgré la chaleur du restaurant. (GN)", options: ["épais", "épaisse", "épaisses"], correct: "épais" },
+            { q: "Les portes vitrées du resto chic [?] automatiquement à l'approche des clients. (GV)", options: ["ouvre", "ouvres", "ouvrent"], correct: "ouvrent" },
+            { q: "Ces patates frites [?] sont une spécialité du chef du McDo. (GN)", options: ["délicieux", "délicieuse", "délicieuses"], correct: "délicieuses" },
+            { q: "La Pro des Noms [?] son long repas avec un thé à la menthe. (GV)", options: ["termine", "termines", "terminent"], correct: "termine" }
+        ]},
+        { id: 7, title: "Voyage 6 (Mix)", icon: "🌮", completed: false, questions: [
+            { q: "Les tomates [?] coupées en rondelles sont parfaites dans le burger. (GN)", options: ["rouge", "rouges", "rougie"], correct: "rouges" },
+            { q: "Viking le verbe [?] toujours de dire merci au serveur poli. (GV)", options: ["n'oublie", "n'oublies", "n'oublient"], correct: "n'oublie" },
+            { q: "Une [?] flaque de boisson gazeuse coule par terre. (GN)", options: ["gros", "grosse", "grosses"], correct: "grosse" },
+            { q: "Les deux amis du resto chic [?] la décoration dorée du plafond. (GV)", options: ["remarque", "remarques", "remarquent"], correct: "remarquent" },
+            { q: "Le Trio Big Mac est rempli d'ingrédients [?] et savoureux. (GN)", options: ["frais", "fraîche", "fraîches"], correct: "frais" },
+            { q: "La Pro des Noms [?] un sourire éclatant en voyant son dessert. (GV)", options: ["affiche", "affiches", "affichent"], correct: "affiche" },
+            { q: "Dédé met les [?] emballages de carton dans le bac de recyclage. (GN)", options: ["vieux", "vieille", "vieilles"], correct: "vieux" },
+            { q: "Les petites cuillères en argent [?] sous la lumière du lustre. (GV)", options: ["brille", "brilles", "brillent"], correct: "brillent" },
+            { q: "N.C. porte son [?] foulard de laine car la climatisation est forte. (GN)", options: ["beau", "beaux", "belles"], correct: "beau" },
+            { q: "Viking le verbe [?] poliment le pourboire dans la petite pochette. (GV)", options: ["glisse", "glisses", "glissent"], correct: "glisse" }
+        ]},
+        { id: 8, title: "Voyage 7 (Mix)", icon: "🍝", completed: false, questions: [
+            { q: "Les [?] frites froides au fond du sac sont moins appétissantes. (GN)", options: ["petit", "petite", "petites"], correct: "petites" },
+            { q: "Le chef pâtissier [?] le sucre glace sur le gâteau fondant. (GV)", options: ["saupoudre", "saupoudres", "saupoudrent"], correct: "saupoudre" },
+            { q: "Adji a une [?] tache de mayonnaise sur le bout de son nez. (GN)", options: ["gros", "grosse", "grosses"], correct: "grosse" },
+            { q: "Viking et la Pro des Noms [?] des blagues pendant le repas. (GV)", options: ["raconte", "racontes", "racontent"], correct: "racontent" },
+            { q: "Ces [?] biscuits aux brisures de chocolat sont tièdes et bons. (GN)", options: ["merveilleux", "merveilleuse", "merveilleuses"], correct: "merveilleux" },
+            { q: "Les assiettes vides [?] rapidement dans les mains du serveur efficace. (GV)", options: ["disparaît", "disparais", "disparaissent"], correct: "disparaissent" },
+            { q: "La [?] machine à café du McDo fait un bruit fort et saccadé. (GN)", options: ["nouveau", "nouvelle", "nouveaux"], correct: "nouvelle" },
+            { q: "La Pro des Noms [?] son manteau au vestiaire avant de s'asseoir. (GV)", options: ["confie", "confies", "confient"], correct: "confie" },
+            { q: "Les [?] amis matelots rient à gorge déployée de leur aventure. (GN)", options: ["joyeux", "joyeuse", "joyeuses"], correct: "joyeux" },
+            { q: "Viking le verbe [?] fermement la main du gérant du restaurant. (GV)", options: ["serre", "serres", "serrent"], correct: "serre" }
+        ]},
+        { id: 9, title: "Le Grand Final", icon: "⚓", completed: false, questions: [
+            { q: "Les [?] bateaux de nos aventuriers les attendent sagement au port. (GN)", options: ["grand", "grande", "grands"], correct: "grands" },
+            { q: "Viking et la Pro des Noms [?] enfin le luxueux établissement 5 étoiles. (GV)", options: ["quitte", "quittes", "quittent"], correct: "quittent" },
+            { q: "Dédé range ses [?] restants de frites pour plus tard. (GN)", options: ["petit", "petite", "petits"], correct: "petits" },
+            { q: "L'équipage complet [?] sur le navire avec le ventre bien plein. (GV)", options: ["remonte", "remontes", "remontent"], correct: "remonte" },
+            { q: "Leurs [?] aventures grammaticales ne font que commencer. (GN)", options: ["prochain", "prochaine", "prochaines"], correct: "prochaines" },
+            { q: "Les marins rassasiés [?] les voiles pour retourner en pleine mer. (GV)", options: ["hisse", "hisses", "hissent"], correct: "hissent" },
+            { q: "Une [?] brise marine fait voler le chapeau de N.C. (GN)", options: ["fort", "forte", "forts"], correct: "forte" },
+            { q: "Le capitaine Viking [?] le cap vers l'île de la Conjugaison. (GV)", options: ["fixe", "fixes", "fixent"], correct: "fixe" },
+            { q: "Cette [?] pause repas fut un immense succès pour tout le monde ! (GN)", options: ["beau", "belles", "belle"], correct: "belle" },
+            { q: "Les élèves de la 4e année [?] cette mission d'évasion haut la main ! (GV)", options: ["réussit", "réussissez", "réussissent"], correct: "réussissent" }
+        ]}
+    ];
+
+    let currentDoorIndex = -1;
+    let currentQuestionIndex = 0;
+
+    function startGame() {
+        document.getElementById('story-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'block';
+        renderMenu();
+    }
+
+    function renderMenu() {
+        const container = document.getElementById('doors-container');
+        container.innerHTML = "";
+        
+        menuData.forEach((door, index) => {
+            const card = document.createElement('div');
+            card.className = `door-card ${door.completed ? 'completed' : ''}`;
+            card.innerHTML = `
+                <div class="door-icon">${door.completed ? '🔓' : door.icon}</div>
+                <div class="door-title">${door.title}</div>
+            `;
+            card.onclick = () => openDoor(index);
+            container.appendChild(card);
+        });
+    }
+
+    function openDoor(index) {
+        currentDoorIndex = index;
+        currentQuestionIndex = 0;
+        
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        document.getElementById('current-door-title').textContent = menuData[index].icon + " " + menuData[index].title;
+        
+        loadQuestion();
+    }
+
+    function returnToMenu() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'block';
+        renderMenu();
+    }
+
+    function loadQuestion() {
+        const door = menuData[currentDoorIndex];
+        
+        if (currentQuestionIndex >= door.questions.length) {
+            door.completed = true;
+            document.getElementById('question-text').innerHTML = "🎉 Addition payée ! Code décrypté avec succès !";
+            document.getElementById('options-container').innerHTML = "";
+            document.getElementById('feedback-msg').textContent = "";
+            setTimeout(returnToMenu, 3000);
+            return;
+        }
+
+        const qData = door.questions[currentQuestionIndex];
+        document.getElementById('counter').textContent = `${currentQuestionIndex + 1} / ${door.questions.length}`;
+        
+        const progress = (currentQuestionIndex / door.questions.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+
+        let questionText = qData.q;
+        if(questionText.includes("(GN)")) {
+            questionText = questionText.replace("(GN)", "<span style='font-size:0.9rem; color:#f39c12;'>🍟 Mission: Trio Big Mac (GN)</span>");
+        } else if (questionText.includes("(GV)")) {
+            questionText = questionText.replace("(GV)", "<span style='font-size:0.9rem; color:#8e44ad;'>🍷 Mission: Resto Chic (GV)</span>");
+        }
+
+        document.getElementById('question-text').innerHTML = questionText.replace("[?]", "<strong style='color:var(--primary);'>[___]</strong>");
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = "";
+        
+        const uniqueOptions = [...new Set(qData.options)];
+        while(uniqueOptions.length < 3) {
+             uniqueOptions.push(qData.options[Math.floor(Math.random() * qData.options.length)]);
+        }
+
+        const shuffledOptions = [...uniqueOptions].sort(() => Math.random() - 0.5).slice(0,3);
+        
+        shuffledOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "btn-option";
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(opt, qData.correct);
+            optionsContainer.appendChild(btn);
+        });
+
+        document.getElementById('feedback-msg').textContent = "";
+        document.getElementById('feedback-msg').className = "feedback";
+    }
+
+    function checkAnswer(selected, correct) {
+        const feedback = document.getElementById('feedback-msg');
+        
+        if (selected === correct) {
+            feedback.textContent = "✅ Excellent ! L'accord est parfaitement réussi.";
+            feedback.className = "feedback success";
+            
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach(b => b.disabled = true);
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1200);
+        } else {
+            feedback.textContent = "❌ Attention ! Es-tu au McDo (GN) ou au Resto Chic (GV) ?";
+            feedback.className = "feedback error";
+        }
+    }
+</script>
+</body>
+</html>
