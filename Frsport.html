@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4 : Les Sports - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2b5876; 
+            --bg: #f4f7f6;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal & Projet Final */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            background: #ecf0f1; border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: var(--primary); text-align: left;
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        .final-project-box { background: #e8f8f5; border: 4px dashed #16a085; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; position: relative; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #1abc9c; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .exemples-box { background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        .redaction-col { display: flex; flex-direction: column; gap: 15px; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .word-card:hover { border-color: #f39c12; }
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #fcf3cf; border-color: #f39c12; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .btn-tab-1 { background: #3498db; } 
+        .btn-tab-2 { background: #9b59b6; } 
+        .btn-tab-3 { background: #e67e22; } 
+        .btn-tab-4 { background: #1abc9c; } 
+        .btn-tab-5 { background: #2ecc71; } 
+        .btn-tab-6 { background: #34495e; } 
+        .btn-tab-7 { background: #e74c3c; border: 2px solid #c0392b;} 
+        .btn-menu { background: #7f8c8d; }
+
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+        
+        /* Contenu */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; border-left: 5px solid #bdc3c7; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold; background: #eafaf1; padding: 10px; border-radius: 5px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical;}
+        
+        .inspiration-box { background: #fef9e7; border: 2px dashed #f1c40f; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 1rem; color: #34495e; line-height: 1.6;}
+        .inspiration-box h4 { margin-top: 0; color: #d4ac0d; margin-bottom: 10px; font-size: 1.2rem;}
+        .inspiration-box ul { margin: 0; padding-left: 20px; }
+        .inspiration-box li { margin-bottom: 5px; }
+
+        /* Jeu Association */
+        .assoc-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .assoc-col { display: flex; flex-direction: column; gap: 10px; width: 45%; }
+        .assoc-item { padding: 15px; background: white; border: 3px solid #bdc3c7; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; user-select: none; }
+        .assoc-item.emoji-item { font-size: 2.5rem; }
+        .assoc-item:hover:not(.matched) { border-color: #9b59b6; }
+        .assoc-item.selected { background: #f4ecf7; border-color: #9b59b6; transform: scale(1.05); }
+        .assoc-item.matched { background: #abebc6; border-color: var(--success); color: var(--success); cursor: default; opacity: 0.6; pointer-events: none; }
+
+        /* MACHINE À PHRASES FOLLES */
+        .slot-machine {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0;
+            background: var(--primary); padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .slot-window {
+            background: white; border: 4px solid #f1c40f; border-radius: 10px; padding: 20px;
+            width: 30%; font-size: 1.5rem; font-weight: bold; text-align: center; min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .slot-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .slot-text { color: #e74c3c; font-size: 1.6rem; }
+        .btn-spin {
+            background: #e74c3c; color: white; font-size: 1.5rem; padding: 15px 40px; border: 4px solid #c0392b; 
+            border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 0 #c0392b; transition: 0.1s; margin-bottom: 20px;
+        }
+        .btn-spin:active { transform: translateY(5px); box-shadow: 0 0 0 #c0392b; }
+
+        /* CSS POUR L'IMPRESSION PROPRE */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 0; margin: 0; border: none; box-shadow: none; }
+            button, .nav-bar, .badge { display: none !important; }
+            textarea { border: 1px solid #ccc; background: transparent; resize: none; overflow: hidden; min-height: 150px; }
+            .inspiration-box { display: none !important; }
+            .plan-box { border: none; box-shadow: none; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+        .btn-print:hover { background: #2c3e50; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary); font-size: 2.5rem;">🏅 Le Tournoi des Sports</h1>
+        <p style="font-size: 1.2rem;">Échauffez-vous ! Découvrez le vocabulaire du sport et relevez les défis de Madame Claudia !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn" onclick="playClick(); loadCourse(0)">⚽ Cours 1 : Sports d'équipe<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(1)">🎾 Cours 2 : Raquettes & Individuel<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(2)">🎿 Cours 3 : Sports d'hiver<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(3)">🏊 Cours 4 : Aquatique & Extrême<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #16a085; margin-top: 0; font-size: 2rem; text-align: center;">🌟 Projet Final : Mon sport préféré</h2>
+            <p style="font-size: 1.2rem; text-align: center;">C'est à ton tour d'être le champion ! Écris un beau texte divisé en <strong>trois paragraphes</strong> pour présenter ton sport favori.</p>
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #16a085; margin-top: 0;">📋 Ton plan de match</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>Paragraphe 1 : L'introduction.</strong> Quel est ton sport préféré et où se pratique-t-il ?</li>
+                        <li><strong>Paragraphe 2 : L'équipement et l'action.</strong> De quoi as-tu besoin pour jouer ? Quelles sont les actions à faire ?</li>
+                        <li><strong>Paragraphe 3 : Ta passion.</strong> Explique pourquoi tu aimes ce sport.</li>
+                    </ul>
+                    <h3 style="color: #e67e22; margin-top: 25px;">💡 Exemples pour t'inspirer :</h3>
+                    <div class="exemples-box">
+                        <p><strong>⚽ Le Soccer (Football) :</strong> Mon sport préféré est le soccer. Je joue sur un grand terrain vert. J'ai besoin d'un <strong>ballon</strong> et de <strong>souliers à crampons</strong>. Mon but est de <strong>courir</strong> vite et de <strong>frapper</strong> dans le ballon.</p>
+                        <hr style="border: 0; border-top: 1px solid #f0d0b5; margin: 10px 0;">
+                        <p><strong>🏊 La Natation :</strong> J'adore la natation. Je pratique ce sport dans la grande piscine de la ville. Je porte un <strong>maillot de bain</strong> et des <strong>lunettes</strong>. Je dois <strong>plonger</strong> et <strong>nager</strong> très vite.</p>
+                    </div>
+                </div>
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold; color: #34495e;">1. Introduction (Le sport et le lieu) :</label>
+                    <textarea rows="3" placeholder="Ex: Mon sport préféré est... Je le pratique dans/sur..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">2. L'action (L'équipement et les verbes) :</label>
+                    <textarea rows="4" placeholder="Ex: Pour jouer, j'ai besoin de... Pendant le match, je dois..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">3. Conclusion (Pourquoi j'aime ce sport) :</label>
+                    <textarea rows="3" placeholder="Ex: J'aime vraiment ce sport parce que... Je suis un athlète qui est..."></textarea>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer mon texte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2rem;">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Vocabulaire</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('association')">2. Paires</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('devinettes')">3. Le Quiz</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('histoires')">4. Les Défis</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. Écrire</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('expose')">6. Entrevue</button>
+            <button class="btn btn-tab-7" onclick="playClick(); showTab('erreurs')">7. 🎰 Phrases Folles</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3 style="color: #3498db;">L'Échauffement : Clique sur la carte pour révéler l'image et la phrase !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #9b59b6;">
+                <h3 style="color: #9b59b6; margin-top:0;">🧩 Trouve les paires !</h3>
+                <p>Associe la bonne image avec le nom du sport. Clique sur une image à gauche, puis sur le mot à droite.</p>
+                <div class="assoc-container" id="assoc-game-area"></div>
+                <div id="assoc-message" style="margin-top:20px; font-weight:bold; font-size:1.2rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box" id="dev-container" style="border-left-color: #e67e22;">
+                <h3 style="color: #e67e22; margin-top:0;">❓ Le Quiz de la Classe</h3>
+                <p>Lis bien la question et choisis le bon sport dans la liste !</p>
+            </div>
+            <button class="btn btn-action" style="background:#e67e22;" onclick="playClick(); checkDevinettes()">Vérifier mes réponses</button>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container" style="border-left-color: #34495e;"></div>
+            <button class="btn btn-action" style="background:#27ae60;" onclick="finishCourse()">✅ J'ai réussi mon entrevue !</button>
+        </div>
+
+        <div id="tab-erreurs" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #e74c3c; background: #fdedec; text-align: center;">
+                <h3 style="color: #c0392b; font-size: 2rem; margin-top:0;">🎰 La Machine Sportive Bizarroïde !</h3>
+                <p style="font-size: 1.2rem;">Clique sur le gros bouton rouge. Lis l'erreur à voix haute, puis corrige la phrase de ton ami !</p>
+                <button class="btn-spin" onclick="playClick(); spinMachine()">🔴 CRÉER UNE ERREUR</button>
+
+                <div class="slot-machine">
+                    <div class="slot-window"><div class="slot-label">1. L'Athlète</div><div class="slot-text" id="slot-sujet">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">2. L'Action</div><div class="slot-text" id="slot-verbe">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">3. Le Lieu/L'Objet</div><div class="slot-text" id="slot-complement">❓</div></div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px dashed #e74c3c; text-align: left;">
+                    <p style="font-size: 1.3rem; color: #c0392b; font-weight: bold;">🗣️ À ton tour d'aider ton ami :</p>
+                    <textarea rows="2" placeholder="Exemple : Non ! Yied ne nage pas sur la glace ! Yied patine sur la glace."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playSuccess() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; 
+        let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+
+    // Effet sonore "Tic" pour la machine
+    function playTick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    // Effet sonore "Clac" pour la fin de la machine
+    function playClank() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    // --- BADGES ---
+    function toggleBadge(event, id) {
+        event.stopPropagation(); 
+        playSuccess(); 
+        const badge = document.getElementById('badge-' + id);
+        badge.classList.toggle('earned');
+    }
+
+    // --- IMPRESSION ---
+    function printSection(elementId) {
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById(elementId).classList.add('print-area');
+        window.print();
+    }
+
+    // --- DONNÉES ENRICHIES (SPORTS & PRÉNOMS DES ÉLÈVES) ---
+    const data = [
+        {
+            title: "Cours 1 : Les Sports d'équipe ⚽",
+            words: [
+                {n:"Soccer", i:"⚽", d:"On joue au soccer en frappant le ballon avec les pieds."}, {n:"Basketball", i:"🏀", d:"Au basketball, on dribble et on lance dans le panier."},
+                {n:"Volleyball", i:"🏐", d:"Au volleyball, on frappe le ballon au-dessus du filet."}, {n:"Baseball", i:"⚾", d:"Au baseball, on frappe la petite balle avec un bâton."},
+                {n:"Hockey", i:"🏒", d:"Au hockey, on patine pour compter un but avec la rondelle."}, {n:"Football américain", i:"🏈", d:"Au football américain, on court avec le ballon ovale."},
+                {n:"Rugby", i:"🏉", d:"Au rugby, les joueurs sont très forts et courent ensemble."}, {n:"Handball", i:"🤾", d:"Au handball, on lance le ballon avec les mains dans le but."},
+                {n:"Cricket", i:"🏏", d:"Au cricket, on utilise une batte plate pour frapper."}, {n:"Ultimate Frisbee", i:"🥏", d:"On court pour attraper le disque volant."}
+            ],
+            devinettes: [
+                {q:"Pour marquer un point, Yied doit lancer le ballon en hauteur dans un panier. Quel est ce sport ?", r:"Basketball"},
+                {q:"Sur le grand terrain vert, Nour utilise seulement ses pieds pour faire une passe. Quel est ce sport ?", r:"Soccer"},
+                {q:"Emiliana met son gant en cuir pour attraper la balle volante. Quel est ce sport ?", r:"Baseball"},
+                {q:"Hugo saute très haut près du filet pour frapper le ballon blanc avec sa main. Quel est ce sport ?", r:"Volleyball"},
+                {q:"David met son casque et prend son bâton pour pousser la rondelle noire. Quel est ce sport ?", r:"Hockey"}
+            ],
+            histoires: [
+                {txt: "C'est la grande finale du tournoi ! Giquelle a le ballon de basketball dans les mains. L'équipe adverse la bloque. Il ne reste que 3 secondes au cadran avant la fin du match. Elle regarde le panier au loin, elle prend une grande respiration...", q: "Que doit faire Giquelle maintenant pour gagner le match ?", react: "🗣️ Défi oral : Si Giquelle rate son lancer, comment vas-tu la consoler en tant que bon coéquipier ?"},
+                {txt: "Pendant le match de soccer, Elias court super vite avec le ballon vers le but. Mais oh non ! Un joueur de l'autre équipe lui fait un croche-pied par accident. Elias tombe sur le gazon et a un peu mal au genou.", q: "Selon toi, est-ce que l'arbitre doit siffler une faute ?", react: "🗣️ Défi oral : Explique à Elias comment se protéger quand il tombe."},
+                {txt: "Kesia est la gardienne de but pour son équipe de hockey. Elle porte un équipement très lourd pour se protéger des rondelles qui arrivent très vite sur elle. Elle est très concentrée.", q: "Pourquoi Kesia porte-t-elle un équipement très lourd ?", react: "🗣️ Défi oral : Aimerais-tu être gardien de but ? Pourquoi ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-1-1", titre: "✍️ Projet 1 : Le match de Lorie", desc: "Aide Lorie à raconter le meilleur match de soccer de sa vie !", 
+                    noms: "un ballon, un filet, des crampons, un arbitre, la foule, un but, l'équipe.",
+                    verbes: "courir, passer, frapper, compter, sauter, gagner, célébrer.",
+                    adjectifs: "rapide, fatigué, heureux, incroyable, fort.",
+                    debuts: "Hier, Lorie a joué..., À la fin du match..., Toute l'équipe était..."
+                },
+                { 
+                    id: "ecr-1-2", titre: "✍️ Projet 2 : Invente un nouveau sport !", desc: "Pegah et toi inventez un sport d'équipe complètement fou. Quelles sont les règles ?", 
+                    noms: "un terrain géant, trois ballons, un trampoline, des règles, un point.",
+                    verbes: "lancer, rebondir, attraper, interdire, rigoler.",
+                    adjectifs: "amusant, difficile, bizarre, nouveau, fou.",
+                    debuts: "Notre nouveau sport s'appelle..., Pour gagner il faut..., Il est interdit de..."
+                }
+            ],
+            expose: "Tu es le capitaine de ton équipe. \n\n*Exemple de discours :* « Écoutez l'équipe ! Aujourd'hui nous devons jouer ensemble. Faites des bonnes passes, courez vite, et surtout : on n'abandonne jamais ! »"
+        },
+        {
+            title: "Cours 2 : Sports Individuels & Raquettes 🎾",
+            words: [
+                {n:"Tennis", i:"🎾", d:"Au tennis, on frappe la balle jaune avec une raquette."}, {n:"Badminton", i:"🏸", d:"Au badminton, on frappe un petit volant très léger."},
+                {n:"Ping-Pong", i:"🏓", d:"Au ping-pong, on joue sur une table avec une petite raquette."}, {n:"Gymnastique", i:"🤸", d:"En gymnastique, on fait des pirouettes et des sauts."},
+                {n:"Athlétisme", i:"🏃", d:"En athlétisme, on court très vite sur la piste."}, {n:"Boxe", i:"🥊", d:"À la boxe, on porte de gros gants rouges pour le combat."},
+                {n:"Karaté", i:"🥋", d:"Au karaté, on porte une ceinture et on fait des katas."}, {n:"Cyclisme", i:"🚴", d:"En cyclisme, on pédale très vite sur son vélo."},
+                {n:"Golf", i:"⛳", d:"Au golf, on essaie de mettre la balle dans le petit trou."}, {n:"Équitation", i:"🏇", d:"En équitation, on monte à cheval et on saute des obstacles."}
+            ],
+            devinettes: [
+                {q:"Lorie met son kimono blanc et vient d'obtenir sa ceinture jaune. Quel sport pratique-t-elle ?", r:"Karaté"},
+                {q:"Pegah monte sur son vélo pour faire une course de 20 kilomètres. Quel est ce sport ?", r:"Cyclisme"},
+                {q:"Yied frappe le petit volant en plumes avec sa raquette légère. Quel est ce sport ?", r:"Badminton"},
+                {q:"Nour met ses gros gants rouges et monte sur le ring. Quel est ce sport ?", r:"Boxe"},
+                {q:"Emiliana fait des roulades et saute sur le grand tapis bleu. Quel est ce sport ?", r:"Gymnastique"}
+            ],
+            histoires: [
+                {txt: "Hugo participe à un tournoi de tennis très important. Il fait très chaud sur le terrain aujourd'hui. Il frappe la balle jaune avec sa raquette de toutes ses forces. À la pause, il a tellement soif qu'il boit toute sa bouteille d'eau d'un coup !", q: "Pourquoi Hugo boit-il toute sa bouteille d'eau ?", react: "🗣️ Défi oral : Que devrais-tu dire à Hugo pour l'encourager avant qu'il retourne sur le terrain ?"},
+                {txt: "David adore l'équitation. Son cheval s'appelle Étoile. Avant de commencer à galoper et à sauter les barrières, David doit toujours brosser Étoile et s'assurer qu'il a bien mangé.", q: "Comment s'appelle le cheval de David ?", react: "🗣️ Défi oral : As-tu peur des chevaux ou aimerais-tu essayer de monter dessus ?"},
+                {txt: "Giquelle est sur la ligne de départ pour la course d'athlétisme de 100 mètres. Le signal retentit : BANG ! Elle court comme le vent. Elle regarde devant elle, concentrée sur la ligne d'arrivée.", q: "Quelle est la distance de la course de Giquelle ?", react: "🗣️ Défi oral : Es-tu quelqu'un qui court vite d'habitude ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-2-1", titre: "✍️ Projet 1 : Le champion de raquette", desc: "Écris l'histoire d'un match de tennis ou de ping-pong très serré joué par Elias.", 
+                    noms: "une raquette, une balle, un filet, le point de victoire, la sueur.",
+                    verbes: "frapper, rater, courir, gagner, servir, renvoyer.",
+                    adjectifs: "rapide, difficile, puissant, concentré, fatiguant.",
+                    debuts: "C'est la balle de match pour Elias..., Il lance la balle en l'air et..., Le public applaudit car..."
+                },
+                { 
+                    id: "ecr-2-2", titre: "✍️ Projet 2 : Une nouvelle ceinture", desc: "Kesia passe son examen pour avoir sa ceinture noire de karaté. Décris ses actions.", 
+                    noms: "un kimono, une ceinture noire, un tatami, un juge, de la force.",
+                    verbes: "saluer, crier, donner un coup de pied, se concentrer, réussir.",
+                    adjectifs: "respectueux, fort, souple, calme, impressionnant.",
+                    debuts: "Aujourd'hui, Kesia est nerveuse..., Elle entre sur le tapis et..., À la fin, le juge dit..."
+                }
+            ],
+            expose: "On t'interviewe à la télévision après ta victoire en athlétisme.\n\n*Exemple :* « Bonjour ! Oui, je suis très fatigué mais très heureux ! J'ai beaucoup pratiqué, j'ai couru tous les matins. Le secret, c'est de bien manger et de bien dormir... »"
+        },
+        {
+            title: "Cours 3 : Les Sports d'hiver 🎿",
+            words: [
+                {n:"Ski alpin", i:"🎿", d:"En ski alpin, on descend vite la montagne enneigée."}, {n:"Patinage", i:"⛸️", d:"En patinage, on glisse élégamment sur la glace."},
+                {n:"Planche à neige", i:"🏂", d:"On garde l'équilibre sur une seule planche dans la neige."}, {n:"Ski de fond", i:"⛷️", d:"En ski de fond, on marche et on glisse dans la forêt."},
+                {n:"Raquette", i:"🌨️", d:"On marche sur la neige épaisse avec des raquettes aux pieds."}, {n:"Bobsleigh", i:"🛷", d:"On descend un tunnel de glace très vite dans un traîneau."},
+                {n:"Curling", i:"🥌", d:"Au curling, on glisse une grosse pierre et on balaie la glace."}, {n:"Biathlon", i:"🎯", d:"En biathlon, on fait du ski et on tire sur une cible."},
+                {n:"Patinage de vitesse", i:"⏱️", d:"On patine le plus vite possible autour de l'anneau de glace."}, {n:"Luge", i:"🏔️", d:"On se couche sur un petit traîneau pour glisser."}
+            ],
+            devinettes: [
+                {q:"Lorie a mis ses longs skis pour marcher dans la forêt silencieuse. Quel est ce sport ?", r:"Ski de fond"},
+                {q:"Pegah glisse sur une seule grande planche et fait des sauts. Quel est ce sport ?", r:"Planche à neige"},
+                {q:"Yied a mis des lames tranchantes sous ses pieds pour danser sur la glace. Quel est ce sport ?", r:"Patinage"},
+                {q:"Nour frotte la glace très fort avec un balai devant une grosse pierre. Quel est ce sport ?", r:"Curling"},
+                {q:"Emiliana attache ses grosses chaussures plates pour marcher sur la neige profonde sans caler. Quel sport fait-elle ?", r:"Raquette"}
+            ],
+            histoires: [
+                {txt: "C'est la première fois que Hugo va au mont de ski. Il a mis son casque, ses lunettes, son manteau chaud et ses mitaines. En haut de la montagne, il regarde en bas et trouve que la pente est vraiment très abrupte ! Il a des petits papillons dans le ventre.", q: "Nomme deux pièces d'équipement que Hugo a mises pour se protéger du froid.", react: "🗣️ Défi oral : Que lui conseilles-tu pour descendre la montagne en sécurité ?"},
+                {txt: "David et Giquelle vont patiner au grand parc. La glace est parfaite et la musique joue fort. David essaie de patiner à reculons, mais BOUM ! Il tombe sur les fesses. Giquelle arrive en riant un peu pour l'aider à se relever.", q: "Qu'est-ce que David essayait de faire avant de tomber ?", react: "🗣️ Défi oral : Sais-tu patiner ? Est-ce facile de garder l'équilibre ?"},
+                {txt: "Elias adore l'hiver au Québec. Chaque fin de semaine, il va faire de la raquette dans la forêt avec son chien. Le silence de la nature couverte de neige blanche le rend très paisible et heureux.", q: "Avec qui Elias va-t-il faire de la raquette ?", react: "🗣️ Défi oral : Aimes-tu l'hiver au Québec ou préfères-tu rester au chaud ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-3-1", titre: "✍️ Projet 1 : La première fois en ski !", desc: "Kesia n'a jamais fait de ski de sa vie. Raconte sa journée d'apprentissage à la montagne.", 
+                    noms: "la montagne, la neige froide, les skis, les bâtons, un moniteur, une chute.",
+                    verbes: "glisser, tomber, rire, se relever, freiner, descendre.",
+                    adjectifs: "blanc, froid, difficile, courageux, amusant.",
+                    debuts: "Aujourd'hui, Kesia va à la montagne..., Au début, elle n'arrive pas à..., Finalement, elle trouve que..."
+                },
+                { 
+                    id: "ecr-3-2", titre: "✍️ Projet 2 : Magie sur la glace", desc: "Lorie fait un spectacle de patinage artistique magnifique. Décris sa performance.", 
+                    noms: "la glace, la musique, une belle robe, des patins, des applaudissements.",
+                    verbes: "tourner, sauter, glisser, sourire, danser.",
+                    adjectifs: "gracieux, rapide, brillant, magnifique, léger.",
+                    debuts: "La musique commence et Lorie..., Elle glisse sur la glace avec..., Quand le spectacle se termine..."
+                }
+            ],
+            expose: "Tu dois convaincre un ami qui déteste le froid de venir faire un sport d'hiver avec toi.\n\n*Exemple :* « Allez viens ! Habille-toi bien chaudement. Le ski c'est génial, tu vas voir on va rigoler dans la neige. Après, on boira un bon chocolat chaud ! »"
+        },
+        {
+            title: "Cours 4 : Sports Aquatiques & Extrêmes 🏊",
+            words: [
+                {n:"Natation", i:"🏊", d:"En natation, on nage des longueurs dans la piscine."}, {n:"Plongeon", i:"🌊", d:"En plongeon, on saute du haut du tremplin dans l'eau."},
+                {n:"Surf", i:"🏄", d:"En surf, on glisse sur les vagues de l'océan."}, {n:"Voile", i:"⛵", d:"Le bateau à voile avance grâce au vent."},
+                {n:"Kayak", i:"🛶", d:"Dans le kayak, on utilise une pagaie pour avancer sur l'eau."}, {n:"Plongée", i:"🤿", d:"En plongée, on explore le fond de la mer avec des bouteilles d'air."},
+                {n:"Escalade", i:"🧗", d:"En escalade, on grimpe très haut sur le mur ou la roche."}, {n:"Parachutisme", i:"🪂", d:"En parachutisme, on saute d'un avion avec un parachute."},
+                {n:"Planche à voile", i:"🌬️", d:"On navigue sur l'eau avec une planche qui a une voile."}, {n:"Ski nautique", i:"🚤", d:"Un bateau rapide nous tire pendant qu'on glisse sur l'eau."}
+            ],
+            devinettes: [
+                {q:"Pegah saute d'un petit avion et son grand parapluie s'ouvre dans le ciel. Quel est ce sport ?", r:"Parachutisme"},
+                {q:"Yied est assis dans un petit bateau étroit et utilise une pagaie pour avancer sur la rivière. Quel est ce sport ?", r:"Kayak"},
+                {q:"Nour se tient debout sur sa planche pour attraper une grosse vague dans l'océan. Quel est ce sport ?", r:"Surf"},
+                {q:"Emiliana saute du haut du grand tremplin de 10 mètres dans la piscine. Quel est ce sport ?", r:"Plongeon"},
+                {q:"Hugo met un harnais de sécurité pour grimper sur un mur avec des prises de couleurs. Quel est ce sport ?", r:"Escalade"}
+            ],
+            histoires: [
+                {txt: "David fait de la plongée sous-marine pour la première fois dans le sud. L'eau est claire et bleue. En respirant dans son masque, il voit nager de magnifiques poissons colorés et même une grosse tortue de mer qui passe lentement à côté de lui !", q: "Quels animaux David voit-il sous l'eau ?", react: "🗣️ Défi oral : Aimerais-tu respirer sous l'eau pour voir les poissons, ou as-tu peur des profondeurs ?"},
+                {txt: "Giquelle est à la piscine municipale. Elle a mis ses lunettes de natation et son casque de bain. Elle commence à nager le crawl d'un bout à l'autre de la piscine. L'eau fraîche est tellement agréable après une longue journée d'école.", q: "Pourquoi l'eau est-elle agréable pour Giquelle ?", react: "🗣️ Défi oral : Sais-tu nager ? As-tu appris quand tu étais petit ?"},
+                {txt: "Elias a beaucoup de courage : il fait de l'escalade sur une vraie montagne ! Ses doigts s'agrippent fortement aux roches. Il ne regarde jamais en bas pour ne pas avoir le vertige. Quand il arrive au sommet, la vue est incroyable.", q: "Pourquoi Elias ne regarde-t-il jamais en bas ?", react: "🗣️ Défi oral : As-tu le vertige (peur des hauteurs) ? Serais-tu capable de grimper au sommet ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-4-1", titre: "✍️ Projet 1 : La grosse vague", desc: "Kesia est sur l'océan avec sa planche de surf. Raconte comment elle a attrapé la plus grosse vague de la journée.", 
+                    noms: "l'océan, une vague géante, une planche, le soleil, le sable, de l'eau.",
+                    verbes: "nager, attendre, se lever, glisser, crier, équilibrer.",
+                    adjectifs: "salé, chaud, énorme, excitant, courageux.",
+                    debuts: "Aujourd'hui Kesia est à la mer..., Soudain, elle voit arriver..., Sur sa planche, elle..."
+                },
+                { 
+                    id: "ecr-4-2", titre: "✍️ Projet 2 : Le grand saut !", desc: "Lorie fait du parachutisme. Décris ce qu'elle ressent en sautant de l'avion.", 
+                    noms: "le ciel bleu, un avion, un parachute, le vent, les nuages, les oiseaux.",
+                    verbes: "voler, sauter, ouvrir, regarder, flotter, atterrir.",
+                    adjectifs: "haut, effrayant, magique, silencieux, libre.",
+                    debuts: "La porte de l'avion s'ouvre..., Lorie ferme les yeux et saute..., Quand le parachute s'ouvre, c'est..."
+                }
+            ],
+            expose: "Tu veux apprendre à faire du surf, pose des questions au professeur ! \n\n*Exemple :* « Excusez-moi, comment je dois placer mes pieds sur la planche ? Est-ce que l'eau est froide aujourd'hui ? Que dois-je faire si je tombe ? »"
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        document.getElementById('course-title').innerText = course.title;
+        
+        // 1. Imagier
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `
+                <div class="mot-seul">${w.n}</div>
+                <div class="hidden-content">
+                    <div class="emoji">${w.i}</div>
+                    <div class="sentence">${w.d}</div>
+                </div>`;
+            div.onclick = () => { 
+                div.classList.add('revealed'); 
+            };
+            grid.appendChild(div);
+        });
+
+        // 2. Association
+        let selectedEmojiId = null; let selectedWordId = null; let matches = 0;
+        const assocArea = document.getElementById('assoc-game-area');
+        const pairs = [...course.words].sort(() => 0.5 - Math.random()).slice(0, 5);
+        const colE = [...pairs].sort(() => 0.5 - Math.random());
+        const colM = [...pairs].sort(() => 0.5 - Math.random());
+        
+        assocArea.innerHTML = `
+            <div class="assoc-col">${colE.map(e => `<div class="assoc-item emoji-item" id="e-${e.n}">${e.i}</div>`).join('')}</div>
+            <div class="assoc-col">${colM.map(m => `<div class="assoc-item" id="m-${m.n}">${m.n}</div>`).join('')}</div>
+        `;
+        
+        document.querySelectorAll('.assoc-item').forEach(item => {
+            item.onclick = function() {
+                playClick();
+                if(this.classList.contains('matched')) return;
+                const isEmoji = this.id.startsWith('e-');
+                const val = this.id.substring(2);
+                
+                if(isEmoji) {
+                    if(selectedEmojiId) document.getElementById('e-'+selectedEmojiId).classList.remove('selected');
+                    selectedEmojiId = val; this.classList.add('selected');
+                } else {
+                    if(selectedWordId) document.getElementById('m-'+selectedWordId).classList.remove('selected');
+                    selectedWordId = val; this.classList.add('selected');
+                }
+                
+                if(selectedEmojiId && selectedWordId) {
+                    if(selectedEmojiId === selectedWordId) {
+                        document.getElementById('e-'+selectedEmojiId).classList.replace('selected', 'matched');
+                        document.getElementById('m-'+selectedWordId).classList.replace('selected', 'matched');
+                        matches++;
+                        if(matches===5) { playSuccess(); }
+                    } else {
+                        setTimeout(() => {
+                            document.getElementById('e-'+selectedEmojiId).classList.remove('selected');
+                            document.getElementById('m-'+selectedWordId).classList.remove('selected');
+                            selectedEmojiId = null; selectedWordId = null;
+                        }, 500);
+                    }
+                    if(selectedEmojiId === selectedWordId) { selectedEmojiId = null; selectedWordId = null;}
+                }
+            };
+        });
+
+        // 3. Devinettes
+        const devDiv = document.getElementById('dev-container');
+        devDiv.innerHTML = `
+            <h3 style="color: #e67e22; margin-top:0;">❓ Le Quiz de la Classe</h3>
+            <p>Lis bien la question et choisis le bon sport dans la liste !</p>
+        `;
+        course.devinettes.forEach((d, index) => {
+            devDiv.innerHTML += `
+                <p class="question">Q${index+1}: ${d.q}</p>
+                <select id="dev-${index}" style="padding:5px; font-size: 1rem;">
+                    <option value="">-- Choisis --</option>
+                    ${course.words.map(w => `<option value="${w.n}">${w.n}</option>`).join('')}
+                </select>
+                <span id="res-${index}"></span>
+            `;
+        });
+
+        // 4. Lecture / Défis
+        const histDiv = document.getElementById('hist-container');
+        histDiv.innerHTML = '';
+        course.histoires.forEach(h => {
+            histDiv.innerHTML += `
+                <div class="box" style="border-left-color: #1abc9c;">
+                    <p style="font-size:1.15rem; line-height: 1.6;">${h.txt}</p>
+                    <p class="question">❓ Question : ${h.q}</p>
+                    <textarea rows="2" placeholder="Écris ta réponse ici..."></textarea>
+                    <p class="react">${h.react}</p>
+                </div>`;
+        });
+
+        // 5. Écriture
+        const ecrDiv = document.getElementById('ecriture-container');
+        ecrDiv.innerHTML = '';
+        course.ecriture.forEach(e => {
+            ecrDiv.innerHTML += `
+                <div class="box" id="${e.id}" style="border-left-color: #2ecc71; background: #eafaf1; padding: 30px;">
+                    <h3 style="color: #27ae60; margin-top:0; font-size: 1.5rem;">${e.titre}</h3>
+                    <p style="font-size: 1.1rem; font-weight: bold;">${e.desc}</p>
+                    
+                    <div class="inspiration-box">
+                        <h4>💡 Boîte d'inspiration pour t'aider :</h4>
+                        <ul>
+                            <li><strong>Noms utiles :</strong> ${e.noms}</li>
+                            <li><strong>Verbes d'action :</strong> ${e.verbes}</li>
+                            <li><strong>Adjectifs :</strong> ${e.adjectifs}</li>
+                            <li><strong>Idées pour commencer :</strong> ${e.debuts}</li>
+                        </ul>
+                    </div>
+
+                    <textarea rows="8" placeholder="Commence à écrire ton texte ici..."></textarea>
+                    
+                    <div style="text-align:right;">
+                        <button class="btn-print" onclick="playClick(); printSection('${e.id}')">🖨️ Imprimer ce texte</button>
+                    </div>
+                </div>`;
+        });
+
+        // 6. Exposé
+        document.getElementById('expose-container').innerHTML = `
+            <h3 style="color: #34495e; margin-top:0;">Consigne de l'entrevue :</h3>
+            <p style="font-size:1.2rem; line-height:1.5;">Prépare-toi à parler devant la classe ! Madame Claudia va t'écouter.</p>
+            <div style="background: #f4f6f7; padding: 15px; border-left: 4px solid #34495e; margin-top: 15px;">
+                <p style="font-style: italic; margin:0; font-size: 1.1rem;">${course.expose.replace(/\n\n/g, '<br><br>')}</p>
+            </div>`;
+
+        // 7. Reset Machine
+        document.getElementById('slot-sujet').innerText = "❓";
+        document.getElementById('slot-verbe').innerText = "❓";
+        document.getElementById('slot-complement').innerText = "❓";
+
+        showTab('imagier');
+    }
+
+    // --- LA MACHINE À PHRASES FOLLES (PERSONNALISÉE) ---
+    const bizarroDictionary = {
+        sujets: [
+            "Yied", "Nour", "Emiliana", "Hugo", "David", 
+            "Giquelle", "Elias", "Kesia", "Lorie", "Pegah"
+        ],
+        verbes: [
+            "nage", "patine", "dribble", "frappe", "lance", "attrape", "grimpe", "glisse", "plonge"
+        ],
+        complements: [
+            "sur une patinoire glacée", "dans le panier de basketball", "avec une grosse raquette", 
+            "sur une montagne de neige", "dans la petite piscine", "avec des gros gants rouges",
+            "en parachute dans le ciel", "sur une planche de surf"
+        ]
+    };
+
+    function spinMachine() {
+        const s = bizarroDictionary.sujets[Math.floor(Math.random() * bizarroDictionary.sujets.length)];
+        const v = bizarroDictionary.verbes[Math.floor(Math.random() * bizarroDictionary.verbes.length)];
+        const c = bizarroDictionary.complements[Math.floor(Math.random() * bizarroDictionary.complements.length)];
+
+        let ticks = 0;
+        const interval = setInterval(() => {
+            playTick(); // Bruit mécanique pendant la rotation
+            document.getElementById('slot-sujet').innerText = bizarroDictionary.sujets[Math.floor(Math.random() * bizarroDictionary.sujets.length)];
+            document.getElementById('slot-verbe').innerText = bizarroDictionary.verbes[Math.floor(Math.random() * bizarroDictionary.verbes.length)];
+            document.getElementById('slot-complement').innerText = bizarroDictionary.complements[Math.floor(Math.random() * bizarroDictionary.complements.length)];
+            ticks++;
+            if (ticks > 15) {
+                clearInterval(interval);
+                document.getElementById('slot-sujet').innerText = s;
+                document.getElementById('slot-verbe').innerText = v;
+                document.getElementById('slot-complement').innerText = c;
+                playClank(); // Bruit de fin
+            }
+        }, 100);
+    }
+
+    function checkDevinettes() {
+        const course = data[currentCourseId];
+        let score = 0;
+        course.devinettes.forEach((d, i) => {
+            const select = document.getElementById(`dev-${i}`);
+            const span = document.getElementById(`res-${i}`);
+            if(select.value === d.r) { 
+                span.innerHTML = " ✅"; span.style.color = "var(--success)"; score++;
+            } else { 
+                span.innerHTML = " ❌"; span.style.color = "red"; 
+            }
+        });
+        if(score === course.devinettes.length) {
+            setTimeout(playSuccess, 500);
+        }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    function finishCourse() {
+        playSuccess();
+        document.getElementById('badge-' + currentCourseId).classList.add('earned');
+        setTimeout(() => {
+            alert("Félicitations ! Tu as gagné le trophée de ce cours !");
+            goHome();
+        }, 800);
+    }
+
+    function goHome() {
+        document.getElementById('course-view').classList.remove('active');
+        document.getElementById('menu').classList.add('active');
+    }
+</script>
+</body>
+</html>
