@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les 4 Cours de Madame Claudia - Animaux & Écriture</title>
+    <style>
+        :root {
+            --primary: #2980b9;
+            --dark-border: #2c3e50;
+            --bg: #fdfaf0;
+            --accent: #e67e22;
+            --success: #27ae60;
+            --writing: #8e44ad;
+            --step-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--dark-border);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .course-btn {
+            background: #ecf0f1;
+            border: 4px solid var(--primary);
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-family: 'Century Gothic';
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        
+        .badge { 
+            font-size: 2.5rem; 
+            position: absolute; 
+            top: 5px; 
+            right: 10px; 
+            opacity: 0.2; 
+            filter: grayscale(100%); 
+            cursor: pointer; 
+            z-index: 10;
+        }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        .badge:hover { transform: scale(1.2); }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        /* Projet Final sur le menu */
+        .final-project-box {
+            background: #f4ecf7;
+            border: 4px dashed var(--writing);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 40px;
+            text-align: left;
+            position: relative;
+        }
+
+        .step-container {
+            background: var(--step-bg);
+            border: 2px solid #dcd6e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .step-title {
+            color: var(--writing);
+            margin-top: 0;
+            border-bottom: 2px solid var(--writing);
+            padding-bottom: 5px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .word-tag {
+            display: inline-block;
+            background: #fdfaf0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            border: 1px solid var(--accent);
+            font-size: 0.95rem;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .category-label {
+            font-weight: bold;
+            color: var(--dark-border);
+            margin: 10px 0 5px 0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+
+        textarea.plan-textarea { 
+            width: 100%; 
+            font-family: 'Century Gothic'; 
+            font-size: 1.1rem; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 2px solid #ccc; 
+            box-sizing: border-box; 
+            line-height: 1.5;
+            margin-top: 15px;
+            background: #fafafa;
+        }
+        textarea.plan-textarea:focus { border-color: var(--writing); outline: none; background: white;}
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--dark-border); padding: 20px; border-radius: 15px; background: #f8f9fa; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card { background: white; border: 2px solid #ccc; padding: 20px 10px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; }
+        .word-card:hover { border-color: var(--accent); }
+        .word-card .hidden-content { display: none; margin-top: 10px; width: 100%; }
+        .word-card.revealed { background: #eef7ff; border-color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.9rem; font-weight: normal; color: #555; margin-bottom: 10px; }
+
+        /* Drag & Drop Devinettes */
+        .drag-pool { background: #eee; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 70px; }
+        .draggable-emoji { font-size: 1.5rem; cursor: grab; background: white; border: 2px solid #ccc; border-radius: 10px; padding: 5px 15px; user-select: none; font-weight: bold; }
+        .draggable-emoji:active { cursor: grabbing; }
+        .dev-row { display: flex; align-items: center; background: white; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #ddd; }
+        .dev-question { flex-grow: 1; font-weight: bold; font-size: 1.1rem; margin: 0; padding-right: 15px; }
+        /* Ajustement de la largeur pour que le texte et l'emoji entrent bien */
+        .drop-zone { width: 160px; height: 60px; border: 2px dashed var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; color: #999; font-size: 0.9rem; }
+        .dev-result { width: 40px; font-size: 1.5rem; text-align: right; font-weight: bold; }
+
+        /* Navigation interne */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 30px; font-size: 1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold;}
+        .btn:hover { background: #1a5276; }
+        .btn-action { background: var(--accent); font-size: 1.2rem; padding: 15px 30px; margin-top: 15px;}
+        .btn-write { background: var(--writing); }
+        .btn-print { background: var(--dark-border); margin-top: 10px; font-size: 1.1rem; padding: 12px 25px;}
+        
+        /* Contenu textuel */
+        .box { background: #fff9e6; padding: 20px; border-radius: 10px; border-left: 5px solid var(--accent); margin-bottom: 20px; text-align: left; }
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold;}
+        
+        textarea.normal-textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 15px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; line-height: 1.5;}
+
+        /* Style pour l'impression */
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                border: none;
+                padding: 0;
+            }
+            .btn-print, .word-tag, .category-label, .badge { display: none; }
+            .step-container { border: none; padding: 0; margin-bottom: 10px; background: transparent; }
+            .step-title { border-bottom: none; margin-bottom: 0; font-size: 1.1rem; color: black; }
+            textarea.plan-textarea { border: none; resize: none; overflow: hidden; background: transparent; padding: 0; margin-top: 5px; height: auto !important;}
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1>🎒 Le Passeport de Francisation</h1>
+        <p>Choisis ton cours d'aujourd'hui. (Prof : Cliquez sur la médaille pour l'attribuer manuellement !)</p>
+        <div class="menu-grid">
+            <button class="course-btn" onclick="loadCourse(0)">🦁 Cours 1 : La Savane<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Cliquer pour donner l'étampe">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(1)">🌲 Cours 2 : La Forêt<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Cliquer pour donner l'étampe">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(2)">🚜 Cours 3 : La Ferme<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Cliquer pour donner l'étampe">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(3)">🌊 Cours 4 : L'Eau<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Cliquer pour donner l'étampe">🏅</span></button>
+        </div>
+
+        <div class="final-project-box" id="print-section">
+            <h2 style="color: var(--writing); margin-top: 0;">✍️ Projet d'écriture #5 : Mon animal totem</h2>
+            <p><strong>Consigne de Madame Claudia :</strong> Suis ce plan de travail étape par étape pour construire ton texte. Choisis des mots dans les boîtes pour t'aider !</p>
+            
+            <div class="step-container">
+                <h3 class="step-title">1️⃣ Paragraphe 1 : L'animal et le tempérament</h3>
+                <div class="category-label">Choix d'animaux :</div>
+                <div>
+                    <span class="word-tag">le lion 🦁</span> <span class="word-tag">le renard 🦊</span> <span class="word-tag">le dauphin 🐬</span> <span class="word-tag">le hibou 🦉</span> <span class="word-tag">le chien 🐶</span> <span class="word-tag">le castor 🦫</span> <span class="word-tag">l'ours 🐻</span> <span class="word-tag">l'aigle 🦅</span> <span class="word-tag">le serpent 🐍</span> <span class="word-tag">le singe 🐒</span> <span class="word-tag">l'éléphant 🐘</span> <span class="word-tag">la girafe 🦒</span> <span class="word-tag">le requin 🦈</span>
+                </div>
+                <div class="category-label">Adjectifs (Mon tempérament) :</div>
+                <div>
+                    <span class="word-tag">courageux / courageuse</span> <span class="word-tag">calme</span> <span class="word-tag">travaillant(e)</span> <span class="word-tag">curieux / curieuse</span> <span class="word-tag">drôle</span> <span class="word-tag">affectueux / affectueuse</span> <span class="word-tag">créatif / créative</span> <span class="word-tag">organisé(e)</span> <span class="word-tag">têtu(e)</span> <span class="word-tag">rêveur / rêveuse</span> <span class="word-tag">timide</span> <span class="word-tag">énergique</span>
+                </div>
+                <textarea class="plan-textarea" rows="3" placeholder="Mon animal totem est... Je lui ressemble parce que j'ai un tempérament..."></textarea>
+            </div>
+
+            <div class="step-container">
+                <h3 class="step-title">2️⃣ Paragraphe 2 : L'apparence physique</h3>
+                <div class="category-label">Caractéristiques physiques :</div>
+                <div>
+                    <span class="word-tag">des ailes douces 🪽</span> <span class="word-tag">une carapace solide 🐢</span> <span class="word-tag">des griffes pointues 🐾</span> <span class="word-tag">de grandes nageoires 🦈</span> <span class="word-tag">un pelage chaud 🐻</span> <span class="word-tag">de grands yeux ronds 👀</span> <span class="word-tag">une longue trompe 🐘</span> <span class="word-tag">des cornes pointues 🦌</span> <span class="word-tag">une peau lisse 🐬</span> <span class="word-tag">une queue colorée 🦜</span> <span class="word-tag">des crocs féroces 🦁</span> <span class="word-tag">des sabots lourds 🫏</span> <span class="word-tag">un bec pointu 🦅</span>
+                </div>
+                <div class="category-label">Adjectifs de couleur/grandeur/style :</div>
+                <div>
+                    <span class="word-tag">grand(e)</span> <span class="word-tag">petit(e)</span> <span class="word-tag">coloré(e)</span> <span class="word-tag">invisible</span> <span class="word-tag">brillant(e)</span> <span class="word-tag">rapide</span> <span class="word-tag">agile</span> <span class="word-tag">mince</span> <span class="word-tag">gros(se)</span> <span class="word-tag">discret / discrète</span> <span class="word-tag">lumineux / lumineuse</span>
+                </div>
+                <textarea class="plan-textarea" rows="3" placeholder="Si j'avais un corps magique, j'aimerais avoir... Mon pelage (ou ma peau) serait..."></textarea>
+            </div>
+
+            <div class="step-container">
+                <h3 class="step-title">3️⃣ Paragraphe 3 : L'habitat et les actions</h3>
+                <div class="category-label">Lieux :</div>
+                <div>
+                    <span class="word-tag">dans la forêt profonde 🌲</span> <span class="word-tag">dans l'océan bleu 🌊</span> <span class="word-tag">dans la savane chaude ☀️</span> <span class="word-tag">dans une maison douillette 🏠</span> <span class="word-tag">dans les montagnes enneigées 🏔️</span> <span class="word-tag">dans le désert aride 🏜️</span> <span class="word-tag">dans la jungle verte 🌴</span> <span class="word-tag">dans une grotte mystérieuse 🌑</span> <span class="word-tag">dans le ciel immense ☁️</span>
+                </div>
+                <div class="category-label">Verbes d'action :</div>
+                <div>
+                    <span class="word-tag">voler très haut ☁️</span> <span class="word-tag">nager vite 🏊</span> <span class="word-tag">grimper aux arbres 🌳</span> <span class="word-tag">observer en silence 🤫</span> <span class="word-tag">creuser la terre 🕳️</span> <span class="word-tag">chasser discrètement 🤫</span> <span class="word-tag">sauter loin 🦘</span> <span class="word-tag">construire des abris 🏗️</span> <span class="word-tag">communiquer avec les autres 🗣️</span> <span class="word-tag">protéger ma famille 🛡️</span>
+                </div>
+                <textarea class="plan-textarea" rows="3" placeholder="J'habiterais dans... Avec mon corps d'animal, je pourrais..."></textarea>
+            </div>
+            
+            <div style="text-align: right;">
+                <button class="btn btn-print" onclick="window.print()">🖨️ Imprimer mon texte</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn" onclick="showTab('imagier')">1. Les 10 mots</button>
+            <button class="btn" onclick="showTab('devinettes')">2. Devinettes</button>
+            <button class="btn" onclick="showTab('histoires')">3. Histoires</button>
+            <button class="btn btn-write" onclick="showTab('ecriture')">4. Écriture</button>
+            <button class="btn" onclick="showTab('expose')">5. Exposé Oral</button>
+            <button class="btn" style="background:#7f8c8d" onclick="goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3>Clique sur le mot pour voir l'animal, l'écouter et lire sa phrase 🔊</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box">
+                <h3 style="margin-top:0; color:var(--primary);">Glisse le bon animal dans la case !</h3>
+                <div id="drag-pool" class="drag-pool" ondrop="drop(event)" ondragover="allowDrop(event)">
+                </div>
+                <div id="dev-container" style="text-align: left;"></div>
+                <div style="text-align: center;">
+                    <button class="btn btn-action" onclick="checkDevinettes()">Vérifier mes réponses</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div class="box" id="ecriture-container" style="border-left-color: var(--writing); background: #f9f2fd;">
+            </div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container"></div>
+            <button class="btn btn-action" onclick="finishCourse()">✅ J'ai terminé ce cours !</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playPopSound() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playRewardSound() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let parole = new SpeechSynthesisUtterance(texte);
+            parole.lang = 'fr-CA'; 
+            parole.rate = 0.9; 
+            window.speechSynthesis.speak(parole);
+        }
+    }
+
+    // --- BASE DE DONNÉES DES 4 COURS ---
+    const data = [
+        {
+            title: "Cours 1 : Les Animaux de la Savane et Jungle",
+            words: [
+                {n:"Lion", i:"🦁", d:"Le lion féroce dort sous un acacia."}, {n:"Tigre", i:"🐯", d:"Le tigre rayé se cache dans les herbes."},
+                {n:"Singe", i:"🐵", d:"Le singe mange une banane jaune."}, {n:"Éléphant", i:"🐘", d:"L'éléphant souffle de la poussière."},
+                {n:"Girafe", i:"🦒", d:"La girafe tend le cou pour manger."}, {n:"Zèbre", i:"🦓", d:"Le zèbre galope avec le troupeau."},
+                {n:"Kangourou", i:"🦘", d:"Le kangourou saute très haut."}, {n:"Panda", i:"🐼", d:"Le panda mâche des feuilles de bambou."},
+                {n:"Crocodile", i:"🐊", d:"Le crocodile attend dans l'eau chaude."}, {n:"Hippopotame", i:"🦛", d:"L'hippopotame ouvre sa grande bouche."}
+            ],
+            devinettes: [
+                {q:"J'ai une longue trompe et de grandes oreilles. Qui suis-je ?", r:"Éléphant"},
+                {q:"J'ai des rayures noires et blanches. Qui suis-je ?", r:"Zèbre"},
+                {q:"Je saute et j'ai une poche pour mon bébé. Qui suis-je ?", r:"Kangourou"},
+                {q:"Je suis le roi des animaux avec ma crinière. Qui suis-je ?", r:"Lion"},
+                {q:"J'adore manger du bambou en Chine. Qui suis-je ?", r:"Panda"}
+            ],
+            histoires: [
+                {
+                    txt: "Mateo visite la savane. Il voit une girafe avec ses longues pattes fines et son pelage couvert de grandes taches rousses. C'est un animal au tempérament très calme et pacifique. Elle est toujours patiente et ne s'énerve jamais quand elle cherche sa nourriture. Elle mange les feuilles tout en haut d'un arbre avec sa langue bleue !", 
+                    q: "Comment est le tempérament de la girafe ?", 
+                    react: "🗣️ À l'oral : Es-tu quelqu'un de patient comme la girafe ou de pressé ?"
+                },
+                {
+                    txt: "Plus loin, un petit singe couvert de poils bruns avec de longs doigts agiles descend d'une liane. Ce petit primate a un caractère très espiègle et imprévisible. Il est hyperactif et adore jouer des tours aux humains ! Il attrape la casquette de Mateo et remonte vite se cacher en riant.", 
+                    q: "Comment sont les doigts du singe ?", 
+                    react: "🗣️ À l'oral : Raconte une farce que tu as déjà faite à quelqu'un."
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #1 : Le super prédateur",
+                desc: "Invente un grand prédateur de la savane. Décris ses **caractéristiques physiques** (ses dents, ses pattes, sa couleur). Ensuite, écris deux phrases pour expliquer son **tempérament** (est-il solitaire, agressif, paresseux, rusé ?)."
+            },
+            expose: "🎤 Tu es gardien de Zoo ! Choisis un animal sauvage. Dis-nous : Comment il s'appelle ? À quoi il ressemble physiquement ? Quel est son tempérament avec les autres animaux ?"
+        },
+        {
+            title: "Cours 2 : Les Animaux de la Forêt (Québec)",
+            words: [
+                {n:"Loup", i:"🐺", d:"Le loup gris hurle la nuit."}, {n:"Ours", i:"🐻", d:"L'ours noir cherche des petits fruits."},
+                {n:"Renard", i:"🦊", d:"Le renard roux marche sans bruit."}, {n:"Orignal", i:"🫎", d:"L'orignal a de grands bois sur la tête."},
+                {n:"Castor", i:"🦫", d:"Le castor coupe un arbre avec ses dents."}, {n:"Raton Laveur", i:"🦝", d:"Le raton laveur fouille dans la poubelle."},
+                {n:"Écureuil", i:"🐿️", d:"L'écureuil enterre une noisette."}, {n:"Cerf", i:"🦌", d:"Le petit cerf court dans le bois."},
+                {n:"Hibou", i:"🦉", d:"Le hibou ouvre ses yeux ronds."}, {n:"Lièvre", i:"🐇", d:"Le lièvre blanc se cache dans la neige."}
+            ],
+            devinettes: [
+                {q:"Je construis des barrages sur la rivière. Qui suis-je ?", r:"Castor"},
+                {q:"J'ai un masque noir sur les yeux comme un voleur. Qui suis-je ?", r:"Raton Laveur"},
+                {q:"Je suis le plus grand animal de la forêt québécoise. Qui suis-je ?", r:"Orignal"},
+                {q:"Je suis un oiseau qui chasse la nuit. Qui suis-je ?", r:"Hibou"},
+                {q:"Je cache des noisettes pour l'hiver. Qui suis-je ?", r:"Écureuil"}
+            ],
+            histoires: [
+                {
+                    txt: "Amina se promène dans la forêt au Québec. Elle aperçoit un castor avec sa queue large et plate recouverte d'écailles. Le castor a une personnalité très travaillante et déterminée. Il est infatigable et n'abandonne jamais avant d'avoir fini son barrage. 'CRAAACK', il fait tomber un arbre avec ses grandes dents !", 
+                    q: "Comment est la queue du castor ?", 
+                    react: "🗣️ À l'oral : Quand tu fais un travail difficile, abandonnes-tu vite ou es-tu déterminé comme le castor ?"
+                },
+                {
+                    txt: "Le soir, Amina voit un raton laveur avec son masque noir sur les yeux et ses petites griffes pointues. Cet animal a un tempérament très curieux et fouineur. Il est très audacieux et n'a pas peur de s'approcher des tentes pour chercher un morceau de pain oublié.", 
+                    q: "Quelles sont les caractéristiques du visage du raton laveur ?", 
+                    react: "🗣️ À l'oral : Es-tu de nature curieuse ? Qu'aimes-tu explorer ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #2 : La préparation pour l'hiver",
+                desc: "Choisis un animal de la forêt québécoise qui se prépare pour la neige. Décris son **pelage** ou ses réserves de nourriture. Explique ensuite son **caractère** : est-il inquiet de l'hiver, joyeux de voir la neige, ou grognon parce qu'il veut dormir ?"
+            },
+            expose: "🎤 Tu es Guide de la forêt ! Choisis un animal du Québec. Décris son tempérament (timide, curieux ?) pour expliquer aux touristes comment l'observer sans lui faire peur."
+        },
+        {
+            title: "Cours 3 : Les Animaux de la Ferme et de la Maison",
+            words: [
+                {n:"Chat", i:"🐱", d:"Le chat ronronne sur le lit."}, {n:"Chien", i:"🐶", d:"Le chien rapporte la balle rouge."},
+                {n:"Cheval", i:"🐴", d:"Le cheval mange du foin sec."}, {n:"Vache", i:"🐮", d:"La vache donne du bon lait frais."},
+                {n:"Cochon", i:"🐷", d:"Le cochon dort dans la paille."}, {n:"Mouton", i:"🐑", d:"Le mouton a une laine très douce."},
+                {n:"Lapin", i:"🐰", d:"Le lapin grignote une carotte."}, {n:"Poule", i:"🐔", d:"La poule pond un gros œuf."},
+                {n:"Canard", i:"🦆", d:"Le canard nage dans la mare."}, {n:"Souris", i:"🐭", d:"La petite souris court très vite."}
+            ],
+            devinettes: [
+                {q:"Je donne du lait pour faire du fromage. Qui suis-je ?", r:"Vache"},
+                {q:"Je ponds des œufs pour le déjeuner. Qui suis-je ?", r:"Poule"},
+                {q:"J'ai de la laine sur le dos. Qui suis-je ?", r:"Mouton"},
+                {q:"Je fais 'Coin-coin' dans l'eau. Qui suis-je ?", r:"Canard"},
+                {q:"Je suis le meilleur ami de l'homme. Qui suis-je ?", r:"Chien"}
+            ],
+            histoires: [
+                {
+                    txt: "Luka visite la ferme. Il regarde la grosse vache tachetée avec ses sabots lourds et son grand museau rose. La vache a une nature extrêmement placide et tranquille. Elle est très affectueuse et adore qu'on lui flatte le cou pendant qu'on la trait pour avoir du lait frais.", 
+                    q: "Comment est le museau de la vache ?", 
+                    react: "🗣️ À l'oral : Préfères-tu les animaux tranquilles ou les animaux qui courent partout ?"
+                },
+                {
+                    txt: "Dans la grange, Luka observe une petite poule rousse avec des plumes douces et un bec pointu. La poule a un caractère nerveux et très bavard. Elle est facilement inquiète et caquette bruyamment dès qu'elle entend un bruit ! Elle cache trois beaux œufs chauds dans la paille.", 
+                    q: "Quel est le caractère de la poule ?", 
+                    react: "🗣️ À l'oral : Es-tu bavard(e) comme une poule ou silencieux/silencieuse ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #3 : La vie à la ferme",
+                desc: "Raconte la journée de ton animal de compagnie (ou de ferme) préféré. Décris **deux de ses traits physiques** (ses oreilles, sa queue). Ensuite, écris deux phrases sur sa **personnalité** (est-il têtu, affectueux, joueur, paresseux ?)."
+            },
+            expose: "🎤 Tu es le Fermier d'un jour ! Choisis un animal. Décris son corps et son caractère. Pourquoi ce tempérament est-il utile (ou drôle) à la ferme ?"
+        },
+        {
+            title: "Cours 4 : Les Animaux de l'Eau et les Petites Bêtes",
+            words: [
+                {n:"Baleine", i:"🐳", d:"La baleine chante dans l'océan."}, {n:"Dauphin", i:"🐬", d:"Le dauphin saute hors des vagues."},
+                {n:"Requin", i:"🦈", d:"Le requin nage très vite."}, {n:"Pingouin", i:"🐧", d:"Le pingouin plonge dans l'eau glacée."},
+                {n:"Grenouille", i:"🐸", d:"La grenouille attrape une mouche."}, {n:"Tortue", i:"🐢", d:"La tortue marche sur le gazon."},
+                {n:"Serpent", i:"🐍", d:"Le serpent vert s'enroule."}, {n:"Abeille", i:"🐝", d:"L'abeille butine une fleur rose."},
+                {n:"Papillon", i:"🦋", d:"Le papillon vole avec le vent."}, {n:"Araignée", i:"🕷️", d:"L'araignée fabrique une belle toile."}
+            ],
+            devinettes: [
+                {q:"Je suis le plus grand animal de l'océan. Qui suis-je ?", r:"Baleine"},
+                {q:"Je fais du miel délicieux. Qui suis-je ?", r:"Abeille"},
+                {q:"J'étais une chenille avant. Qui suis-je ?", r:"Papillon"},
+                {q:"J'ai 8 pattes et je tisse des toiles. Qui suis-je ?", r:"Araignée"},
+                {q:"Je suis un reptile sans pattes qui rampe. Qui suis-je ?", r:"Serpent"}
+            ],
+            histoires: [
+                {
+                    txt: "Mei va à l'aquarium. Un immense requin gris passe doucement, avec sa peau lisse et ses nombreuses dents acérées. Le requin a un tempérament très solitaire et concentré. Il est très observateur et ne s'intéresse qu'à chasser sa nourriture en silence. Mei a des frissons !", 
+                    q: "Comment est la peau du requin ?", 
+                    react: "🗣️ À l'oral : Aimes-tu faire des activités seul(e) comme le requin, ou en groupe ?"
+                },
+                {
+                    txt: "Dans le jardin, Mei regarde une petite abeille avec son corps rayé et plein de petits poils jaunes. L'abeille possède une personnalité très organisée et dévouée. Elle est toujours concentrée sur son travail et fait équipe avec les autres pour fabriquer le miel.", 
+                    q: "Comment est le corps de l'abeille ?", 
+                    react: "🗣️ À l'oral : Es-tu organisé(e) dans tes travaux d'école comme la petite abeille ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #4 : Le monstre marin",
+                desc: "Invente un animal aquatique inconnu. À quoi ressemble-t-il **physiquement** (a-t-il des écailles brillantes, huit yeux, de grandes nageoires ?) ? Quelles sont **ses émotions et son tempérament** sous l'eau (est-il craintif, protecteur, très drôle ?) ?"
+            },
+            expose: "🎤 Tu es Explorateur des océans ! Choisis un animal qui vit dans l'eau. Parle-nous de son apparence physique bizarre et de sa personnalité cachée."
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    // --- FONCTIONS DRAG & DROP ---
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("id", ev.target.id);
+        ev.dataTransfer.setData("animal", ev.target.dataset.animal);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        let dataId = ev.dataTransfer.getData("id");
+        let draggedEl = document.getElementById(dataId);
+        let target = ev.target;
+
+        if (target.classList.contains('draggable-emoji')) {
+            target = target.parentElement;
+        }
+
+        if (target.classList.contains('drop-zone')) {
+            if (target.children.length > 0) {
+                document.getElementById('drag-pool').appendChild(target.children[0]);
+            }
+            target.appendChild(draggedEl);
+            target.style.borderColor = "var(--success)";
+        } else if (target.id === 'drag-pool') {
+            target.appendChild(draggedEl);
+        }
+    }
+
+    function checkDevinettes() {
+        let score = 0;
+        const course = data[currentCourseId];
+        course.devinettes.forEach((dev, idx) => {
+            let dropZone = document.getElementById('drop-' + idx);
+            let res = document.getElementById('res-' + idx);
+            if (dropZone.children.length > 0) {
+                let answer = dropZone.children[0].dataset.animal;
+                if (answer === dev.r) {
+                    res.innerHTML = "✅";
+                    score++;
+                } else {
+                    res.innerHTML = "❌";
+                }
+            } else {
+                res.innerHTML = "❓";
+            }
+        });
+        
+        if (score === course.devinettes.length) {
+            playRewardSound();
+            alert("Bravo ! Tu connais tous tes animaux ! 🎉");
+        }
+    }
+
+    // --- CHARGEMENT DU COURS ---
+    function loadCourse(id) {
+        currentCourseId = id;
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        
+        const course = data[id];
+        document.getElementById('course-title').innerText = course.title;
+        
+        // 1. Imagier (Mots lus au clic + Bouton audio pour phrase)
+        let gridWords = document.getElementById('grid-words');
+        gridWords.innerHTML = '';
+        course.words.forEach(w => {
+            let div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `
+                <div class="emoji">${w.i}</div>
+                <div>${w.n}</div>
+                <div class="hidden-content">
+                    <div class="sentence">${w.d}</div>
+                    <button class="btn" style="padding: 5px 15px; font-size: 0.85rem;" onclick="event.stopPropagation(); lireTexte('${w.d.replace(/'/g, "\\'")}')">🔊 Lire la phrase</button>
+                </div>
+            `;
+            div.onclick = () => {
+                div.classList.add('revealed');
+                lireTexte(w.n); // Lit seulement le mot
+            };
+            gridWords.appendChild(div);
+        });
+
+        // 2. Devinettes (Ajout du texte à côté de l'emoji)
+        let pool = document.getElementById('drag-pool');
+        let devContainer = document.getElementById('dev-container');
+        pool.innerHTML = '';
+        devContainer.innerHTML = '';
+
+        let answers = course.devinettes.map(d => {
+            let wordObj = course.words.find(w => w.n === d.r);
+            return { name: d.r, emoji: wordObj ? wordObj.i : '❓' };
+        });
+        answers.sort(() => Math.random() - 0.5);
+
+        answers.forEach((ans, idx) => {
+            let el = document.createElement('div');
+            el.className = 'draggable-emoji';
+            el.draggable = true;
+            el.id = 'drag-' + idx;
+            el.dataset.animal = ans.name;
+            el.innerHTML = `${ans.emoji} ${ans.name}`; // Emoji + Texte
+            el.ondragstart = drag;
+            pool.appendChild(el);
+        });
+
+        course.devinettes.forEach((dev, idx) => {
+            devContainer.innerHTML += `
+                <div class="dev-row">
+                    <p class="dev-question">${dev.q}</p>
+                    <div class="drop-zone" id="drop-${idx}" data-answer="${dev.r}" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                    <div class="dev-result" id="res-${idx}"></div>
+                </div>
+            `;
+        });
+
+        // 3. Histoires
+        let histContainer = document.getElementById('hist-container');
+        histContainer.innerHTML = '';
+        course.histoires.forEach(h => {
+            histContainer.innerHTML += `
+                <div class="box">
+                    <p style="font-size: 1.1rem; line-height: 1.5;">${h.txt}</p>
+                    <p class="question">❓ ${h.q}</p>
+                    <textarea class="normal-textarea" rows="2" placeholder="Écris ta réponse ici..."></textarea>
+                    <p class="react">${h.react}</p>
+                </div>
+            `;
+        });
+
+        // 4. Écriture
+        let ecritureContainer = document.getElementById('ecriture-container');
+        ecritureContainer.innerHTML = `
+            <h3 style="color: var(--writing); margin-top:0;">${course.ecriture.titre}</h3>
+            <p>${course.ecriture.desc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+            <textarea class="normal-textarea" rows="6" placeholder="Commence à écrire ton texte ici..."></textarea>
+        `;
+
+        // 5. Exposé
+        let exposeContainer = document.getElementById('expose-container');
+        exposeContainer.innerHTML = `<p style="font-size: 1.2rem; font-weight: bold;">${course.expose}</p>`;
+        
+        showTab('imagier');
+    }
+
+    // --- NAVIGATION ---
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    function goHome() {
+        document.getElementById('course-view').classList.remove('active');
+        document.getElementById('menu').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function finishCourse() {
+        playPopSound();
+        goHome();
+    }
+
+    function toggleBadge(event, id) {
+        event.stopPropagation();
+        let badge = document.getElementById('badge-' + id);
+        badge.classList.toggle('earned');
+        if (badge.classList.contains('earned')) {
+            playPopSound();
+        }
+    }
+</script>
+</body>
+</html>
