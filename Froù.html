@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5 : Habitats et Cachettes - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2b5876; 
+            --bg: #f4f7f6;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal & Projet Final */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            background: #ecf0f1; border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: var(--primary); text-align: left;
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        .final-project-box { background: #e8f8f5; border: 4px dashed #16a085; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; position: relative; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #1abc9c; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .exemples-box { background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        .redaction-col { display: flex; flex-direction: column; gap: 15px; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .word-card:hover { border-color: #f39c12; }
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #fcf3cf; border-color: #f39c12; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .btn-tab-1 { background: #3498db; } 
+        .btn-tab-2 { background: #9b59b6; } 
+        .btn-tab-3 { background: #e67e22; } 
+        .btn-tab-4 { background: #1abc9c; } 
+        .btn-tab-5 { background: #2ecc71; } 
+        .btn-tab-6 { background: #34495e; } 
+        .btn-tab-7 { background: #e74c3c; border: 2px solid #c0392b;} 
+        .btn-menu { background: #7f8c8d; }
+
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+        
+        /* Contenu */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; border-left: 5px solid #bdc3c7; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold; background: #eafaf1; padding: 10px; border-radius: 5px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical;}
+        
+        .inspiration-box { background: #fef9e7; border: 2px dashed #f1c40f; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 1rem; color: #34495e; line-height: 1.6;}
+        .inspiration-box h4 { margin-top: 0; color: #d4ac0d; margin-bottom: 10px; font-size: 1.2rem;}
+        .inspiration-box ul { margin: 0; padding-left: 20px; }
+        .inspiration-box li { margin-bottom: 5px; }
+
+        /* Jeu Association */
+        .assoc-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .assoc-col { display: flex; flex-direction: column; gap: 10px; width: 45%; }
+        .assoc-item { padding: 15px; background: white; border: 3px solid #bdc3c7; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; user-select: none; }
+        .assoc-item.emoji-item { font-size: 2.5rem; }
+        .assoc-item:hover:not(.matched) { border-color: #9b59b6; }
+        .assoc-item.selected { background: #f4ecf7; border-color: #9b59b6; transform: scale(1.05); }
+        .assoc-item.matched { background: #abebc6; border-color: var(--success); color: var(--success); cursor: default; opacity: 0.6; pointer-events: none; }
+
+        /* MACHINE À PHRASES FOLLES */
+        .slot-machine {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0;
+            background: var(--primary); padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .slot-window {
+            background: white; border: 4px solid #f1c40f; border-radius: 10px; padding: 20px;
+            width: 30%; font-size: 1.5rem; font-weight: bold; text-align: center; min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .slot-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .slot-text { color: #e74c3c; font-size: 1.6rem; }
+        .btn-spin {
+            background: #e74c3c; color: white; font-size: 1.5rem; padding: 15px 40px; border: 4px solid #c0392b; 
+            border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 0 #c0392b; transition: 0.1s; margin-bottom: 20px;
+        }
+        .btn-spin:active { transform: translateY(5px); box-shadow: 0 0 0 #c0392b; }
+
+        /* CSS POUR L'IMPRESSION PROPRE */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 0; margin: 0; border: none; box-shadow: none; }
+            button, .nav-bar, .badge { display: none !important; }
+            textarea { border: 1px solid #ccc; background: transparent; resize: none; overflow: hidden; min-height: 150px; }
+            .inspiration-box { display: none !important; }
+            .plan-box { border: none; box-shadow: none; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+        .btn-print:hover { background: #2c3e50; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary); font-size: 2.5rem;">🗺️ Habitats et Cachettes Secrètes</h1>
+        <p style="font-size: 1.2rem;">Explore les pièces de la maison, découvre des coins mystérieux et construis ton propre campement !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn" onclick="playClick(); loadCourse(0)">🛋️ Cours 1 : Les pièces de la maison<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(1)">🕸️ Cours 2 : Les coins mystérieux<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(2)">🏕️ Cours 3 : Camps et cachettes<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(3)">🏰 Cours 4 : Maisons extraordinaires<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Professeur : Cliquez pour donner la médaille !">🏆</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #16a085; margin-top: 0; font-size: 2rem; text-align: center;">🌟 Projet Final : Ma cachette de rêve</h2>
+            <p style="font-size: 1.2rem; text-align: center;">Ferme les yeux et imagine le meilleur endroit secret au monde ! Décris ta cachette en <strong>trois paragraphes</strong>.</p>
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #16a085; margin-top: 0;">📋 Ton plan de construction</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>Paragraphe 1 : L'endroit.</strong> Où se trouve ta cachette ? (Dans un arbre, sous la terre, dans ta chambre ?)</li>
+                        <li><strong>Paragraphe 2 : L'intérieur.</strong> Qu'est-ce qu'il y a dedans ? (Des coussins, une télévision secrète, des collations ?)</li>
+                        <li><strong>Paragraphe 3 : Les activités.</strong> Que fais-tu quand tu es caché là avec tes amis ?</li>
+                    </ul>
+                    <h3 style="color: #e67e22; margin-top: 25px;">💡 Exemples pour t'inspirer :</h3>
+                    <div class="exemples-box">
+                        <p><strong>🌳 La cabane dans les nuages :</strong> Ma cachette secrète est une cabane tout en haut du plus grand chêne de mon jardin. À l'intérieur, il y a des <strong>lumières magiques</strong> et un <strong>hamac très doux</strong>. J'adore y aller pour <strong>lire des bandes dessinées</strong> et <strong>manger des biscuits</strong>.</p>
+                        <hr style="border: 0; border-top: 1px solid #f0d0b5; margin: 10px 0;">
+                        <p><strong>🛋️ Le fort du salon :</strong> J'ai construit un fort géant avec toutes les <strong>couvertures</strong> de la maison. C'est juste derrière le canapé. Dedans, j'ai mis ma <strong>tablette</strong> et des <strong>oreillers moelleux</strong>. J'y invite mon chien pour <strong>regarder des films</strong>.</p>
+                    </div>
+                </div>
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold; color: #34495e;">1. L'endroit (Où est ta cachette et comment elle s'appelle) :</label>
+                    <textarea rows="3" placeholder="Ex: Ma cachette magique se trouve..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">2. L'intérieur (Les objets et la décoration) :</label>
+                    <textarea rows="4" placeholder="Ex: À l'intérieur, c'est très confortable. J'ai mis..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">3. Les activités (Ce que tu fais là-bas) :</label>
+                    <textarea rows="3" placeholder="Ex: J'adore aller dans ma cachette parce que je peux..."></textarea>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer mon texte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2rem;">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Vocabulaire</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('association')">2. Paires</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('devinettes')">3. Le Quiz</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('histoires')">4. Les Défis</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. Écrire</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('expose')">6. Entrevue</button>
+            <button class="btn btn-tab-7" onclick="playClick(); showTab('erreurs')">7. 🎰 Phrases Folles</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3 style="color: #3498db;">L'Exploration : Clique sur la carte pour entendre le mot et voir la phrase !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #9b59b6;">
+                <h3 style="color: #9b59b6; margin-top:0;">🧩 Trouve les paires !</h3>
+                <p>Associe la bonne image avec le nom du lieu. Clique sur une image à gauche, puis sur le mot à droite.</p>
+                <div class="assoc-container" id="assoc-game-area"></div>
+                <div id="assoc-message" style="margin-top:20px; font-weight:bold; font-size:1.2rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box" id="dev-container" style="border-left-color: #e67e22;">
+                <h3 style="color: #e67e22; margin-top:0;">❓ Le Quiz de la Maison</h3>
+                <p>Lis bien la question et choisis le bon endroit dans la liste !</p>
+            </div>
+            <button class="btn btn-action" style="background:#e67e22;" onclick="playClick(); checkDevinettes()">Vérifier mes réponses</button>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container" style="border-left-color: #34495e;"></div>
+            <button class="btn btn-action" style="background:#27ae60;" onclick="finishCourse()">✅ J'ai réussi mon entrevue !</button>
+        </div>
+
+        <div id="tab-erreurs" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #e74c3c; background: #fdedec; text-align: center;">
+                <h3 style="color: #c0392b; font-size: 2rem; margin-top:0;">🎰 La Machine Bizarroïde !</h3>
+                <p style="font-size: 1.2rem;">Clique sur le gros bouton rouge. Lis l'erreur à voix haute, puis corrige la phrase de ton ami !</p>
+                <button class="btn-spin" onclick="playClick(); spinMachine()">🔴 CRÉER UNE ERREUR</button>
+
+                <div class="slot-machine">
+                    <div class="slot-window"><div class="slot-label">1. Qui ?</div><div class="slot-text" id="slot-sujet">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">2. Fait quoi ?</div><div class="slot-text" id="slot-verbe">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">3. Où ?</div><div class="slot-text" id="slot-complement">❓</div></div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px dashed #e74c3c; text-align: left;">
+                    <p style="font-size: 1.3rem; color: #c0392b; font-weight: bold;">🗣️ À ton tour de remettre de l'ordre :</p>
+                    <textarea rows="2" placeholder="Exemple : Non ! Yied ne prend pas sa douche dans le four ! Yied prend sa douche dans la salle de bain."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playSuccess() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; 
+        let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+
+    function playTick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function playClank() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    // --- BADGES ---
+    function toggleBadge(event, id) {
+        event.stopPropagation(); 
+        playSuccess(); 
+        const badge = document.getElementById('badge-' + id);
+        badge.classList.toggle('earned');
+    }
+
+    // --- IMPRESSION ---
+    function printSection(elementId) {
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById(elementId).classList.add('print-area');
+        window.print();
+    }
+
+    // --- DONNÉES ENRICHIES (LIEUX & PRÉNOMS DES ÉLÈVES) ---
+    const data = [
+        {
+            title: "Cours 1 : Les pièces de la maison 🛋️",
+            words: [
+                {n:"Cuisine", i:"🍳", d:"Dans la cuisine, on prépare de bons repas."}, {n:"Salon", i:"🛋️", d:"Dans le salon, on s'assoit sur le canapé pour relaxer."},
+                {n:"Chambre", i:"🛏️", d:"Dans la chambre, on dort dans un lit confortable."}, {n:"Salle de bain", i:"🛁", d:"Dans la salle de bain, on se lave et on brosse ses dents."},
+                {n:"Salle à manger", i:"🍽️", d:"Dans la salle à manger, on s'assoit à la table pour manger."}, {n:"Bureau", i:"💻", d:"Dans le bureau, on fait ses devoirs sur l'ordinateur."},
+                {n:"Couloir", i:"🚪", d:"Le couloir est un passage long pour aller aux autres pièces."}, {n:"Salle de lavage", i:"🧺", d:"Dans la salle de lavage, on nettoie les vêtements sales."},
+                {n:"Entrée", i:"🧥", d:"Dans l'entrée, on enlève ses souliers et son manteau."}, {n:"Balcon", i:"🪴", d:"Sur le balcon, on prend l'air à l'extérieur."}
+            ],
+            devinettes: [
+                {q:"Yied a les mains toutes sales après avoir joué dehors. Où doit-il aller pour se laver ?", r:"Salle de bain"},
+                {q:"Nour a très faim, elle veut préparer un gros sandwich. Dans quelle pièce va-t-elle ?", r:"Cuisine"},
+                {q:"Emiliana veut écouter un bon film avec sa famille sur le grand téléviseur. Où vont-ils ?", r:"Salon"},
+                {q:"Il est 20h00, Hugo baille et a très sommeil. Où doit-il aller ?", r:"Chambre"},
+                {q:"Le chandail de David est plein de boue. Où doit-il le mettre pour le nettoyer ?", r:"Salle de lavage"}
+            ],
+            histoires: [
+                {txt: "Giquelle est dans la cuisine avec sa grand-mère. Elles préparent un gâteau au chocolat géant. Il y a de la farine partout sur le comptoir ! Soudain, Giquelle réalise qu'elles ont oublié d'acheter des œufs.", q: "Qu'est-ce que Giquelle et sa grand-mère cuisinent ?", react: "🗣️ Défi oral : Quel est ton dessert préféré à cuisiner à la maison ?"},
+                {txt: "Elias fait ses devoirs de mathématiques dans le bureau. C'est très silencieux, mais soudain, son petit frère entre en courant et commence à chanter très fort en jouant de la guitare en plastique.", q: "Pourquoi Elias est-il dans le bureau ?", react: "🗣️ Défi oral : Que devrait dire Elias à son petit frère de façon polie ?"},
+                {txt: "Kesia rentre de l'école. Il pleut très fort dehors. Elle arrive dans l'entrée de la maison, ses bottes sont pleines d'eau et son manteau est trempé.", q: "Que doit faire Kesia dans l'entrée avec ses vêtements mouillés ?", react: "🗣️ Défi oral : Aimerais-tu aller jouer sous la pluie ou préfères-tu rester au sec dans le salon ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-1-1", titre: "✍️ Projet 1 : La recette magique", desc: "Aide Lorie à décrire ce qu'elle prépare de délicieux dans la cuisine.", 
+                    noms: "le comptoir, le four, un chaudron, des fruits, une cuillère, un tablier.",
+                    verbes: "mélanger, couper, goûter, cuire, sentir, sourire.",
+                    adjectifs: "sucré, chaud, délicieux, grand, propre.",
+                    debuts: "Aujourd'hui, Lorie est dans la cuisine pour..., Elle met son tablier et..., Ça sent tellement bon parce que..."
+                },
+                { 
+                    id: "ecr-1-2", titre: "✍️ Projet 2 : Une soirée pyjama", desc: "Pegah organise une soirée dans le salon avec ses amis. Raconte cette belle soirée.", 
+                    noms: "des coussins, du maïs soufflé (popcorn), un film, un canapé, des couvertures.",
+                    verbes: "rigoler, regarder, s'installer, manger, s'endormir.",
+                    adjectifs: "confortable, amusant, douillet, fatigué, drôle.",
+                    debuts: "Ce soir, Pegah a transformé le salon en..., Les amis s'installent sur..., À la fin du film..."
+                }
+            ],
+            expose: "Tu fais visiter ta maison à un nouvel ami. \n\n*Exemple de discours :* « Bienvenue chez moi ! Voici l'entrée, tu peux laisser tes chaussures ici. À droite, c'est le grand salon avec mon canapé préféré. Et viens voir la cuisine, il y a des biscuits ! »"
+        },
+        {
+            title: "Cours 2 : Les coins mystérieux 🕸️",
+            words: [
+                {n:"Grenier", i:"📦", d:"Le grenier est tout en haut de la maison, sous le toit."}, {n:"Sous-sol", i:"🪜", d:"Le sous-sol est en bas, souvent sous la terre."},
+                {n:"Garage", i:"🚗", d:"Dans le garage, on range la voiture et les outils."}, {n:"Jardin", i:"🌷", d:"Dans le jardin, on plante de belles fleurs et des légumes."},
+                {n:"Cabanon", i:"🛖", d:"Le cabanon est une petite maison dans la cour pour ranger les pelles."}, {n:"Escalier", i:"📶", d:"On monte et on descend l'escalier pour changer d'étage."},
+                {n:"Placard", i:"🧥", d:"Dans le placard, on suspend les manteaux sur des cintres."}, {n:"Garde-manger", i:"🥫", d:"Dans le garde-manger, on garde les conserves et la nourriture."},
+                {n:"Terrasse", i:"🪑", d:"Sur la terrasse, on installe des chaises pour manger dehors."}, {n:"Toit", i:"🏠", d:"Le toit protège la maison de la pluie et de la neige."}
+            ],
+            devinettes: [
+                {q:"Lorie veut gonfler les pneus de son vélo avec la grosse pompe. Où doit-elle aller ?", r:"Garage"},
+                {q:"Pegah cherche une vieille boîte de jouets cachée tout en haut de la maison, sous le plafond. Où va-t-elle ?", r:"Grenier"},
+                {q:"Yied va arroser les tomates et les belles roses jaunes. Dans quelle partie de la maison est-il ?", r:"Jardin"},
+                {q:"Nour cherche une boîte de soupe aux nouilles pour le dîner. Où sont rangées les conserves ?", r:"Garde-manger"},
+                {q:"Emiliana veut sortir la tondeuse à gazon. Elle ouvre la petite porte au fond de la cour. Où est-elle ?", r:"Cabanon"}
+            ],
+            histoires: [
+                {txt: "Hugo descend doucement l'escalier vers le sous-sol. La lumière ne fonctionne pas ! Il fait tout noir. Il allume la lampe de poche de son téléphone. Soudain, il entend un petit 'Miaou' venant d'une boîte en carton.", q: "Pourquoi Hugo ne voit-il rien dans le sous-sol ?", react: "🗣️ Défi oral : As-tu peur de descendre dans un sous-sol tout noir ? Que ferais-tu à la place de Hugo ?"},
+                {txt: "David est dans le grenier avec son grand-père. Il y a beaucoup de poussière et de toiles d'araignées. En ouvrant une vieille malle en bois, David découvre l'ancien uniforme de baseball de son grand-père quand il était jeune !", q: "Qu'est-ce que David trouve dans la malle en bois ?", react: "🗣️ Défi oral : Quel trésor aimerais-tu trouver dans un vieux grenier ?"},
+                {txt: "Giquelle passe l'après-midi dans le jardin. Elle a des gants verts et une petite pelle. Elle fait des trous dans la terre brune pour planter des graines de tournesol qui deviendront immenses cet été.", q: "Quels outils Giquelle utilise-t-elle pour jardiner ?", react: "🗣️ Défi oral : Aimes-tu jouer dans la terre ou préfères-tu rester propre ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-2-1", titre: "✍️ Projet 1 : Le trésor du grenier", desc: "Écris l'histoire d'Elias qui explore le grenier de la maison et fait une découverte surprenante.", 
+                    noms: "une malle, de la poussière, une carte au trésor, une araignée, une fenêtre ronde.",
+                    verbes: "monter, ouvrir, tousser, chercher, trouver, s'émerveiller.",
+                    adjectifs: "sombre, mystérieux, vieux, silencieux, magique.",
+                    debuts: "Elias pousse la porte du grenier lentement..., Il y a beaucoup de..., Dans un coin, il aperçoit..."
+                },
+                { 
+                    id: "ecr-2-2", titre: "✍️ Projet 2 : Le grand nettoyage", desc: "Kesia doit aider ses parents à ranger le garage. Décris cette grande corvée !", 
+                    noms: "des outils, des boîtes, un balai, des vélos, de la peinture.",
+                    verbes: "balayer, trier, déplacer, nettoyer, se fatiguer.",
+                    adjectifs: "désordonné, rempli, lourd, fatiguant, propre.",
+                    debuts: "Le garage est tellement en désordre que..., Kesia prend un grand balai pour..., Après deux heures de travail..."
+                }
+            ],
+            expose: "Tu as entendu un drôle de bruit bizarre dans le sous-sol de ta maison ! Raconte ton exploration à tes amis avec beaucoup de suspense.\n\n*Exemple :* « Vous ne me croirez jamais ! Hier soir, j'ai entendu *Grrr Grrr* dans le sous-sol. J'ai pris ma lampe de poche. J'ai descendu les marches une par une... »"
+        },
+        {
+            title: "Cours 3 : Camps et Cachettes 🏕️",
+            words: [
+                {n:"Cabane dans les arbres", i:"🌳", d:"Une petite maison en bois construite dans les branches."}, {n:"Tente", i:"⛺", d:"On monte une tente en tissu pour dormir en camping."},
+                {n:"Fort de couvertures", i:"🏰", d:"Un château fabriqué avec des chaises et des couvertures douces."}, {n:"Roulotte", i:"🚐", d:"Une maison sur des roues que l'on attache à la voiture."},
+                {n:"Chalet", i:"🪵", d:"Une belle maison en rondins de bois dans la forêt."}, {n:"Hamac", i:"🪢", d:"Un filet suspendu entre deux arbres pour faire la sieste."},
+                {n:"Feu de camp", i:"🔥", d:"On allume un feu dehors pour se réchauffer et cuire des guimauves."}, {n:"Base secrète", i:"🕵️", d:"Un endroit caché où seuls tes meilleurs amis ont le droit d'entrer."},
+                {n:"Sac de couchage", i:"🐛", d:"Un sac chaud comme un gros manteau pour dormir par terre."}, {n:"Yourte", i:"🛖", d:"Une grande tente ronde et solide venue d'Asie."}
+            ],
+            devinettes: [
+                {q:"Lorie a accroché un grand drap sur les chaises de la cuisine pour se cacher en dessous. Qu'a-t-elle construit ?", r:"Fort de couvertures"},
+                {q:"Pegah dort dans la forêt, mais elle est bien au chaud dans une maison faite en rondins de bois. Où est-elle ?", r:"Chalet"},
+                {q:"Yied pique des piquets dans le gazon pour faire tenir un abri en toile verte. Qu'est-il en train de monter ?", r:"Tente"},
+                {q:"Nour grimpe à une échelle en corde pour rejoindre ses amis dans les branches du gros chêne. Où va-t-elle ?", r:"Cabane dans les arbres"},
+                {q:"Emiliana se balance doucement entre deux palmiers pour faire la sieste. Sur quoi est-elle couchée ?", r:"Hamac"}
+            ],
+            histoires: [
+                {txt: "Hugo et ses amis ont construit la meilleure cabane dans les arbres du quartier. À l'intérieur, ils ont un seau attaché à une corde pour monter des collations en secret. Le mot de passe pour entrer est 'Pamplemousse' !", q: "Que doivent dire les amis de Hugo pour avoir le droit d'entrer dans la cabane ?", react: "🗣️ Défi oral : Quel serait ton mot de passe secret pour ta propre base ?"},
+                {txt: "David fait du camping avec sa famille. Le soir, il s'assoit autour du feu de camp avec un long bâton. Il pique une grosse guimauve blanche au bout du bâton et la fait rôtir jusqu'à ce qu'elle soit dorée et fondante.", q: "Pourquoi David a-t-il besoin d'un long bâton ?", react: "🗣️ Défi oral : Aimes-tu les guimauves grillées ou as-tu peur de te brûler avec le feu ?"},
+                {txt: "Il pleut à verse ce samedi. Giquelle décide de camper quand même... mais dans le salon ! Elle met son sac de couchage rouge sur le tapis et éteint toutes les lumières pour s'éclairer avec une lampe de poche.", q: "Où Giquelle a-t-elle installé son sac de couchage ?", react: "🗣️ Défi oral : As-tu déjà fait du camping dans ta propre maison ? C'était comment ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-3-1", titre: "✍️ Projet 1 : Nuit sous la tente", desc: "Raconte la première fois que Kesia dort dehors dans une tente. Que voit-elle ? Qu'entend-elle ?", 
+                    noms: "une lampe de poche, les étoiles, un hibou, un sac de couchage, la forêt.",
+                    verbes: "écouter, observer, frissonner, dormir, ziper, chuchoter.",
+                    adjectifs: "sombre, effrayant, merveilleux, silencieux, étoilé.",
+                    debuts: "La nuit tombe sur le terrain de camping..., Kesia est dans son sac de couchage et soudain..., Par la fenêtre de la tente, elle voit..."
+                },
+                { 
+                    id: "ecr-3-2", titre: "✍️ Projet 2 : Le plus grand fort !", desc: "Lorie et son frère construisent un fort gigantesque avec les meubles du salon. Décris-le !", 
+                    noms: "des pinces à linge, des coussins, le canapé, une porte secrète, un drap géant.",
+                    verbes: "attacher, ramper, se cacher, protéger, imaginer.",
+                    adjectifs: "immense, douillet, secret, incroyable, sombre.",
+                    debuts: "Pour construire le fort, Lorie utilise..., La porte secrète est cachée derrière..., À l'intérieur, c'est comme un vrai château car..."
+                }
+            ],
+            expose: "Tu as construit la cabane de tes rêves et tu fais la visite guidée à la télévision.\n\n*Exemple :* « Bonjour à tous ! Bienvenue dans ma base secrète ! Comme vous le voyez, le toit est fait avec le drap de mon lit. Ici c'est le coin lecture, et là c'est la boîte secrète pour cacher mon chocolat ! »"
+        },
+        {
+            title: "Cours 4 : Maisons Extraordinaires 🏰",
+            words: [
+                {n:"Château", i:"🏰", d:"Le roi et la reine vivent dans un immense château en pierre."}, {n:"Igloo", i:"🧊", d:"Une maison ronde fabriquée avec de gros blocs de glace."},
+                {n:"Phare", i:"🗼", d:"Une très haute tour près de la mer avec une grosse lumière."}, {n:"Bateau-maison", i:"🛥️", d:"Une maison construite sur un bateau qui flotte sur l'eau."},
+                {n:"Gratte-ciel", i:"🏙️", d:"Un immeuble tellement haut qu'il semble toucher les nuages."}, {n:"Grotte", i:"🦇", d:"Un trou naturel et profond dans une montagne ou sous la terre."},
+                {n:"Manoir", i:"🏛️", d:"Une très grande et riche maison ancienne avec un grand domaine."}, {n:"Maison hantée", i:"👻", d:"Une vieille maison abandonnée où vivent peut-être des fantômes !"},
+                {n:"Roulotte de cirque", i:"🎪", d:"Une caravane colorée où dorment les artistes du cirque."}, {n:"Station spatiale", i:"🚀", d:"Une maison en métal qui flotte dans l'espace, pour les astronautes."}
+            ],
+            devinettes: [
+                {q:"Pegah flotte dans les airs dans sa chambre car il n'y a pas de gravité. Où habite-t-elle ?", r:"Station spatiale"},
+                {q:"Yied monte 200 marches en colimaçon pour aller allumer la grosse ampoule qui guidera les bateaux. Où est-il ?", r:"Phare"},
+                {q:"Nour porte une grosse couronne en or et marche dans une grande salle de bal en pierre. Où habite-t-elle ?", r:"Château"},
+                {q:"Emiliana dort dans un lit qui tangue doucement sur l'eau de la rivière. Dans quoi vit-elle ?", r:"Bateau-maison"},
+                {q:"Hugo entre dans une maison toute blanche. Il fait très froid à l'intérieur, car les murs sont en neige glacée. Où est-il ?", r:"Igloo"}
+            ],
+            histoires: [
+                {txt: "David habite au 45ème étage d'un immense gratte-ciel en verre. Pour aller à l'école, il doit prendre un ascenseur très rapide. De sa fenêtre, les voitures en bas ont l'air de toutes petites fourmis !", q: "Comment les voitures ressemblent-elles vues de la fenêtre de David ?", react: "🗣️ Défi oral : Aimerais-tu vivre très très haut dans le ciel, ou as-tu le vertige ?"},
+                {txt: "Giquelle passe la nuit d'Halloween dans une vieille maison hantée. Les planchers en bois font 'Cric... Crac...'. Soudain, une porte claque très fort toute seule avec un courant d'air froid !", q: "Quel bruit fait le plancher en bois quand on marche dessus ?", react: "🗣️ Défi oral : Serais-tu capable de dormir dans cette maison ou partirais-tu en courant ?"},
+                {txt: "Elias a un travail incroyable : il vit dans un phare sur une île isolée. Quand il y a une grosse tempête sur l'océan, il s'assure que la grosse lumière tourne toute la nuit pour empêcher les bateaux de frapper les rochers.", q: "Pourquoi Elias allume-t-il la grosse lumière du phare ?", react: "🗣️ Défi oral : Aimerais-tu vivre tout seul sur une île près de l'océan ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-4-1", titre: "✍️ Projet 1 : La vie de château", desc: "Kesia est la reine (ou le roi) d'un grand château. Décris sa journée luxueuse.", 
+                    noms: "une couronne, un trône, un garde, un festin, un dragon, un donjon.",
+                    verbes: "ordonner, manger, se promener, régner, saluer.",
+                    adjectifs: "gigantesque, magnifique, royal, puissant, délicieux.",
+                    debuts: "Aujourd'hui, au château, c'est une grande journée pour Kesia..., Elle s'assoit sur son trône et..., Pour le souper, les cuisiniers préparent..."
+                },
+                { 
+                    id: "ecr-4-2", titre: "✍️ Projet 2 : Une nuit dans la glace", desc: "Lorie dort dans un véritable igloo dans le grand Nord. Décris cette expérience glaçante !", 
+                    noms: "de la glace, le vent froid, une peau d'ours, le silence, les aurores boréales.",
+                    verbes: "grelotter, se réchauffer, observer, sculpter, dormir.",
+                    adjectifs: "glacé, rond, magnifique, silencieux, courageux.",
+                    debuts: "À l'intérieur de l'igloo, les murs sont..., Pour ne pas avoir froid, Lorie..., Quand elle sort sa tête dehors, elle voit..."
+                }
+            ],
+            expose: "Tu vends une maison très bizarre à un client (par exemple, une maison hantée ou un igloo). Convaincs-le de l'acheter !\n\n*Exemple :* « Cette maison hantée est parfaite pour vous ! Les toiles d'araignées sont gratuites. Et vous n'avez jamais l'impression d'être seul avec les fantômes ! Achetez-la ! »"
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; 
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        document.getElementById('course-title').innerText = course.title;
+        
+        // 1. Imagier (Clic carte retourne l'image, clic carte lance le mot)
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `
+                <div class="mot-seul">${w.n}</div>
+                <div class="hidden-content">
+                    <div class="emoji">${w.i}</div>
+                    <div class="sentence">${w.d}</div>
+                </div>`;
+            div.onclick = () => { 
+                div.classList.add('revealed'); 
+                lireTexte(w.n); // LECTURE DU MOT SEUL 
+            };
+            grid.appendChild(div);
+        });
+
+        // 2. Association
+        let selectedEmojiId = null; let selectedWordId = null; let matches = 0;
+        const assocArea = document.getElementById('assoc-game-area');
+        const pairs = [...course.words].sort(() => 0.5 - Math.random()).slice(0, 5);
+        const colE = [...pairs].sort(() => 0.5 - Math.random());
+        const colM = [...pairs].sort(() => 0.5 - Math.random());
+        
+        assocArea.innerHTML = `
+            <div class="assoc-col">${colE.map(e => `<div class="assoc-item emoji-item" id="e-${e.n}">${e.i}</div>`).join('')}</div>
+            <div class="assoc-col">${colM.map(m => `<div class="assoc-item" id="m-${m.n}">${m.n}</div>`).join('')}</div>
+        `;
+        
+        document.querySelectorAll('.assoc-item').forEach(item => {
+            item.onclick = function() {
+                playClick();
+                if(this.classList.contains('matched')) return;
+                const isEmoji = this.id.startsWith('e-');
+                const val = this.id.substring(2);
+                
+                if(isEmoji) {
+                    if(selectedEmojiId) document.getElementById('e-'+selectedEmojiId).classList.remove('selected');
+                    selectedEmojiId = val; this.classList.add('selected');
+                } else {
+                    if(selectedWordId) document.getElementById('m-'+selectedWordId).classList.remove('selected');
+                    selectedWordId = val; this.classList.add('selected');
+                }
+                
+                if(selectedEmojiId && selectedWordId) {
+                    if(selectedEmojiId === selectedWordId) {
+                        document.getElementById('e-'+selectedEmojiId).classList.replace('selected', 'matched');
+                        document.getElementById('m-'+selectedWordId).classList.replace('selected', 'matched');
+                        matches++;
+                        if(matches===5) { playSuccess(); }
+                    } else {
+                        setTimeout(() => {
+                            document.getElementById('e-'+selectedEmojiId).classList.remove('selected');
+                            document.getElementById('m-'+selectedWordId).classList.remove('selected');
+                            selectedEmojiId = null; selectedWordId = null;
+                        }, 500);
+                    }
+                    if(selectedEmojiId === selectedWordId) { selectedEmojiId = null; selectedWordId = null;}
+                }
+            };
+        });
+
+        // 3. Devinettes
+        const devDiv = document.getElementById('dev-container');
+        devDiv.innerHTML = `
+            <h3 style="color: #e67e22; margin-top:0;">❓ Le Quiz de la Maison</h3>
+            <p>Lis bien la question et choisis le bon endroit dans la liste !</p>
+        `;
+        course.devinettes.forEach((d, index) => {
+            devDiv.innerHTML += `
+                <p class="question">Q${index+1}: ${d.q}</p>
+                <select id="dev-${index}" style="padding:5px; font-size: 1rem;">
+                    <option value="">-- Choisis --</option>
+                    ${course.words.map(w => `<option value="${w.n}">${w.n}</option>`).join('')}
+                </select>
+                <span id="res-${index}"></span>
+            `;
+        });
+
+        // 4. Lecture / Défis
+        const histDiv = document.getElementById('hist-container');
+        histDiv.innerHTML = '';
+        course.histoires.forEach(h => {
+            histDiv.innerHTML += `
+                <div class="box" style="border-left-color: #1abc9c;">
+                    <p style="font-size:1.15rem; line-height: 1.6;">${h.txt}</p>
+                    <p class="question">❓ Question : ${h.q}</p>
+                    <textarea rows="2" placeholder="Écris ta réponse ici..."></textarea>
+                    <p class="react">${h.react}</p>
+                </div>`;
+        });
+
+        // 5. Écriture
+        const ecrDiv = document.getElementById('ecriture-container');
+        ecrDiv.innerHTML = '';
+        course.ecriture.forEach(e => {
+            ecrDiv.innerHTML += `
+                <div class="box" id="${e.id}" style="border-left-color: #2ecc71; background: #eafaf1; padding: 30px;">
+                    <h3 style="color: #27ae60; margin-top:0; font-size: 1.5rem;">${e.titre}</h3>
+                    <p style="font-size: 1.1rem; font-weight: bold;">${e.desc}</p>
+                    
+                    <div class="inspiration-box">
+                        <h4>💡 Boîte d'inspiration pour t'aider :</h4>
+                        <ul>
+                            <li><strong>Noms utiles :</strong> ${e.noms}</li>
+                            <li><strong>Verbes d'action :</strong> ${e.verbes}</li>
+                            <li><strong>Adjectifs :</strong> ${e.adjectifs}</li>
+                            <li><strong>Idées pour commencer :</strong> ${e.debuts}</li>
+                        </ul>
+                    </div>
+
+                    <textarea rows="8" placeholder="Commence à écrire ton texte ici..."></textarea>
+                    
+                    <div style="text-align:right;">
+                        <button class="btn-print" onclick="playClick(); printSection('${e.id}')">🖨️ Imprimer ce texte</button>
+                    </div>
+                </div>`;
+        });
+
+        // 6. Exposé
+        document.getElementById('expose-container').innerHTML = `
+            <h3 style="color: #34495e; margin-top:0;">Consigne de l'entrevue :</h3>
+            <p style="font-size:1.2rem; line-height:1.5;">Prépare-toi à parler devant la classe ! Madame Claudia va t'écouter.</p>
+            <div style="background: #f4f6f7; padding: 15px; border-left: 4px solid #34495e; margin-top: 15px;">
+                <p style="font-style: italic; margin:0; font-size: 1.1rem;">${course.expose.replace(/\n\n/g, '<br><br>')}</p>
+            </div>`;
+
+        // 7. Reset Machine
+        document.getElementById('slot-sujet').innerText = "❓";
+        document.getElementById('slot-verbe').innerText = "❓";
+        document.getElementById('slot-complement').innerText = "❓";
+
+        showTab('imagier');
+    }
+
+    // --- LA MACHINE À PHRASES FOLLES ---
+    const bizarroDictionary = {
+        sujets: [
+            "Yied", "Nour", "Emiliana", "Hugo", "David", 
+            "Giquelle", "Elias", "Kesia", "Lorie", "Pegah"
+        ],
+        verbes: [
+            "prend sa douche", "cuit des saucisses", "construit un fort", 
+            "cache un trésor", "lit un livre", "plante des fleurs", "dort profondément", "fait ses devoirs"
+        ],
+        complements: [
+            "dans le réfrigérateur", "sur le toit du château", "dans la salle de lavage", 
+            "au sommet du phare", "sous le lit du monstre", "dans la maison hantée",
+            "dans la tente", "au milieu du grenier"
+        ]
+    };
+
+    function spinMachine() {
+        const s = bizarroDictionary.sujets[Math.floor(Math.random() * bizarroDictionary.sujets.length)];
+        const v = bizarroDictionary.verbes[Math.floor(Math.random() * bizarroDictionary.verbes.length)];
+        const c = bizarroDictionary.complements[Math.floor(Math.random() * bizarroDictionary.complements.length)];
+
+        let ticks = 0;
+        const interval = setInterval(() => {
+            playTick(); 
+            document.getElementById('slot-sujet').innerText = bizarroDictionary.sujets[Math.floor(Math.random() * bizarroDictionary.sujets.length)];
+            document.getElementById('slot-verbe').innerText = bizarroDictionary.verbes[Math.floor(Math.random() * bizarroDictionary.verbes.length)];
+            document.getElementById('slot-complement').innerText = bizarroDictionary.complements[Math.floor(Math.random() * bizarroDictionary.complements.length)];
+            ticks++;
+            if (ticks > 15) {
+                clearInterval(interval);
+                document.getElementById('slot-sujet').innerText = s;
+                document.getElementById('slot-verbe').innerText = v;
+                document.getElementById('slot-complement').innerText = c;
+                playClank(); 
+            }
+        }, 100);
+    }
+
+    function checkDevinettes() {
+        const course = data[currentCourseId];
+        let score = 0;
+        course.devinettes.forEach((d, i) => {
+            const select = document.getElementById(`dev-${i}`);
+            const span = document.getElementById(`res-${i}`);
+            if(select.value === d.r) { 
+                span.innerHTML = " ✅"; span.style.color = "var(--success)"; score++;
+            } else { 
+                span.innerHTML = " ❌"; span.style.color = "red"; 
+            }
+        });
+        if(score === course.devinettes.length) {
+            setTimeout(playSuccess, 500);
+        }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    function finishCourse() {
+        playSuccess();
+        document.getElementById('badge-' + currentCourseId).classList.add('earned');
+        setTimeout(() => {
+            alert("Félicitations ! Tu as gagné le trophée de ce cours !");
+            goHome();
+        }, 800);
+    }
+
+    function goHome() {
+        document.getElementById('course-view').classList.remove('active');
+        document.getElementById('menu').classList.add('active');
+    }
+</script>
+</body>
+</html>
