@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3 : Les Métiers - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; /* Bleu marin professionnel */
+            --dark-border: #1a252f;
+            --bg: #f4f6f7;
+            --accent: #f39c12; /* Jaune/Orange construction et succès */
+            --success: #27ae60;
+            --writing: #16a085; /* Vert émeraude */
+            -- mystery: #c0392b; /* Rouge mystère/erreur */
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--dark-border);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            background: #ecf0f1; border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: var(--primary);
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        .badge { font-size: 2rem; position: absolute; top: 10px; right: 10px; opacity: 0.2; filter: grayscale(100%); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        /* Projet Final */
+        .final-project-box { background: #e8f8f5; border: 4px dashed var(--writing); padding: 20px; border-radius: 15px; margin-top: 40px; text-align: left; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--dark-border); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .word-card:hover { border-color: var(--accent); }
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #fcf3cf; border-color: var(--accent); color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.9rem; font-weight: normal; color: #34495e; }
+        .audio-icon { display: none; font-size: 1.5rem; margin-top: 5px; cursor: pointer; }
+        .word-card.revealed .audio-icon { display: inline-block; }
+
+        /* Navigation et Boutons */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 30px; font-size: 1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold;}
+        .btn:hover { background: #1a252f; }
+        .btn-action { background: var(--accent); font-size: 1.2rem; padding: 15px 30px; color: white;}
+        .btn-action:hover { background: #d68910; }
+        .btn-write { background: var(--writing); }
+        .btn-mystery { background: var(--mystery); }
+        .btn-mystery:hover { background: #962d22; }
+        
+        /* Contenu */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; border-left: 5px solid var(--accent); margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box;}
+
+        /* Jeu Association */
+        .assoc-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .assoc-col { display: flex; flex-direction: column; gap: 10px; width: 45%; }
+        .assoc-item { 
+            padding: 15px; background: white; border: 3px solid #bdc3c7; border-radius: 10px; 
+            cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; user-select: none;
+        }
+        .assoc-item.emoji-item { font-size: 2.5rem; }
+        .assoc-item:hover:not(.matched) { border-color: var(--accent); }
+        .assoc-item.selected { background: #fdebd0; border-color: var(--accent); transform: scale(1.05); }
+        .assoc-item.matched { background: #abebc6; border-color: var(--success); color: var(--success); cursor: default; opacity: 0.6; pointer-events: none; }
+
+        /* Style Image Mystère / Erreurs */
+        .erreurs-img-container { 
+            width: 100%; max-width: 800px; margin: 20px auto; 
+            border: 8px solid var(--mystery); border-radius: 10px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); overflow: hidden;
+            background: black;
+        }
+        .erreurs-img-container img { width: 100%; height: auto; display: block; }
+        .discussion-prompts { font-size: 1.2rem; text-align: left; background: #f9ebea; padding: 20px; border-radius: 10px; border-left: 5px solid var(--mystery); margin-top: 20px;}
+        .erreurs-question { color: var(--mystery); font-weight: bold; margin-bottom: 10px;}
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary);">💼 Le Passeport des Métiers</h1>
+        <p>Découvre les professions et prépare-toi pour le marché du travail avec Madame Claudia !</p>
+        <div class="menu-grid">
+            <button class="course-btn" onclick="loadCourse(0)">🩺 Cours 1 : Santé & Sécurité<span id="badge-0" class="badge">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(1)">🔨 Cours 2 : Manuel & Construction<span id="badge-1" class="badge">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(2)">💻 Cours 3 : L'École & Le Bureau<span id="badge-2" class="badge">🏅</span></button>
+            <button class="course-btn" onclick="loadCourse(3)">🌲 Cours 4 : Nature & Transport<span id="badge-3" class="badge">🏅</span></button>
+        </div>
+
+        <div class="final-project-box">
+            <h2 style="color: var(--writing); margin-top: 0;">✍️ Projet Final : Le métier de mes rêves</h2>
+            <p><strong>Consigne de Madame Claudia :</strong> Pense à ton futur (ou à ce que tu faisais dans ton pays).</p>
+            <p>Quel est le métier de tes rêves ? Décris les outils que tu vas utiliser. Explique pourquoi ton tempérament (ta personnalité) fait de toi la meilleure personne pour faire ce travail !</p>
+            <textarea rows="5" placeholder="Mon métier de rêve est... J'utiliserai... J'ai le bon tempérament pour ce travail parce que je suis..."></textarea>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn" onclick="showTab('imagier')">1. Les 10 mots</button>
+            <button class="btn" onclick="showTab('association')">2. Association</button>
+            <button class="btn" onclick="showTab('devinettes')">3. Devinettes</button>
+            <button class="btn" onclick="showTab('histoires')">4. Situations</button>
+            <button class="btn btn-write" onclick="showTab('ecriture')">5. Écriture</button>
+            <button class="btn" onclick="showTab('expose')">6. L'Entrevue</button>
+            <button class="btn btn-mystery" onclick="showTab('erreurs')">7. 🔎 Jeu des Erreurs !</button>
+            <button class="btn" style="background:#7f8c8d" onclick="goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3>L'Imagier des Métiers : Clique pour voir l'outil, la phrase et entendre la phrase !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box">
+                <h3 style="color: var(--primary); margin-top:0;">🧩 Trouve les paires !</h3>
+                <p>Associe la bonne image avec le nom du métier. Clique sur une image à gauche, puis sur le mot à droite.</p>
+                <div class="assoc-container" id="assoc-game-area"></div>
+                <div id="assoc-message" style="margin-top:20px; font-weight:bold; font-size:1.2rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box" id="dev-container"></div>
+            <button class="btn btn-action" onclick="checkDevinettes()">Vérifier mes réponses</button>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div class="box" id="ecriture-container" style="border-left-color: var(--writing); background: #e8f8f5;"></div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container"></div>
+            <button class="btn btn-action" onclick="finishCourse()">✅ Entrevue réussie !</button>
+        </div>
+
+        <div id="tab-erreurs" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: var(--mystery); background: #fdf2f1;">
+                <h3 style="color: var(--mystery); margin-top:0;">🔎 Le Jeu des Erreurs : Regarde bien l'image bizarroïde !</h3>
+                <p style="font-size: 1.2rem;">Rien ne va plus dans ce métier ! Observe l'image attentivement. Tout est mélangé, bizarroïde ou illogique. Peux-tu trouver ce qui cloche ?</p>
+                
+                <div id="erreurs-content-container">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const data = [
+        {
+            title: "Cours 1 : La Santé et la Sécurité",
+            words: [
+                {n:"Médecin", i:"🩺", d:"Le médecin soigne les malades à la clinique."}, {n:"Infirmière", i:"💉", d:"L'infirmière fait un vaccin avec une aiguille."},
+                {n:"Dentiste", i:"🦷", d:"Le dentiste répare une dent cariée."}, {n:"Pharmacien", i:"💊", d:"Le pharmacien prépare les médicaments."},
+                {n:"Pompier", i:"🚒", d:"Le pompier éteint le feu avec de l'eau."}, {n:"Policier", i:"🚓", d:"Le policier arrête les voleurs."},
+                {n:"Ambulancier", i:"🚑", d:"L'ambulancier conduit vite à l'hôpital."}, {n:"Vétérinaire", i:"🐕", d:"Le vétérinaire opère un chien blessé."},
+                {n:"Optométriste", i:"👓", d:"L'optométriste vérifie la vision des yeux."}, {n:"Psychologue", i:"🛋️", d:"Le psychologue écoute les gens parler."}
+            ],
+            devinettes: [
+                {q:"J'utilise un gros camion rouge et une lance à eau. Qui suis-je ?", r:"Pompier"},
+                {q:"Je travaille dans une pharmacie avec des pilules et des sirops. Qui suis-je ?", r:"Pharmacien"},
+                {q:"Si tu as très mal à une dent, tu dois venir me voir. Qui suis-je ?", r:"Dentiste"},
+                {q:"Mon patient a des poils et une queue. Je suis un docteur pour les animaux. Qui suis-je ?", r:"Vétérinaire"},
+                {q:"J'ai un stéthoscope autour du cou pour écouter ton cœur. Qui suis-je ?", r:"Médecin"}
+            ],
+            histoires: [
+                {
+                    txt: "L'infirmière Tremblay a les mains douces et porte toujours un uniforme bleu très propre. Elle a un tempérament extrêmement rassurant et souriant. Même quand un patient pleure parce qu'il a peur des piqûres, elle reste patiente et lui parle doucement pour le calmer.", 
+                    q: "De quelle couleur est l'uniforme de l'infirmière ?", 
+                    react: "🗣️ À l'oral : Es-tu quelqu'un de patient quand une autre personne pleure ou a peur ?"
+                },
+                {
+                    txt: "Le policier Roy est très grand, avec de larges épaules et des bottes noires brillantes. Il possède un caractère courageux et autoritaire. Il n'a peur de rien ! Quand il y a un accident dans la rue, il prend des decisions rapidement pour protéger tout le monde.", 
+                    q: "Comment sont les bottes du policier ?", 
+                    react: "🗣️ À l'oral : Penses-tu que tu serais capable de prendre des décisions rapides dans une urgence ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #1 : Une urgence médicale !",
+                desc: "Invente une petite histoire où quelqu'un se blesse. Choisis **deux professionnels de la santé ou de la sécurité** qui viennent l'aider. Décris les outils qu'ils apportent avec eux."
+            },
+            erreurs: {
+                imgBase64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAMAAQMAAAC1+y8mAAAAA1BMVEUAAP7u87ozAAAAAXRSTlMAQObYZgAAAAlwSFlzAAAOxAAADsQBlssn/AAAADl0RVh0Q29tbWVudABDb252ZXJ0ZWQgYnkuIERlc2t0b3AgQmVzdCBJQ08gQ29udmVydGVyIDQuMS4x//0S8QAAAABJRU5ErkJggg==", // Image Base64 intégrée illustrative
+                discussion: [
+                    "🕵️ Mission : Regarde l'image. Peux-tu trouver les erreurs bizarres dans cette clinique ?",
+                    "🩺 Explique : Qu'est-ce que le médecin fait de mal ? Que devrait-il faire à la place ?",
+                    "🗣️ Oral : Fais une phrase complète (Sujet + Verbe + Complément) pour décrire ce que fait l'infirmière dans cette image bizarroïde."
+                ]
+            },
+            expose: "🎤 L'Entrevue : Choisis un métier de ce cours. Bonjour ! Pourquoi voulez-vous travailler à notre hôpital / poste de police ? Prouvez-nous que vous êtes assez courageux ou patient pour ce travail."
+        },
+        {
+            title: "Cours 2 : La Construction et les Travaux Manuels",
+            words: [
+                {n:"Charpentier", i:"🪚", d:"Le charpentier coupe du bois pour la maison."}, {n:"Électricien", i:"⚡", d:"L'électricien installe les fils électriques."},
+                {n:"Plombier", i:"🔧", d:"Le plombier répare le lavabo qui coule."}, {n:"Mécanicien", i:"🚗", d:"Le mécanicien change les pneus du char."},
+                {n:"Peintre", i:"🖌️", d:"Le peintre met de la couleur sur les murs."}, {n:"Cuisinier", i:"🍳", d:"Le cuisinier coupe des légumes au restaurant."},
+                {n:"Boulanger", i:"🥖", d:"Le boulanger fait du pain frais très tôt."}, {n:"Coiffeur", i:"✂️", d:"Le coiffeur coupe les cheveux au salon."},
+                {n:"Soudeur", i:"🔥", d:"Le soudeur attache des morceaux de métal."}, {n:"Couturier", i:"🧵", d:"Le couturier coud une belle robe."}
+            ],
+            devinettes: [
+                {q:"J'ai de la farine sur mon tablier et je me lève la nuit pour faire des croissants. Qui suis-je ?", r:"Boulanger"},
+                {q:"J'utilise une clé à molette pour empêcher l'eau de couler partout dans la salle de bain. Qui suis-je ?", r:"Plombier"},
+                {q:"Mon outil préféré est un pinceau ou un rouleau, et j'ai des taches sur mes vêtements. Qui suis-je ?", r:"Peintre"},
+                {q:"Je travaille dans un garage, j'ai les mains sales et je répare des moteurs. Qui suis-je ?", r:"Mécanicien"},
+                {q:"J'utilise des ciseaux et un séchoir pour te rendre beau ou belle. Qui suis-je ?", r:"Coiffeur"}
+            ],
+            histoires: [
+                {
+                    txt: "Le charpentier Marco a les bras très musclés et porte toujours une ceinture de cuir lourde remplie d'outils. Il a un tempérament très travaillant et perfectionniste. Il mesure chaque morceau de bois deux fois pour être certain que la maison sera solide et droite.", 
+                    q: "Qu'est-ce que le charpentier porte autour de sa taille ?", 
+                    react: "🗣️ À l'oral : Es-tu perfectionniste dans ton travail à l'école ou fais-tu les choses rapidement ?"
+                },
+                {
+                    txt: "Dans la cuisine du grand restaurant, la cuisinière Julie a les cheveux attachés sous un filet et porte un grand tablier blanc. Elle a un caractère très énergique et résistant au stress. Même quand il y a 50 clients qui attendent, elle ne panique pas et crie ses commandes avec force.", 
+                    q: "Que porte la cuisinière sur sa tête pour protéger la nourriture ?", 
+                    react: "🗣️ À l'oral : Es-tu capable de travailler quand il y a beaucoup de stress et de bruit autour de toi ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #2 : La rénovation",
+                desc: "Tu as acheté une vieille maison qui est brisée. Nomme **trois travailleurs manuels** (ex: électricien, plombier...) que tu dois engager. Explique exactement ce que chacun va réparer chez toi."
+            },
+            erreurs: {
+                imgBase64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAMAAQMAAAC1+y8mAAAAA1BMVEUAAP7u87ozAAAAAXRSTlMAQObYZgAAAAlwSFlzAAAOxAAADsQBlssn/AAAADl0RVh0Q29tbWVudABDb252ZXJ0ZWQgYnkuIERlc2t0b3AgQmVzdCBJQ08gQ29udmVydGVyIDQuMS4x//0S8QAAAABJRU5ErkJggg==", // Image Base64 intégrée illustrative
+                discussion: [
+                    "🕵️ Mission : Regarde le chantier. C'est le chaos ! Peux-tu trouver les erreurs bizarroïdes ?",
+                    "🔨 Explique : Qu'est-ce que le charpentier fait de mal avec sa scie ? Que devrait-il faire à la place ?",
+                    "🗣️ Oral : Fais une phrase complète (Sujet + Verbe + Complément) pour décrire l'outil bizarre que l'électricien utilise."
+                ]
+            },
+            expose: "🎤 L'Entrevue : Choisis un métier manuel. Bonjour ! Nous avons un gros chantier. Montrez-nous que vous êtes perfectionniste et travaillant. Quel est votre outil préféré et comment l'utilisez-vous ?"
+        },
+        {
+            title: "Cours 3 : L'École et le Bureau",
+            words: [
+                {n:"Professeur", i:"📝", d:"Le professeur explique la leçon au tableau."}, {n:"Directeur", i:"👔", d:"Le directeur gère l'école depuis son bureau."},
+                {n:"Secrétaire", i:"📞", d:"La secrétaire répond au téléphone toute la journée."}, {n:"Informaticien", i:"💻", d:"Le informaticien programme des logiciels."},
+                {n:"Comptable", i:"🧮", d:"Le comptable calcule l'argent et les taxes."}, {n:"Bibliothécaire", i:"📚", d:"Le bibliothécaire classe les romans en silence."},
+                {n:"Concierge", i:"🧹", d:"Le concierge nettoie les planchers de l'école."}, {n:"Éducatrice", i:"🧸", d:"L'éducatrice joue avec les bébés à la garderie."},
+                {n:"Avocat", i:"⚖️", d:"Le avocat défend son client au tribunal."}, {n:"Journaliste", i:"🎤", d:"Le journaliste pose des questions pour les nouvelles."}
+            ],
+            devinettes: [
+                {q:"J'ai un balai, une vadrouille et beaucoup de clés. Je garde l'école propre. Qui suis-je ?", r:"Concierge"},
+                {q:"Je travaille sur deux écrans d'ordinateur et j'écris du code toute la journée. Qui suis-je ?", r:"Informaticien"},
+                {q:"Je corrige des cahiers avec un stylo rouge et j'aide les élèves. Qui suis-je ?", r:"Professeur"},
+                {q:"J'utilise une calculatrice et je fais les rapports d'impôts de la compagnie. Qui suis-je ?", r:"Comptable"},
+                {q:"Je travaille avec les tout-petits, j'ai beaucoup de jouets et de patience. Qui suis-je ?", r:"Éducatrice"}
+            ],
+            histoires: [
+                {
+                    txt: "La secrétaire Sylvie porte de petites lunettes sur le bout de son nez et a les doigts agiles pour taper très vite au clavier. Elle a un tempérament extrêmement organisé et sociable. Elle connaît le nom de tous les parents de l'école et sourit toujours quand elle répond au téléphone.", 
+                    q: "Qu'est-ce que Sylvie porte sur son nez ?", 
+                    react: "🗣️ À l'oral : Aimes-tu parler au téléphone en français ? Est-ce que tu te trouves sociable ?"
+                },
+                {
+                    txt: "L'avocat monsieur Dubeau porte un complet noir très chic et a une voix grave et forte. Il possède un caractère très persuasif et têtu. Quand il est devant le juge, il n'abandonne jamais et utilise les meilleurs mots pour défendre l'innocence de son client.", 
+                    q: "Comment est la voix de monsieur Dubeau ?", 
+                    react: "🗣️ À l'oral : Es-tu têtu(e) quand tu sais que tu as raison ? Comment fais-tu pour convaincre les autres ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #3 : L'employé du mois",
+                desc: "Choisis un métier de bureau ou d'école. Rédige un petit texte pour féliciter cet employé. Décris sa **personnalité** (ex: organisé, poli, intelligent) et dis pourquoi il mérite une médaille cette semaine."
+            },
+            erreurs: {
+                imgBase64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAMAAQMAAAC1+y8mAAAAA1BMVEUAAP7u87ozAAAAAXRSTlMAQObYZgAAAAlwSFlzAAAOxAAADsQBlssn/AAAADl0RVh0Q29tbwvbnveRWQgYnkuIERlc2t0b3AgQmVzdCBJQ08gQ29udmVydGVyIDQuMS4x//0S8QAAAABJRU5ErkJggg==", // Image Base64 intégrée illustrative
+                discussion: [
+                    "🕵️ Mission : Regarde cette école bizarroïde. Rien ne fonctionne ! Peux-tu trouver les erreurs ?",
+                    "💻 Explique : Qu'est-ce que l'informaticien fait de mal avec son clavier ? Que devrait-il faire à la place ?",
+                    "🗣️ Oral : Fais une phrase complète (Sujet + Verbe + Complément) pour décrire l'outil bizarre que le professeur utilise pour écrire."
+                ]
+            },
+            expose: "🎤 L'Entrevue : Choisis un métier de bureau. Bonjour ! Nous cherchons quelqu'un de très organisé. Parlez-nous de vos qualités. Êtes-vous doué avec les ordinateurs ou avec les gens ?"
+        },
+        {
+            title: "Cours 4 : La Nature et les Transports",
+            words: [
+                {n:"Agriculteur", i:"🚜", d:"L'agriculteur conduit son tracteur dans le champ."}, {n:"Chauffeur", i:"🚌", d:"Le chauffeur d'autobus regarde la route."},
+                {n:"Pilote", i:"✈️", d:"Le pilote fait voler l'avion dans le ciel."}, {n:"Facteur", i:"✉️", d:"Le facteur met la lettre dans la boîte."},
+                {n:"Pêcheur", i:"🎣", d:"Le pêcheur attrape du poisson sur son bateau."}, {n:"Bûcheron", i:"🪓", d:"Le bûcheron coupe des arbres en forêt."},
+                {n:"Jardinier", i:"🌻", d:"Le jardinier plante de belles fleurs jaunes."}, {n:"Guide", i:"🧭", d:"Le guide montre la montagne aux touristes."},
+                {n:"Éboueur", i:"🗑️", d:"L'éboueur ramasse les poubelles le matin."}, {n:"Capitaine", i:"🚢", d:"Le capitaine navigue sur le grand fleuve."}
+            ],
+            devinettes: [
+                {q:"Je marche toute la journée dans la rue avec un gros sac rempli de courrier. Qui suis-je ?", r:"Facteur"},
+                {q:"Je travaille très haut dans les nuages avec des hôtesses de l'air. Qui suis-je ?", r:"Pilote"},
+                {q:"Je porte des bottes de caoutchouc vertes et je plante des tomates et du maïs. Qui suis-je ?", r:"Agriculteur"},
+                {q:"Je travaille très fort physiquement pour vider les bacs de recyclage dans le gros camion. Qui suis-je ?", r:"Éboueur"},
+                {q:"Je travaille dans les bois au Québec avec une scie à chaîne et une chemise à carreaux. Qui suis-je ?", r:"Bûcheron"}
+            ],
+            histoires: [
+                {
+                    txt: "L'agriculteur Léo a la peau très bronzée par le soleil, des mains rudes et porte un vieux chapeau de paille. Il a un tempérament très matinal et observateur. Il se lève à 4h00 du matin tous les jours et regarde attentivement le ciel pour savoir s'il va pleuvoir sur ses récoltes.", 
+                    q: "Pourquoi la peau de Léo est-elle bronzée ?", 
+                    react: "🗣️ À l'oral : Es-tu une personne matinale (qui aime se lever tôt) ou préfères-tu dormir le matin ?"
+                },
+                {
+                    txt: "La pilote d'avion, capitaine Blais, porte un uniforme impeccable avec des galons dorés sur les épaules. Elle a un caractère très concentré et calme. Même s'il y a une grosse tempête de neige, elle garde son sang-froid pour atterrir l'avion en toute sécurité à Montréal.", 
+                    q: "Qu'est-ce qu'il y a sur les épaules de l'uniforme de la pilote ?", 
+                    react: "🗣️ À l'oral : Aimerais-tu avoir un métier où tu voyages tout le temps, ou préfères-tu rester près de ta maison ?"
+                }
+            ],
+            ecriture: {
+                titre: "✍️ Projet d'écriture #4 : Le voyage inattendu",
+                desc: "Tu pars en voyage, mais le transport va mal ! Raconte l'histoire. Implique un **chauffeur, un pilote ou un capitaine** et explique comment cet homme ou cette femme a sauvé la situation avec calme."
+            },
+            erreurs: {
+                imgBase64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAMAAQMAAAC1+y8mAAAAA1BMVEUAAP7u87ozAAAAAXRSTlMAQObYZgAAAAlwSFlzAAAOxAAADsQBlssn/AAAADl0RVh0Q29tbwvbnveRWQgYnkuIERlc2t0b3AgQmVzdCBJQ08gQ29udmVydGVyIDQuMS4x//0S8QAAAABJRU5ErkJggg==", // Image Base64 intégrée illustrative
+                discussion: [
+                    "🕵️ Mission : Regarde cette ferme bizarroïde. Rien n'est normal ! Peux-tu trouver les erreurs ?",
+                    "🚜 Explique : Qu'est-ce que l'agriculteur fait de mal avec son tracteur ? Que devrait-il faire à la place ?",
+                    "🗣️ Oral : Fais une phrase complète (Sujet + Verbe + Complément) pour décrire l'animal bizarre que le pêcheur essaie d'attraper."
+                ]
+            },
+            expose: "🎤 L'Entrevue : Vous voulez conduire notre autobus, notre avion ou notre bateau. Bonjour ! Démontrez-nous que vous avez une excellente vue et que vous savez garder votre calme dans le trafic ou les tempêtes."
+        }
+    ];
+
+    let currentCourseId = 0;
+    
+    // Variables Audio
+    let audioCtx;
+    
+    // Variables Association Game
+    let selectedEmojiId = null;
+    let selectedWordId = null;
+    let assocMatchesFound = 0;
+
+    // Fonction pour lire le texte à voix haute
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Arrête la lecture précédente
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; // Accent Canadien Français
+            utterance.rate = 0.9; // Légèrement ralenti pour mieux comprendre
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.log("La synthèse vocale n'est pas supportée sur ce navigateur.");
+        }
+    }
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        document.getElementById('course-title').innerText = course.title;
+        
+        // 1. Imagier (MAJ : Audio lit la PHRASE complète pour francisation)
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `
+                <div class="mot-seul">${w.n}</div>
+                <div class="hidden-content">
+                    <div class="emoji">${w.i}</div>
+                    <div class="sentence">${w.d}</div>
+                    <div class="audio-icon" title="Écouter la phrase complète">🔊</div>
+                </div>`;
+            div.onclick = () => { 
+                div.classList.add('revealed');
+                lireTexte(w.d); // JOUE LA PHRASE COMPLÈTE AU CLIC (MAJ pour S+V+C francisation)
+            };
+            grid.appendChild(div);
+        });
+
+        // 2. Initialisation du Jeu d'Association
+        initAssociationGame(course.words);
+
+        // 3. Devinettes
+        const devDiv = document.getElementById('dev-container');
+        devDiv.innerHTML = '';
+        course.devinettes.forEach((d, index) => {
+            devDiv.innerHTML += `
+                <p class="question">Q${index+1}: ${d.q}</p>
+                <select id="dev-${index}" style="padding:5px; font-family:'Century Gothic'; margin-bottom:15px; font-size: 1rem;">
+                    <option value="">-- Choisis --</option>
+                    ${course.words.map(w => `<option value="${w.n}">${w.n}</option>`).join('')}
+                </select>
+                <span id="res-${index}" style="font-weight: bold; font-size: 1.1rem;"></span>
+            `;
+        });
+
+        // 4. Histoires
+        const histDiv = document.getElementById('hist-container');
+        histDiv.innerHTML = '';
+        course.histoires.forEach((h, index) => {
+            histDiv.innerHTML += `
+                <div class="box">
+                    <p style="font-size:1.2rem; line-height:1.6;">${h.txt}</p>
+                    <p class="question">❓ ${h.q}</p>
+                    <textarea rows="2" placeholder="Écris ta réponse ici..."></textarea>
+                    <p class="react">${h.react}</p>
+                </div>
+            `;
+        });
+
+        // 5. Écriture
+        document.getElementById('ecriture-container').innerHTML = `
+            <h3 style="color: var(--writing);">${course.ecriture.titre}</h3>
+            <p style="font-size: 1.2rem;">${course.ecriture.desc.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>
+            <textarea rows="6" placeholder="Commence à écrire ton texte ici..."></textarea>
+        `;
+
+        // 6. Exposé (Entrevue)
+        document.getElementById('expose-container').innerHTML = `
+            <h3 style="color: var(--accent);">Consigne de l'Employeur :</h3>
+            <p style="font-size:1.3rem;">${course.expose}</p>
+            <p>Prépare tes arguments. Lève la main quand tu es prêt(e) à passer ton entrevue devant la classe !</p>
+        `;
+
+        // 7. BONUS : Jeu des Erreurs (Image garantie sans protection)
+        initMysteryErrorsGame(course.erreurs);
+
+        showTab('imagier');
+    }
+
+    /* Fonctions du Jeu d'Association */
+    function initAssociationGame(wordsData) {
+        selectedEmojiId = null;
+        selectedWordId = null;
+        assocMatchesFound = 0;
+        const gameArea = document.getElementById('assoc-game-area');
+        gameArea.innerHTML = '';
+        document.getElementById('assoc-message').innerText = "";
+
+        // Prendre 5 mots au hasard
+        const shuffledAll = [...wordsData].sort(() => 0.5 - Math.random());
+        const gamePairs = shuffledAll.slice(0, 5);
+
+        // Créer et mélanger la colonne de gauche (Emojis)
+        const colEmojis = [...gamePairs].map(item => ({ id: item.n, display: item.i })).sort(() => 0.5 - Math.random());
+        // Créer et mélanger la colonne de droite (Mots)
+        const colMots = [...gamePairs].map(item => ({ id: item.n, display: item.n })).sort(() => 0.5 - Math.random());
+
+        gameArea.innerHTML = `
+            <div class="assoc-col" id="col-emojis">
+                ${colEmojis.map(e => `<div class="assoc-item emoji-item" id="emoji-${e.id}" onclick="handleAssocClick('emoji', '${e.id}')">${e.display}</div>`).join('')}
+            </div>
+            <div class="assoc-col" id="col-words">
+                ${colMots.map(m => `<div class="assoc-item word-item" id="word-${m.id}" onclick="handleAssocClick('word', '${m.id}')">${m.display}</div>`).join('')}
+            </div>
+        `;
+    }
+
+    function handleAssocClick(type, id) {
+        if (type === 'emoji') {
+            if(selectedEmojiId) document.getElementById(`emoji-${selectedEmojiId}`).classList.remove('selected');
+            selectedEmojiId = id;
+            document.getElementById(`emoji-${id}`).classList.add('selected');
+        } else {
+            if(selectedWordId) document.getElementById(`word-${selectedWordId}`).classList.remove('selected');
+            selectedWordId = id;
+            document.getElementById(`word-${id}`).classList.add('selected');
+        }
+
+        if (selectedEmojiId && selectedWordId) {
+            checkAssocMatch();
+        }
+    }
+
+    function checkAssocMatch() {
+        const msgDiv = document.getElementById('assoc-message');
+        const elEmoji = document.getElementById(`emoji-${selectedEmojiId}`);
+        const elWord = document.getElementById(`word-${selectedWordId}`);
+
+        if (selectedEmojiId === selectedWordId) {
+            elEmoji.classList.remove('selected'); elEmoji.classList.add('matched');
+            elWord.classList.remove('selected'); elWord.classList.add('matched');
+            lireTexte(selectedWordId); // Joue le mot seul pour la paire trouvée
+            msgDiv.innerText = "Bravo ! " + selectedWordId; msgDiv.style.color = "var(--success)";
+            assocMatchesFound++;
+            if (assocMatchesFound === 5) {
+                setTimeout(() => { msgDiv.innerText = "🎉 Félicitations, toutes les paires sont trouvées !"; }, 1000);
+            }
+        } else {
+            msgDiv.innerText = "❌ Essaie encore !"; msgDiv.style.color = "red";
+            setTimeout(() => {
+                if(!elEmoji.classList.contains('matched')) elEmoji.classList.remove('selected');
+                if(!elWord.classList.contains('matched')) elWord.classList.remove('selected');
+                msgDiv.innerText = "";
+            }, 800);
+        }
+        selectedEmojiId = null; selectedWordId = null;
+    }
+
+    /* Fonctions du Jeu Mystère (Erreurs) - Garantie sans protection */
+    function initMysteryErrorsGame(erreursData) {
+        const container = document.getElementById('erreurs-content-container');
+        container.innerHTML = ''; // Vide le contenu précédent
+
+        if (erreursData) {
+            // Générer l'image bizarroïde (garantie sans protection) et la zone de discussion
+            container.innerHTML = `
+                <div class="erreurs-img-container">
+                    <img src="${erreursData.imgBase64}" alt="Illustration mystère/erreurs bizarroïde">
+                </div>
+                <div class="discussion-prompts box" style="border-left-color: var(--mystery); background: #fdf2f1;">
+                    ${erreursData.discussion.map(p => `<p>${p}</p>`).join('')}
+                    <textarea rows="4" placeholder="Tape tes observations bizarroïdes ici..."></textarea>
+                    <p class="react">🗣️ À l'oral : Fais des phrases complètes (Sujet + Verbe + Complément) avec ton professeur !</p>
+                </div>
+            `;
+        } else {
+            // Message si pas de jeu pour ce cours
+            container.innerHTML = `<div style="text-align:center; padding: 40px; color: #7f8c8d;"><p style="font-size: 4rem;">🕵️‍♂️</p><p style="font-size: 1.3rem;">La mission mystère pour ce cours n'est pas encore prête.</p></div>`;
+        }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    function checkDevinettes() {
+        const course = data[currentCourseId];
+        let score = 0;
+        course.devinettes.forEach((d, i) => {
+            const select = document.getElementById(`dev-${i}`);
+            const span = document.getElementById(`res-${i}`);
+            const repNettoye = d.r.toLowerCase().trim();
+            const choixNettoye = select.value.toLowerCase().trim();
+            
+            if(choixNettoye === repNettoye) {
+                span.innerHTML = " ✅ Excellent !"; span.style.color = "var(--success)"; score++;
+            } else {
+                span.innerHTML = " ❌ Essaie encore !"; span.style.color = "red";
+            }
+        });
+        if(score === 5) alert("Félicitations, tu as trouvé tous les métiers ! Tu es engagé(e) !");
+    }
+
+    function finishCourse() {
+        document.getElementById('badge-' + currentCourseId).classList.add('earned');
+        alert("Félicitations pour ton entrevue ! Tu as gagné ton étampe.");
+        goHome();
+    }
+
+    function goHome() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        document.getElementById('course-view').classList.remove('active');
+        document.getElementById('menu').classList.add('active');
+    }
+</script>
+</body>
+</html>
