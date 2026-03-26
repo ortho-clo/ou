@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 8 : L'Épicerie - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; 
+            --bg: #fdfefe;
+            --success: #27ae60;
+            --c1: #e74c3c; /* Rouge */
+            --c2: #8e44ad; /* Mauve */
+            --c3: #3498db; /* Bleu */
+            --c4: #f39c12; /* Orange */
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: white; text-align: left; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .course-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-1 { background: var(--c1); border-color: #c0392b; }
+        .btn-2 { background: var(--c2); border-color: #71368a; }
+        .btn-3 { background: var(--c3); border-color: #2980b9; }
+        .btn-4 { background: var(--c4); border-color: #d68910; }
+
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s; text-shadow: none;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        /* Projet Final Enrichi */
+        .final-project-box { background: #fef9e7; border: 4px dashed #f1c40f; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #f1c40f; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .boite-mots { background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical; margin-bottom: 10px;}
+        
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-tab-1 { background: #34495e; } 
+        .btn-tab-2 { background: #e74c3c; } 
+        .btn-tab-3 { background: #9b59b6; } 
+        .btn-tab-4 { background: #f1c40f; color: #2c3e50; } 
+        .btn-tab-5 { background: #16a085; } 
+        .btn-tab-6 { background: #d35400; } 
+        .btn-menu { background: #7f8c8d; }
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s;
+        }
+        .word-card:hover { border-color: #3498db; transform: translateY(-5px); box-shadow: 0 5px 10px rgba(0,0,0,0.1);}
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #eaf2f8; border-color: #3498db; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+
+        /* Détecteur de mensonges */
+        .lie-box { background: white; border: 3px solid #e74c3c; padding: 20px; border-radius: 10px; margin-bottom: 15px; text-align: left;}
+        .lie-statement { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: #c0392b;}
+        .btn-tf { font-size: 1rem; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; color: white;}
+        .btn-vrai { background: #27ae60; } .btn-faux { background: #c0392b; }
+        .btn-vrai:hover { background: #1e8449; } .btn-faux:hover { background: #922b21; }
+        .correction { display: none; margin-top: 15px; padding: 10px; background: #fdedec; border-left: 4px solid #c0392b; font-style: italic;}
+
+        /* Les Objets / Catégories */
+        .gear-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 20px; }
+        .gear-item { background: white; border: 4px solid #bdc3c7; border-radius: 15px; padding: 15px; font-size: 2rem; cursor: pointer; transition: 0.2s; user-select: none; font-weight:bold;}
+        .gear-item:hover { transform: scale(1.05); }
+        .gear-item.selected { border-color: #9b59b6; background: #f4ecf7; transform: scale(1.05); box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);}
+        .gear-name { font-size: 1rem; font-weight: normal; display: block; margin-top: 10px; color: #34495e;}
+
+        /* Texte Troué */
+        .troue-box { background: #fef9e7; padding: 30px; border-radius: 10px; border: 3px solid #f1c40f; text-align: left; font-size: 1.2rem; line-height: 2.2;}
+        .trou-select { font-family: 'Century Gothic'; font-size: 1.1rem; padding: 5px; border: 2px solid #3498db; border-radius: 5px; background: white; color: #2980b9; font-weight: bold; margin: 0 5px;}
+        .trou-select:focus { outline: none; border-color: #e67e22; }
+
+        /* Qui suis-je ? (Logique Familiale) */
+        .tv-frame { background: #2c3e50; padding: 20px; border-radius: 20px; border: 10px solid #1a252f; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); margin-top: 20px;}
+        .tv-screen { background: #d5f5e3; border-radius: 10px; padding: 30px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+        .tv-text { font-size: 1.8rem; font-weight: bold; color: #145a32; line-height: 1.4; text-shadow: 1px 1px 0px white;}
+        .btn-live { background: #e74c3c; color: white; padding: 10px 30px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; border: 4px solid white; cursor: pointer; animation: pulse 1.5s infinite; margin-top: 20px;}
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px #e74c3c; } 100% { transform: scale(1); } }
+
+        /* Contenu & Écriture */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .boite-outils { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background: #eaf2f8; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; margin: 20px 0;}
+        .boite-outils h4 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px;}
+        .boite-outils ul { margin: 0; padding-left: 20px; font-size: 1rem; color: #34495e;}
+        
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            button, .nav-bar, .badge { display: none !important; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary); font-size: 2.8rem;">🛒 L'Épicerie et la Nourriture</h1>
+        <p style="font-size: 1.3rem;">Apprends le vocabulaire des aliments, des rayons du supermarché et de la cuisine !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn btn-1" onclick="playClick(); loadCourse(0)">🥦 1. Fruits et légumes<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-2" onclick="playClick(); loadCourse(1)">🥖 2. Les rayons<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-3" onclick="playClick(); loadCourse(2)">🥛 3. Les quantités<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-4" onclick="playClick(); loadCourse(3)">🍽️ 4. À table !<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Donner la médaille">🏆</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #d4ac0d; margin-top: 0; font-size: 2rem; text-align: center;">👨‍🍳 Projet Final : Mon menu de rêve</h2>
+            <p style="font-size: 1.2rem; text-align: center;">Imagine que tu ouvres un restaurant. Écris le menu le plus délicieux pour tes clients !</p>
+            
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #d4ac0d; margin-top: 0;">📋 Le plan de ton menu</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>L'entrée :</strong> Quelque chose de léger pour commencer (soupe, salade, pain).</li>
+                        <li><strong>Le plat principal :</strong> Le gros repas ! (viande, pâtes, légumes).</li>
+                        <li><strong>Le dessert et la boisson :</strong> Pour terminer sur une note sucrée !</li>
+                    </ul>
+                    
+                    <div class="boite-mots">
+                        <h4>💡 Outils pour t'inspirer :</h4>
+                        <p><strong>Mots utiles :</strong> Frais, cuit au four, sauce, portion, délicieux, sucré, salé, chaud, froid.</p>
+                        <p><strong>Exemple :</strong> <em>"Pour commencer, je vous propose une soupe chaude aux carottes et un morceau de pain croquant."</em></p>
+                    </div>
+                </div>
+                
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold;">1. L'entrée :</label>
+                    <textarea rows="3" placeholder="En entrée, nous servons..."></textarea>
+                    
+                    <label style="font-weight: bold;">2. Le plat principal :</label>
+                    <textarea rows="3" placeholder="Comme plat principal, voici notre spécialité..."></textarea>
+                    
+                    <label style="font-weight: bold;">3. Le dessert et la boisson :</label>
+                    <textarea rows="3" placeholder="Pour terminer le repas, vous pourrez déguster..."></textarea>
+                    
+                    <div style="text-align: right;"><button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer mon menu</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Titre</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Vocabulaire</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('mensonges')">2. Détecteur</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('garde-robe')">3. Les Intrus</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('troue')">4. L'Aventure</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. L'Écrivain</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('meteo')">6. Devinettes</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3 style="color: #34495e;">Clique sur la carte pour entendre le mot et découvrir l'explication !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-mensonges" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #e74c3c;">
+                <h3 style="color: #e74c3c; margin-top:0;">🕵️ Le Détecteur de Mensonges</h3>
+                <p style="font-size:1.1rem;">Lis les 6 phrases sur l'épicerie et la nourriture. Est-ce logique ? Clique sur VRAI ou FAUX.</p>
+                <div id="lie-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-garde-robe" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #9b59b6; text-align: center;">
+                <h3 style="color: #9b59b6; margin-top:0;">🔍 Cherche et Trouve !</h3>
+                <p style="font-size: 1.2rem;">Choisis **les 3 mots** qui font partie de la bonne catégorie (lis la consigne en dessous) !</p>
+                <div class="gear-grid" id="gear-container"></div>
+                <button class="btn-action" style="background:#9b59b6;" onclick="playClick(); checkGear()">Vérifier les mots !</button>
+                <div id="gear-message" style="margin-top:20px; font-weight:bold; font-size:1.5rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-troue" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #f1c40f;">
+                <h3 style="color: #d4ac0d; margin-top:0; font-size: 1.8rem;">L'Aventure de Tarik</h3>
+                <p style="font-size: 1.1rem; font-weight:bold;">Tarik a besoin d'aide pour raconter son histoire. Choisis les bons mots !</p>
+                
+                <div class="troue-box" id="troue-text-container"></div>
+                
+                <button class="btn-action" style="background:#f1c40f; color:#2c3e50; width:100%;" onclick="playClick(); checkTroue()">Vérifier l'histoire</button>
+
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 10px; border: 2px solid #ccc;">
+                    <h4 style="color: #34495e; margin-top:0;">❓ Questions de compréhension :</h4>
+                    <div id="troue-questions-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-meteo" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #1abc9c; text-align: center; background: #e8f8f5;">
+                <h3 style="color: #1abc9c; font-size: 2rem; margin-top:0;">🧠 Le remue-méninges de l'épicerie</h3>
+                <p style="font-size: 1.2rem;">Lis la devinette à tes amis. Ils doivent trouver le bon aliment ou le bon objet !</p>
+                
+                <div class="tv-frame">
+                    <div class="tv-screen">
+                        <div id="tv-prompter" class="tv-text">Appuyez sur "Tirer une carte" pour jouer !</div>
+                        <div id="tv-answer" style="display: none; margin-top: 15px; font-size: 1.5rem; color: #c0392b; font-weight: bold; animation: fadeIn 0.4s;"></div>
+                    </div>
+                </div>
+                
+                <button class="btn-live" onclick="playClick(); generateRiddle()">🃏 Tirer une carte</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+    function playSuccess() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12); gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+    function playError() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+    function playTick() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; 
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function toggleBadge(event, id) { event.stopPropagation(); playSuccess(); document.getElementById('badge-' + id).classList.toggle('earned'); }
+    function printSection(elementId) { document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area')); document.getElementById(elementId).classList.add('print-area'); window.print(); }
+
+    // --- DONNÉES DES COURS ---
+    const data = [
+        {   // 0: FRUITS ET LÉGUMES
+            title: "🥦 1. Les fruits et légumes", color: "#e74c3c",
+            words: [
+                {n:"Pomme", i:"🍎", d:"Un fruit rond, rouge ou vert, qui pousse dans un pommier."}, {n:"Carotte", i:"🥕", d:"Un légume orange et long qui pousse dans la terre."},
+                {n:"Banane", i:"🍌", d:"Un fruit jaune et allongé qu'il faut peler avant de manger."}, {n:"Brocoli", i:"🥦", d:"Un légume vert qui ressemble à un petit arbre."},
+                {n:"Fraise", i:"🍓", d:"Un petit fruit rouge très sucré avec des petits grains dessus."}, {n:"Peler", i:"🔪", d:"Enlever la peau d'un fruit ou d'un légume."},
+                {n:"Sucré", i:"🍯", d:"Un goût doux comme le sucre, souvent associé aux fruits ou aux desserts."}, {n:"Salé", i:"🧂", d:"Un goût qui contient du sel, souvent pour les légumes ou la viande."},
+                {n:"Verger", i:"🌳", d:"Un grand terrain où on fait pousser des arbres fruitiers (comme des pommes)."}, {n:"Potager", i:"🌱", d:"Un jardin où on plante et on fait pousser des légumes."}
+            ],
+            mensonges: [
+                {txt: "La carotte est un fruit qui pousse dans un arbre.", ans: false, corr: "Faux ! La carotte est un légume qui pousse dans la terre (le potager)."},
+                {txt: "On doit peler une banane avant de la manger.", ans: true, corr: "Vrai ! La peau de la banane ne se mange pas."},
+                {txt: "Les pommes poussent dans un endroit qu'on appelle un verger.", ans: true, corr: "Vrai ! Les arbres fruitiers sont dans un verger."},
+                {txt: "Le brocoli a un goût très sucré, comme un bonbon.", ans: false, corr: "Faux ! Le brocoli est un légume, il n'est pas sucré."},
+                {txt: "La fraise est un fruit rouge.", ans: true, corr: "Vrai ! Et c'est délicieux !"},
+                {txt: "Le sel donne un goût sucré aux aliments.", ans: false, corr: "Faux ! Le sel donne un goût salé. C'est le sucre qui donne le goût sucré."}
+            ],
+            habits: [
+                {n:"Carotte", i:"🥕", correct:true}, {n:"Brocoli", i:"🥦", correct:true}, {n:"Pomme de terre", i:"🥔", correct:true},
+                {n:"Banane", i:"🍌", correct:false}, {n:"Fraise", i:"🍓", correct:false}, {n:"Pomme", i:"🍎", correct:false},
+                {n:"Sel", i:"🧂", correct:false}, {n:"Verger", i:"🌳", correct:false}, {n:"Couteau", i:"🔪", correct:false}, {n:"Sucre", i:"🍯", correct:false}
+            ], 
+            troue: {
+                texte: "Aujourd'hui, je vais au [TROU] avec mon grand-père pour ramasser des légumes. Nous commençons par tirer des [TROU] hors de la terre, elles sont bien orange ! Ensuite, nous coupons un [TROU] tout vert. Pour le dessert, nous n'allons pas dans le jardin, mais dans le [TROU] à côté de la maison. Il y a de grands arbres pleins de [TROU] rouges et croquantes. C'est mon fruit préféré ! J'aime quand les fruits ont un bon goût [TROU].",
+                choix: [
+                    ["verger", "potager", "magasin"], 
+                    ["bananes", "carottes", "fraises"], 
+                    ["brocoli", "arbre", "nuage"], 
+                    ["potager", "salon", "verger"],
+                    ["carottes", "pommes", "roches"],
+                    ["salé", "amer", "sucré"]
+                ],
+                reponses: ["potager", "carottes", "brocoli", "verger", "pommes", "sucré"],
+                questions: ["1. Où pousse la carotte ?", "2. Quelle est la différence entre un verger et un potager ?"]
+            },
+            ecriture: { 
+                id: "ecr-0", titre: "✍️ Mon fruit ou légume préféré", desc: "Décris ton fruit ou ton légume favori. De quelle couleur est-il ? Comment le manges-tu ?", 
+                noms: "la couleur, la peau, le goût, la cuisine, le jus, le jardin.",
+                verbes: "croquer, peler, couper, cuisiner, pousser, goûter.",
+                adjectifs: "sucré, salé, doux, croquant, mou, délicieux.",
+                liaisons: "Par exemple, de plus, c'est pourquoi, parfois.",
+                debuts: "Mon fruit (ou légume) préféré est..." 
+            }
+        },
+        {   // 1: LES RAYONS
+            title: "🥖 2. Les rayons de l'épicerie", color: "#8e44ad",
+            words: [
+                {n:"Boulangerie", i:"🥐", d:"Le rayon où on achète le pain, les croissants et les brioches."}, {n:"Boucherie", i:"🥩", d:"Le rayon où on achète la viande (bœuf, poulet, porc)."},
+                {n:"Poissonnerie", i:"🐟", d:"Le rayon où on trouve du poisson et des fruits de mer."}, {n:"Produits laitiers", i:"🧀", d:"La section pour le lait, le fromage, le beurre et les yogourts."},
+                {n:"Allée", i:"🛒", d:"Les longs corridors dans le magasin où on marche pour trouver les produits."}, {n:"Chariot (Panier)", i:"🛒", d:"La voiturette qu'on pousse pour mettre notre nourriture dedans."},
+                {n:"Congélateur", i:"❄️", d:"Un meuble très froid où on garde la nourriture glacée (comme la crème glacée)."}, {n:"Caisse", i:"💰", d:"L'endroit à la sortie où on paie nos achats."},
+                {n:"Frais", i:"🌿", d:"Un aliment qui vient d'être récolté ou préparé (pas en conserve)."}, {n:"Emballé", i:"📦", d:"Un produit qui est dans une boîte ou un plastique fermé."}
+            ],
+            mensonges: [
+                {txt: "On trouve du poisson frais dans le rayon de la boulangerie.", ans: false, corr: "Faux ! On trouve le poisson à la poissonnerie."},
+                {txt: "Le fromage et le yogourt sont des produits laitiers.", ans: true, corr: "Vrai ! Ils sont fabriqués à partir du lait."},
+                {txt: "Pour transporter beaucoup de nourriture dans le magasin, on utilise un chariot.", ans: true, corr: "Vrai ! On l'appelle aussi souvent un panier d'épicerie."},
+                {txt: "À la fin de l'épicerie, on doit payer à la boucherie.", ans: false, corr: "Faux ! On paie à la caisse (ou aux caisses libres-services)."},
+                {txt: "On garde la crème glacée dans le congélateur pour ne pas qu'elle fonde.", ans: true, corr: "Vrai ! Le congélateur est beaucoup plus froid que le réfrigérateur."},
+                {txt: "Un pain frais est un pain qui a été fait il y a très longtemps.", ans: false, corr: "Faux ! 'Frais' veut dire qu'il vient tout juste d'être fait."}
+            ],
+            habits: [
+                {n:"Pain", i:"🥖", correct:true}, {n:"Croissant", i:"🥐", correct:true}, {n:"Brioche", i:"🧁", correct:true},
+                {n:"Poulet", i:"🍗", correct:false}, {n:"Poisson", i:"🐟", correct:false}, {n:"Lait", i:"🥛", correct:false},
+                {n:"Fromage", i:"🧀", correct:false}, {n:"Pomme", i:"🍎", correct:false}, {n:"Caisse", i:"💰", correct:false}, {n:"Viande", i:"🥩", correct:false}
+            ],
+            troue: {
+                texte: "Le samedi, je vais à l'épicerie avec ma mère. Dès qu'on entre, je vais chercher un [TROU] pour y mettre nos achats. Nous marchons d'abord dans la première [TROU] pour trouver les fruits et légumes. Ensuite, ça sent tellement bon ! Nous sommes à la [TROU] pour acheter une baguette de pain toute fraîche. Maman me demande d'aller chercher du beurre et du yogourt ; je dois donc me diriger vers la section des [TROU]. À la fin, avant de partir, on met tout sur le tapis de la [TROU] pour payer nos choses.",
+                choix: [
+                    ["panier", "chien", "livre"], 
+                    ["boucherie", "allée", "caisse"], 
+                    ["poissonnerie", "boulangerie", "rue"], 
+                    ["produits laitiers", "congelés", "viandes"],
+                    ["voiture", "table", "caisse"],
+                    ["rien", "rien", "rien"] // 5 trous seulement
+                ],
+                reponses: ["panier", "allée", "boulangerie", "produits laitiers", "caisse"],
+                questions: ["1. Où trouve-t-on le pain et les croissants ?", "2. Que fait-on à la caisse ?"]
+            },
+            ecriture: { 
+                id: "ecr-1", titre: "✍️ Ma visite à l'épicerie", desc: "Raconte la dernière fois que tu es allé(e) faire les courses. Quel est ton rayon préféré et pourquoi ?", 
+                noms: "l'allée, le chariot, la liste, la caisse, les produits, les gens.",
+                verbes: "choisir, pousser, chercher, acheter, payer, aider.",
+                adjectifs: "grand, rempli, coloré, occupé, froid, lourd.",
+                liaisons: "Tout d'abord, ensuite, soudain, finalement.",
+                debuts: "Quand je vais à l'épicerie avec mes parents, j'aime..." 
+            }
+        },
+        {   // 2: LES QUANTITÉS
+            title: "🥛 3. Les quantités", color: "#2980b9",
+            words: [
+                {n:"Litre", i:"🥛", d:"Une mesure pour les liquides (ex: un litre de lait, d'eau ou de jus)."}, {n:"Boîte", i:"📦", d:"Un contenant en carton ou en métal (ex: une boîte de céréales)."},
+                {n:"Sac", i:"🛍️", d:"Un contenant souple, souvent en plastique ou en papier (ex: un sac de pommes)."}, {n:"Douzaine", i:"🥚", d:"Un groupe de 12 choses (ex: on achète souvent une douzaine d'œufs)."},
+                {n:"Tranche", i:"🍞", d:"Un morceau très mince coupé dans un aliment (ex: une tranche de pain ou de fromage)."}, {n:"Bouteille", i:"🍾", d:"Un récipient en verre ou en plastique avec un goulot étroit pour les liquides."},
+                {n:"Peser", i:"⚖️", d:"Mettre un aliment sur une balance pour savoir s'il est lourd."}, {n:"Gramme / Kilo", i:"⚖️", d:"Une mesure pour le poids des objets ou des aliments solides."},
+                {n:"Morceau", i:"🧩", d:"Une partie coupée ou cassée d'un aliment entier (ex: un morceau de gâteau)."}, {n:"Portion", i:"🍽️", d:"La quantité de nourriture servie pour une seule personne."}
+            ],
+            mensonges: [
+                {txt: "On achète généralement les œufs par litre.", ans: false, corr: "Faux ! On achète les œufs à la douzaine (12), et les liquides au litre."},
+                {txt: "Une boîte de céréales est en carton.", ans: true, corr: "Vrai ! Les céréales sont dans un sac, qui est lui-même dans une boîte."},
+                {txt: "Une tranche de pain est un très gros bloc rond.", ans: false, corr: "Faux ! Une tranche est un morceau coupé très mince."},
+                {txt: "Pour savoir combien pèse un sac de pommes, on doit le peser sur une balance.", ans: true, corr: "Vrai ! La balance nous donnera le poids en kilogrammes ou en livres."},
+                {txt: "Une portion, c'est toute la pizza au complet pour toute la famille.", ans: false, corr: "Faux ! Une portion, c'est la quantité pour UNE seule personne (une ou deux pointes)."},
+                {txt: "L'eau et le jus se vendent souvent dans des bouteilles.", ans: true, corr: "Vrai ! La bouteille est parfaite pour garder les liquides."}
+            ],
+            habits: [
+                {n:"Boîte", i:"📦", correct:true}, {n:"Bouteille", i:"🍾", correct:true}, {n:"Sac", i:"🛍️", correct:true},
+                {n:"Pomme", i:"🍎", correct:false}, {n:"Lait", i:"🥛", correct:false}, {n:"Pain", i:"🥖", correct:false},
+                {n:"Poulet", i:"🍗", correct:false}, {n:"Douzaine", i:"🥚", correct:false}, {n:"Litre", i:"🥛", correct:false}, {n:"Eau", i:"💧", correct:false}
+            ],
+            troue: {
+                texte: "Je prépare le petit déjeuner ! Maman m'a demandé de sortir les ingrédients. D'abord, je prends un [TROU] de lait dans le réfrigérateur pour le verser dans mon bol. Ensuite, j'ouvre la grande [TROU] en carton pour prendre mes céréales préférées. Mon père préfère manger des toasts, alors il se coupe une [TROU] de pain. Mon frère, lui, a très faim : il prépare trois œufs, qu'il prend dans la [TROU] qu'on a achetée hier. Tout le monde a sa propre [TROU] et mange à sa faim !",
+                choix: [
+                    ["sac", "litre", "kilo"], 
+                    ["boîte", "bouteille", "douzaine"], 
+                    ["portion", "tranche", "boîte"], 
+                    ["caisse", "tranche", "douzaine"],
+                    ["recette", "portion", "épicerie"],
+                    ["rien", "rien", "rien"] // 5 trous seulement
+                ],
+                reponses: ["litre", "boîte", "tranche", "douzaine", "portion"],
+                questions: ["1. Que mange le frère au petit déjeuner ?", "2. Dans quoi sont rangées les céréales ?"]
+            },
+            ecriture: { 
+                id: "ecr-2", titre: "✍️ Ma liste d'épicerie", desc: "Tu organises une fête avec tes amis ! Fais ta liste d'épicerie en n'oubliant pas de préciser les quantités.", 
+                noms: "un litre, un sac, une boîte, des boissons, des grignotines, des fruits.",
+                verbes: "acheter, organiser, inviter, partager, boire, manger.",
+                adjectifs: "beaucoup, assez, délicieux, grand, rafraîchissant, sucré.",
+                liaisons: "Premièrement, ensuite, sans oublier, pour finir.",
+                debuts: "Pour ma fête, je dois acheter au moins deux..." 
+            }
+        },
+        {   // 3: À TABLE ET EN CUISINE
+            title: "🍽️ 4. À table et en cuisine", color: "#f39c12",
+            words: [
+                {n:"Déjeuner", i:"🍳", d:"Le premier repas de la journée, le matin (au Québec)."}, {n:"Dîner", i:"🥪", d:"Le repas du midi (au Québec)."},
+                {n:"Souper", i:"🍝", d:"Le repas du soir, à la fin de la journée (au Québec)."}, {n:"Recette", i:"📖", d:"Les instructions écrites qui expliquent comment préparer un plat."},
+                {n:"Couper", i:"🔪", d:"Séparer un aliment en morceaux avec un couteau."}, {n:"Mélanger", i:"🥄", d:"Tourner plusieurs ingrédients ensemble (ex: avec une cuillère)."},
+                {n:"Cuire", i:"🔥", d:"Chauffer la nourriture pour qu'elle soit prête à manger (dans le four ou sur la cuisinière)."}, {n:"Assiette", i:"🍽️", d:"Le plat rond ou carré dans lequel on met sa nourriture pour manger."},
+                {n:"Ustensiles", i:"🍴", d:"Les outils qu'on utilise pour manger (la fourchette, le couteau, la cuillère)."}, {n:"Bouillir", i:"🫧", d:"Chauffer un liquide (comme de l'eau) jusqu'à ce qu'il fasse des grosses bulles."}
+            ],
+            mensonges: [
+                {txt: "Au Québec, le repas qu'on mange le matin s'appelle le souper.", ans: false, corr: "Faux ! Le matin, c'est le déjeuner."},
+                {txt: "Pour manger de la soupe, le meilleur ustensile est la fourchette.", ans: false, corr: "Faux ! La soupe est liquide, il faut utiliser une cuillère !"},
+                {txt: "Une recette est un texte qui nous aide à cuisiner étape par étape.", ans: true, corr: "Vrai ! Elle donne les ingrédients et les étapes à suivre."},
+                {txt: "Quand on veut faire des pâtes, on doit faire bouillir de l'eau.", ans: true, corr: "Vrai ! L'eau doit faire des bulles (bouillir) avant d'y mettre les pâtes."},
+                {txt: "Le dîner est le repas qu'on mange vers midi.", ans: true, corr: "Vrai ! (Au Québec)."},
+                {txt: "On met la nourriture dans un verre pour la couper avec un couteau.", ans: false, corr: "Faux ! On met la nourriture dans une assiette pour la couper."}
+            ],
+            habits: [
+                {n:"Couper", i:"🔪", correct:true}, {n:"Mélanger", i:"🥄", correct:true}, {n:"Cuire", i:"🔥", correct:true},
+                {n:"Assiette", i:"🍽️", correct:false}, {n:"Fourchette", i:"🍴", correct:false}, {n:"Recette", i:"📖", correct:false},
+                {n:"Déjeuner", i:"🍳", correct:false}, {n:"Couteau", i:"🔪", correct:false}, {n:"Casserole", i:"🍳", correct:false}, {n:"Bouillir", i:"🫧", correct:true} // 4 choix possibles ici pour plus de fun !
+            ],
+            troue: {
+                texte: "Ce soir, c'est moi qui prépare le [TROU] pour toute la famille ! Je lis bien les instructions écrites sur la [TROU]. D'abord, je dois prendre un couteau pour [TROU] les légumes en petits morceaux. Ensuite, je les mets dans la casserole et je prends une grande cuillère pour bien [TROU] la sauce. Finalement, je mets la casserole sur le feu pour [TROU] le tout pendant 20 minutes. Quand c'est prêt, je mets la nourriture chaude dans chaque [TROU] et je dépose les ustensiles sur la table. À table tout le monde !",
+                choix: [
+                    ["déjeuner", "dîner", "souper"], 
+                    ["boîte", "recette", "bouteille"], 
+                    ["couper", "mélanger", "peler"], 
+                    ["mélanger", "peler", "cuire"],
+                    ["cacher", "cuire", "manger"],
+                    ["chaise", "assiette", "verre"]
+                ],
+                reponses: ["souper", "recette", "couper", "mélanger", "cuire", "assiette"],
+                questions: ["1. Quel repas Tarik prépare-t-il ?", "2. Pourquoi Tarik utilise-t-il un couteau en premier ?"]
+            },
+            ecriture: { 
+                id: "ecr-3", titre: "✍️ Ma recette spéciale", desc: "Si tu pouvais inventer une recette magique ou loufoque, qu'est-ce que ce serait ? (ex: Un gâteau aux bonbons et aux patates !)", 
+                noms: "un ingrédient, une casserole, la magie, un goût, un four, le résultat.",
+                verbes: "ajouter, mélanger, saupoudrer, cuire, inventer, goûter.",
+                adjectifs: "délicieux, bizarre, chaud, gluant, sucré, magique.",
+                liaisons: "En premier lieu, ensuite, par magie, finalement.",
+                debuts: "Ma recette spéciale s'appelle le... Pour la faire, il faut mélanger..." 
+            }
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        const titleEl = document.getElementById('course-title');
+        titleEl.innerText = course.title;
+        titleEl.style.color = course.color;
+        
+        // 1. Imagier
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `<div class="mot-seul">${w.n}</div><div class="hidden-content"><div class="emoji">${w.i}</div><div class="sentence">${w.d}</div></div>`;
+            div.onclick = () => { div.classList.add('revealed'); lireTexte(w.n); }; 
+            grid.appendChild(div);
+        });
+
+        // 2. Détecteur de Mensonges
+        const lieContainer = document.getElementById('lie-container');
+        lieContainer.innerHTML = '';
+        course.mensonges.forEach((m, index) => {
+            lieContainer.innerHTML += `
+                <div class="lie-box">
+                    <div class="lie-statement">"${m.txt}"</div>
+                    <button class="btn-tf btn-vrai" onclick="checkLie(${index}, true)">VRAI</button>
+                    <button class="btn-tf btn-faux" onclick="checkLie(${index}, false)">FAUX</button>
+                    <div class="correction" id="corr-${index}">${m.corr}</div>
+                </div>`;
+        });
+
+        // 3. Objets/Intrus (10 items)
+        const gearContainer = document.getElementById('gear-container');
+        gearContainer.innerHTML = '';
+        document.getElementById('gear-message').innerText = "";
+        let gearList = [...course.habits].sort(() => 0.5 - Math.random());
+        gearList.forEach((g, index) => {
+            const div = document.createElement('div');
+            div.className = 'gear-item';
+            div.id = `gear-${index}`;
+            div.dataset.correct = g.correct;
+            div.innerHTML = `${g.n}`; 
+            div.onclick = function() { playClick(); this.classList.toggle('selected'); };
+            gearContainer.appendChild(div);
+        });
+
+        // Textes de consignes spécifiques pour l'onglet "Intrus"
+        const consigneH3 = document.querySelector('#tab-garde-robe h3');
+        const consigneP = document.querySelector('#tab-garde-robe p');
+        if(id === 0) { consigneH3.innerText = "🥕 Dans le potager"; consigneP.innerHTML = "Trouve les 3 mots qui sont des LÉGUMES !"; }
+        if(id === 1) { consigneH3.innerText = "🥐 À la boulangerie"; consigneP.innerHTML = "Trouve les 3 mots de choses qu'on achète à la boulangerie !"; }
+        if(id === 2) { consigneH3.innerText = "📦 Les contenants"; consigneP.innerHTML = "Trouve les 3 mots qui servent à emballer ou contenir de la nourriture !"; }
+        if(id === 3) { consigneH3.innerText = "👨‍🍳 En cuisine"; consigneP.innerHTML = "Trouve 3 mots qui sont des ACTIONS (des verbes) qu'on fait en cuisinant ! (Il y a 4 bonnes réponses, trouves-en 3 !)"; }
+
+        // 4. Texte Troué
+        const troueContainer = document.getElementById('troue-text-container');
+        const questionsContainer = document.getElementById('troue-questions-container');
+        
+        let texteHTML = course.troue.texte;
+        let numTrous = (texteHTML.match(/\[TROU\]/g) || []).length;
+        for(let i=0; i<numTrous; i++) {
+            let selectHTML = `<select class="trou-select" id="trou-${i}"><option value="">-- ? --</option>`;
+            let shuffledOptions = [...course.troue.choix[i]].sort(() => 0.5 - Math.random());
+            shuffledOptions.forEach(opt => { selectHTML += `<option value="${opt}">${opt}</option>`; });
+            selectHTML += `</select>`;
+            texteHTML = texteHTML.replace("[TROU]", selectHTML);
+        }
+        troueContainer.innerHTML = texteHTML;
+        
+        questionsContainer.innerHTML = '';
+        course.troue.questions.forEach(q => {
+            questionsContainer.innerHTML += `
+                <p style="font-weight:bold; color:var(--primary); font-size:1.1rem; margin-bottom:5px;">${q}</p>
+                <textarea rows="2" style="margin-bottom: 15px;" placeholder="Écris ta réponse ici..."></textarea>
+            `;
+        });
+
+        // 5. L'Écrivain
+        const ecrDiv = document.getElementById('ecriture-container');
+        ecrDiv.innerHTML = `
+            <div class="box" id="${course.ecriture.id}" style="border-left: 5px solid ${course.color}; background: #fafafa; padding: 30px;">
+                <h3 style="color: ${course.color}; margin-top:0; font-size: 1.8rem;">${course.ecriture.titre}</h3>
+                <p style="font-size: 1.2rem; font-weight: bold;">${course.ecriture.desc}</p>
+                
+                <div class="boite-outils">
+                    <div><h4>🧱 Noms utiles</h4><ul><li>${course.ecriture.noms.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🏃 Verbes</h4><ul><li>${course.ecriture.verbes.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🎨 Adjectifs</h4><ul><li>${course.ecriture.adjectifs.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🔗 Mots de liaison</h4><ul><li>${course.ecriture.liaisons.split(', ').join('</li><li>')}</li></ul></div>
+                </div>
+                
+                <p style="color:#7f8c8d; font-style:italic; font-size: 1.1rem;">💡 <strong>Idée pour commencer :</strong> "${course.ecriture.debuts}"</p>
+                
+                <textarea rows="8" placeholder="Écris ton texte ici..."></textarea>
+                <div style="text-align:right;"><button class="btn-print" onclick="playClick(); printSection('${course.ecriture.id}')">🖨️ Imprimer mon texte</button></div>
+            </div>`;
+
+        showTab('imagier');
+    }
+
+    // --- LOGIQUE DES JEUX ---
+    function checkLie(index, answer) {
+        const correctAns = data[currentCourseId].mensonges[index].ans;
+        const corrDiv = document.getElementById(`corr-${index}`);
+        if(answer === correctAns) {
+            playSuccess();
+            corrDiv.style.display = "block"; corrDiv.style.borderLeftColor = "var(--success)"; corrDiv.style.background = "#eafaf1";
+            corrDiv.innerHTML = data[currentCourseId].mensonges[index].corr;
+        } else {
+            playError();
+            corrDiv.style.display = "block"; corrDiv.style.borderLeftColor = "#c0392b"; corrDiv.style.background = "#fdedec";
+            corrDiv.innerHTML = "❌ Oups ! Ce n'est pas la bonne réponse. Relis bien la phrase !";
+            setTimeout(() => { if(corrDiv.innerHTML.includes("Oups")) corrDiv.style.display = "none"; }, 1500);
+        }
+    }
+
+    function checkGear() {
+        const items = document.querySelectorAll('.gear-item');
+        let allCorrect = true; let selectedCount = 0;
+        items.forEach(item => {
+            const isSelected = item.classList.contains('selected');
+            const isCorrect = item.dataset.correct === "true";
+            if (isSelected) selectedCount++;
+            if (isSelected && !isCorrect) allCorrect = false;
+        });
+        
+        // Petite protection pour le jeu 4 qui a 4 réponses valides, mais on en demande 3.
+        let isWin = false;
+        if(currentCourseId === 3) {
+            if(selectedCount === 3 && allCorrect) isWin = true;
+        } else {
+            // Pour les autres cours, on vérifie strictement
+            items.forEach(item => {
+                const isSelected = item.classList.contains('selected');
+                const isCorrect = item.dataset.correct === "true";
+                if (!isSelected && isCorrect) allCorrect = false;
+            });
+            if(selectedCount === 3 && allCorrect) isWin = true;
+        }
+
+        const msgDiv = document.getElementById('gear-message');
+        if (selectedCount !== 3) {
+            playError();
+            msgDiv.style.color = "#e74c3c";
+            msgDiv.innerText = `Tu dois sélectionner exactement 3 mots ! (Tu en as choisi ${selectedCount})`;
+        } else if (isWin) {
+            playSuccess();
+            msgDiv.style.color = "var(--success)";
+            msgDiv.innerText = "✅ Excellent ! Tu as trouvé 3 bons mots !";
+        } else {
+            playError();
+            msgDiv.style.color = "#e74c3c";
+            msgDiv.innerText = "❌ Oups ! Il y a un intrus. Cherche bien !";
+        }
+    }
+
+    function checkTroue() {
+        const course = data[currentCourseId];
+        let score = 0;
+        const selects = document.querySelectorAll('.trou-select');
+        
+        selects.forEach((sel, i) => {
+            if (sel.value === course.troue.reponses[i]) {
+                sel.style.backgroundColor = "#abebc6"; sel.style.borderColor = "var(--success)";
+                score++;
+            } else {
+                sel.style.backgroundColor = "#fdedec"; sel.style.borderColor = "#e74c3c";
+            }
+        });
+
+        if (score === selects.length) {
+            playSuccess();
+            alert("✨ Bravo ! Tu as complété l'histoire !");
+        } else {
+            playError();
+        }
+    }
+
+    // --- DEVIN ET QUI SUIS-JE ---
+    const devinettes = [
+        "Je suis jaune, j'ai une pelure et les singes m'adorent. Qui suis-je ? | La banane",
+        "Je suis orange et je pousse dans la terre. Qui suis-je ? | La carotte",
+        "Je suis le repas que les Québécois mangent le matin. Quel est mon nom ? | Le déjeuner",
+        "Je suis un endroit très froid à l'épicerie, parfait pour la crème glacée. Qui suis-je ? | Le congélateur",
+        "Je suis l'endroit où tu vas pour acheter des croissants et du pain. Qui suis-je ? | La boulangerie",
+        "Je sers à couper les aliments en petits morceaux. Attention, je coupe ! Qui suis-je ? | Un couteau",
+        "On me boit, je suis liquide et blanc, et on m'achète souvent au litre. Qui suis-je ? | Le lait",
+        "Je suis l'ustensile parfait pour manger de la soupe. Qui suis-je ? | La cuillère"
+    ];
+
+    let currentAnswer = ""; 
+
+    function generateRiddle() {
+        playTick();
+        const r = devinettes[Math.floor(Math.random() * devinettes.length)];
+        
+        const split = r.split('|');
+        const question = split[0].trim();
+        currentAnswer = split[1] ? split[1].trim() : ''; 
+        
+        document.getElementById('tv-prompter').innerHTML = `
+            ${question}
+            <br><br>
+            <button id="btn-reveal" style="background: #27ae60; color: white; padding: 10px 20px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; font-family: 'Century Gothic', sans-serif; transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="revealAnswer()">👁️ Voir la réponse</button>
+        `;
+        document.getElementById('tv-answer').style.display = 'none'; 
+    }
+
+    function revealAnswer() {
+        playSuccess();
+        document.getElementById('btn-reveal').style.display = 'none'; 
+        const answerDiv = document.getElementById('tv-answer');
+        answerDiv.style.display = 'block'; 
+        answerDiv.innerHTML = `👉 ${currentAnswer}`;
+    }
+
+    // --- NAVIGATION ---
+    function showTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.style.display = 'none'); document.getElementById('tab-' + tabId).style.display = 'block'; }
+    function goHome() { document.getElementById('course-view').classList.remove('active'); document.getElementById('menu').classList.add('active'); }
+</script>
+</body>
+</html>
