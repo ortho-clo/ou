@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4 : Les Transports - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; 
+            --bg: #f4f6f7;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active-screen { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal & Projet Final */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            background: #ecf0f1; border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: var(--primary); text-align: left;
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        .final-project-box { background: #e8f8f5; border: 4px dashed #16a085; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; position: relative; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #1abc9c; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .exemples-box { background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        .redaction-col { display: flex; flex-direction: column; gap: 15px; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .word-card:hover { border-color: #f39c12; }
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #fcf3cf; border-color: #f39c12; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+        .audio-icon { display: none; font-size: 1rem; margin-top: 5px; cursor: pointer; background: #3498db; color: white; padding: 8px 12px; border-radius: 5px; font-weight: bold;}
+        .word-card.revealed .audio-icon { display: inline-block; }
+        .audio-icon:hover { background: #2980b9; transform: scale(1.05); }
+
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .btn-tab-1 { background: #3498db; } 
+        .btn-tab-2 { background: #9b59b6; } 
+        .btn-tab-3 { background: #e67e22; } 
+        .btn-tab-4 { background: #1abc9c; } 
+        .btn-tab-5 { background: #2ecc71; } 
+        .btn-tab-6 { background: #34495e; } 
+        .btn-tab-7 { background: #e74c3c; border: 2px solid #c0392b;} 
+        .btn-menu { background: #7f8c8d; }
+
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+        
+        /* Contenu */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; border-left: 5px solid #bdc3c7; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold; background: #eafaf1; padding: 10px; border-radius: 5px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical;}
+        
+        .inspiration-box { background: #fef9e7; border: 2px dashed #f1c40f; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 1rem; color: #34495e; line-height: 1.6;}
+        .inspiration-box h4 { margin-top: 0; color: #d4ac0d; margin-bottom: 10px; font-size: 1.2rem;}
+        .inspiration-box ul { margin: 0; padding-left: 20px; }
+        .inspiration-box li { margin-bottom: 5px; }
+
+        /* Jeu Association */
+        .assoc-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .assoc-col { display: flex; flex-direction: column; gap: 10px; width: 45%; }
+        .assoc-item { padding: 15px; background: white; border: 3px solid #bdc3c7; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; user-select: none; text-align:center; }
+        .assoc-item.emoji-item { font-size: 2.5rem; }
+        .assoc-item:hover:not(.matched) { border-color: #9b59b6; }
+        .assoc-item.selected { background: #f4ecf7; border-color: #9b59b6; transform: scale(1.05); }
+        .assoc-item.matched { background: #abebc6; border-color: var(--success); color: var(--success); cursor: default; opacity: 0.6; pointer-events: none; }
+
+        /* Devinettes */
+        .devinette-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
+        .devinette-input { padding: 10px; font-size: 1.1rem; border: 2px solid #bdc3c7; border-radius: 5px; margin-top: 10px; width: 80%; font-family: 'Century Gothic';}
+        .devinette-feedback { font-weight: bold; margin-top: 5px; display: block; }
+
+        /* MACHINE À PHRASES FOLLES */
+        .slot-machine {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0;
+            background: #2c3e50; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .slot-window {
+            background: white; border: 4px solid #f1c40f; border-radius: 10px; padding: 20px;
+            width: 30%; font-size: 1.5rem; font-weight: bold; text-align: center; min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .slot-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .slot-text { color: #e74c3c; font-size: 1.4rem; }
+        .btn-spin {
+            background: #e74c3c; color: white; font-size: 1.5rem; padding: 15px 40px; border: 4px solid #c0392b; 
+            border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 0 #c0392b; transition: 0.1s; margin-bottom: 20px;
+        }
+        .btn-spin:active { transform: translateY(5px); box-shadow: 0 0 0 #c0392b; }
+
+        /* CSS POUR L'IMPRESSION PROPRE */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 0; margin: 0; border: none; box-shadow: none; }
+            button, .nav-bar, .badge, .audio-icon { display: none !important; }
+            textarea { border: 1px solid #ccc; background: transparent; resize: none; overflow: hidden; min-height: 150px; }
+            .inspiration-box { display: none !important; }
+            .plan-box { border: none; box-shadow: none; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+        .btn-print:hover { background: #2c3e50; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active-screen">
+        <h1 style="color: var(--primary); font-size: 2.5rem;">🌍 En route ! Les Transports</h1>
+        <p style="font-size: 1.2rem;">Découvre comment on se déplace sur la terre, sur l'eau et dans les airs avec Madame Claudia !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn" onclick="playClick(); loadCourse(0)">🚗 Cours 1 : Sur la route<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(1)">✈️ Cours 2 : Dans les airs & sur rails<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(2)">🚢 Cours 3 : Sur l'eau<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(3)">🚜 Cours 4 : Véhicules spéciaux<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #16a085; margin-top: 0; font-size: 2rem; text-align: center;">🌟 Projet Final : Le voyage de mes rêves</h2>
+            <p style="font-size: 1.2rem; text-align: center;">C'est le moment de briller ! Écris un beau texte divisé en <strong>trois paragraphes</strong> pour raconter le voyage parfait.</p>
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #16a085; margin-top: 0;">📋 Ton plan de travail</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>Paragraphe 1 : L'introduction.</strong> Nomme ta destination de rêve et le moyen de transport principal que tu utiliseras.</li>
+                        <li><strong>Paragraphe 2 : L'action.</strong> Décris ce que tu vois par la fenêtre pendant le trajet et ce que tu as mis dans tes bagages.</li>
+                        <li><strong>Paragraphe 3 : Ta conclusion.</strong> Explique comment tu te sens (tes émotions) à l'idée de faire ce grand voyage.</li>
+                    </ul>
+                    <h3 style="color: #e67e22; margin-top: 25px;">💡 Exemples pour t'inspirer :</h3>
+                    <div class="exemples-box">
+                        <p><strong>✈️ En avion :</strong> Je vais aller au Japon. Je vais prendre un immense <strong>avion</strong> blanc. Par le hublot, je verrai les nuages. Dans ma valise, j'ai mis mon <strong>appareil photo</strong>.</p>
+                        <hr style="border: 0; border-top: 1px solid #f0d0b5; margin: 10px 0;">
+                        <p><strong>🚢 En croisière :</strong> Je pars dans le Sud sur un énorme <strong>navire de croisière</strong>. Je regarderai les dauphins sauter dans l'eau. J'ai apporté mon <strong>maillot de bain</strong> et mes <strong>lunettes</strong>.</p>
+                    </div>
+                </div>
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold; color: #34495e;">1. Introduction (La destination et le transport) :</label>
+                    <textarea rows="3" placeholder="Ex: Pour le voyage de mes rêves, je veux aller... Je vais voyager en..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">2. L'action (Le paysage et les bagages) :</label>
+                    <textarea rows="4" placeholder="Ex: Pendant le trajet, je vais regarder... Dans ma valise, il y aura..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">3. Conclusion (Mes sentiments) :</label>
+                    <textarea rows="3" placeholder="Ex: Je suis tellement excité de faire ce voyage parce que..."></textarea>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer mon texte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2rem;">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Mots</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('association')">2. Paires</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('devinettes')">3. Quiz</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('histoires')">4. Lecture</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. Écrire</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('expose')">6. Entrevue</button>
+            <button class="btn btn-tab-7" onclick="playClick(); showTab('erreurs')">7. 🎰 Phrases Folles</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active-screen">
+            <div class="imagier-container">
+                <h3 style="color: #3498db;">L'Imagier : Clique sur la carte pour voir la phrase, puis sur le bouton bleu pour entendre le mot !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #9b59b6;">
+                <h3 style="color: #9b59b6; margin-top:0;">🧩 Trouve les paires !</h3>
+                <p>Associe la bonne image avec le nom du transport. Clique sur une image à gauche, puis sur le mot à droite.</p>
+                <div class="assoc-container" id="assoc-game-area"></div>
+                <div id="assoc-message" style="margin-top:20px; font-weight:bold; font-size:1.2rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box" id="dev-container" style="border-left-color: #e67e22;"></div>
+            <button class="btn btn-action" style="background:#e67e22;" onclick="playClick(); checkDevinettes()">Vérifier mes réponses</button>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container" style="border-left-color: #34495e;"></div>
+            <button class="btn btn-action" style="background:#27ae60;" onclick="finishCourse()">✅ J'ai réussi mon entrevue !</button>
+        </div>
+
+        <div id="tab-erreurs" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #e74c3c; background: #fdedec; text-align: center;">
+                <h3 style="color: #c0392b; font-size: 2rem; margin-top:0;">🎰 La Machine à Phrases Bizarroïdes !</h3>
+                <p style="font-size: 1.2rem;">Clique sur le gros bouton rouge. Lis l'erreur à voix haute, puis corrige la phrase !</p>
+                <button class="btn-spin" onclick="playClick(); spinMachine()">🔴 CRÉER UNE ERREUR</button>
+
+                <div class="slot-machine">
+                    <div class="slot-window"><div class="slot-label">1. Le Transport</div><div class="slot-text" id="slot-sujet">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">2. L'Action</div><div class="slot-text" id="slot-verbe">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">3. L'Endroit</div><div class="slot-text" id="slot-complement">❓</div></div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px dashed #e74c3c; text-align: left;">
+                    <p style="font-size: 1.3rem; color: #c0392b; font-weight: bold;">🗣️ À ton tour de jouer avec le professeur :</p>
+                    <textarea rows="2" placeholder="Exemple : L'avion ne roule pas sous l'eau. L'avion vole dans le ciel !"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playSuccess() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; 
+        let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+
+    // --- BADGES ET IMPRESSION ---
+    function toggleBadge(event, id) {
+        event.stopPropagation(); 
+        playSuccess(); 
+        const badge = document.getElementById('badge-' + id);
+        badge.classList.toggle('earned');
+    }
+
+    function printSection(elementId) {
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById(elementId).classList.add('print-area');
+        window.print();
+    }
+
+    // --- DONNÉES ENRICHIES (TRANSPORTS) ---
+    const data = [
+        {
+            title: "Cours 1 : Sur la route",
+            words: [
+                {n:"Voiture", i:"🚗", d:"La famille voyage dans une belle voiture rouge."}, {n:"Autobus", i:"🚌", d:"Les enfants prennent l'autobus jaune pour aller à l'école."},
+                {n:"Camion", i:"🚚", d:"Le camion transporte beaucoup de marchandises lourdes."}, {n:"Moto", i:"🏍️", d:"Le motocycliste porte un casque sur sa moto rapide."},
+                {n:"Vélo", i:"🚲", d:"J'aime faire du vélo dans le parc le dimanche."}, {n:"Taxi", i:"🚕", d:"Le taxi jaune t'amène où tu veux dans la ville."},
+                {n:"Ambulance", i:"🚑", d:"L'ambulance roule vite pour aller à l'hôpital."}, {n:"Camion de pompier", i:"🚒", d:"Le camion de pompier a une grande échelle sur le toit."},
+                {n:"Tracteur", i:"🚜", d:"Le fermier utilise son tracteur dans le grand champ."}, {n:"Trottinette", i:"🛴", d:"La trottinette est amusante pour rouler sur le trottoir."}
+            ],
+            devinettes: [
+                {q:"J'ai deux roues et je n'ai pas de moteur. Il faut pédaler. Qui suis-je ?", r:"Vélo"},
+                {q:"Je suis jaune et j'amène beaucoup d'enfants à l'école le matin. Qui suis-je ?", r:"Autobus"},
+                {q:"Je fais pin-pon et j'ai une grande échelle pour sauver les gens. Qui suis-je ?", r:"Camion de pompier"},
+                {q:"Je travaille à la ferme pour tirer des charges lourdes dans les champs. Qui suis-je ?", r:"Tracteur"},
+                {q:"J'ai deux roues, un moteur très bruyant et on doit porter un casque pour me conduire. Qui suis-je ?", r:"Moto"}
+            ],
+            histoires: [
+                {txt: "Le matin, la ville est très bruyante. Les autobus jaunes s'arrêtent à chaque coin de rue pour prendre les écoliers. Les voitures klaxonnent dans les bouchons de circulation, pendant que les vélos passent tranquillement sur la piste cyclable verte.", q: "Où passent les vélos pour être en sécurité ?", react: "🗣️ Réagir à l'oral : Comment viens-tu à l'école le matin ?"},
+                {txt: "Soudain, une sirène retentit fort ! Tout le monde se range sur le côté de la route. C'est une grosse ambulance blanche avec des lumières clignotantes qui roule très vite pour amener une personne blessée au grand hôpital de la ville.", q: "De quelle couleur est l'ambulance dans l'histoire ?", react: "🗣️ Réagir à l'oral : Sais-tu quel numéro il faut composer en cas d'urgence ?"},
+                {txt: "Le fermier Tremblay se lève tôt. Il monte dans son gros tracteur vert pour aller labourer la terre de son champ. Grâce aux énormes roues de son véhicule, il ne reste jamais pris dans la boue, même quand il pleut beaucoup.", q: "Pourquoi le tracteur ne reste-t-il pas pris dans la boue ?", react: "🗣️ Réagir à l'oral : Aimerais-tu conduire un tracteur un jour ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-1-1", titre: "✍️ Projet 1 : L'embouteillage monstre", desc: "Invente une histoire où il y a un gros bouchon de circulation. Quels véhicules sont coincés ?", 
+                    noms: "une rue, un pont, des lumières, un klaxon, une voiture, un camion, un taxi.",
+                    verbes: "attendre, klaxonner, avancer, reculer, freiner, s'arrêter.",
+                    adjectifs: "lent, bruyant, impatient, fatigué, rouge, fâché.",
+                    debuts: "Ce matin sur le pont..., Tout à coup, ça ne roule plus..., Finalement..."
+                },
+                { 
+                    id: "ecr-1-2", titre: "✍️ Projet 2 : La course folle", desc: "Raconte une course amicale entre un vélo, une trottinette et une moto dans le quartier.", 
+                    noms: "un casque, une rue, un moteur, des pédales, un trottoir, un gagnant.",
+                    verbes: "pédaler, pousser, accélérer, dépasser, rire, gagner.",
+                    adjectifs: "rapide, amusant, essoufflé, prudent, sportif.",
+                    debuts: "Dans la rue de mon quartier..., Le vélo décide de..., À la fin de la course..."
+                }
+            ],
+            expose: "Pour cette présentation, raconte ton meilleur souvenir de voyage en voiture (road trip).\n\n*Exemple :* « L'été dernier, je suis parti en voiture avec ma famille. Nous avons roulé pendant cinq heures. J'ai regardé les montagnes par la fenêtre et nous avons chanté des chansons... »"
+        },
+        {
+            title: "Cours 2 : Dans les airs & sur rails",
+            words: [
+                {n:"Avion", i:"✈️", d:"L'avion vole très haut au-dessus des nuages blancs."}, {n:"Train", i:"🚂", d:"Le train roule vite sur les rails en métal."},
+                {n:"Hélicoptère", i:"🚁", d:"L'hélicoptère fait beaucoup de bruit avec ses grandes pales."}, {n:"Métro", i:"🚇", d:"Le métro voyage dans des tunnels sous la ville."},
+                {n:"Montgolfière", i:"🎈", d:"La montgolfière monte grâce à l'air chaud."}, {n:"Fusée", i:"🚀", d:"La fusée part dans l'espace pour aller sur la lune."},
+                {n:"Tramway", i:"🚋", d:"Le tramway roule sur des rails au milieu de la rue."}, {n:"Téléphérique", i:"🚡", d:"Le téléphérique grimpe jusqu'au sommet de la montagne."},
+                {n:"TGV", i:"🚄", d:"Le TGV est un train à très grande vitesse."}, {n:"Planeur", i:"🛩️", d:"Le planeur vole doucement sans moteur."}
+            ],
+            devinettes: [
+                {q:"Je vole dans l'espace très loin vers les étoiles. Qui suis-je ?", r:"Fusée"},
+                {q:"Je voyage sous la terre pour transporter les gens dans la grande ville. Qui suis-je ?", r:"Métro"},
+                {q:"Je suis un gros ballon coloré qui flotte dans le ciel grâce au feu. Qui suis-je ?", r:"Montgolfière"},
+                {q:"Je roule sur des rails et je fais 'Tchou-Tchou'. Qui suis-je ?", r:"Train"},
+                {q:"J'ai des pales qui tournent très vite au-dessus de moi pour décoller sans piste. Qui suis-je ?", r:"Hélicoptère"}
+            ],
+            histoires: [
+                {txt: "À l'aéroport, des centaines de personnes attendent avec leurs grosses valises. Soudain, un immense avion décolle dans le ciel bleu en laissant une longue traînée blanche derrière lui. Il part pour l'Australie, à l'autre bout de la planète.", q: "Que laisse l'avion derrière lui quand il vole ?", react: "🗣️ Réagir à l'oral : As-tu déjà pris l'avion ? Aimerais-tu aller en Australie ?"},
+                {txt: "Tous les matins, monsieur Léo descend les escaliers sombres pour prendre le métro. Sous la ville, il y a des dizaines de tunnels secrets. Le wagon arrive toujours à la même heure, ouvre ses portes automatiques et emmène Léo à son bureau en quinze petites minutes.", q: "Où se trouvent les tunnels du métro ?", react: "🗣️ Réagir à l'oral : Qu'est-ce qui est mieux : le métro ou l'autobus ? Pourquoi ?"},
+                {txt: "Le décompte a commencé ! 3... 2... 1... Ignition ! Une énorme flamme orange sort des moteurs et la grande fusée s'élève lentement dans les airs. Les courageux astronautes à l'intérieur vont passer six mois dans la station spatiale.", q: "Combien de temps les astronautes vont-ils rester dans l'espace ?", react: "🗣️ Réagir à l'oral : Aimerais-tu voyager dans l'espace un jour ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-2-1", titre: "✍️ Projet 1 : Le voyage magique", desc: "Imagine que tu voyages dans une montgolfière colorée. Raconte ce que tu vois d'en haut.", 
+                    noms: "un ballon, une flamme, un panier, des oiseaux, des nuages, une forêt, une rivière.",
+                    verbes: "voler, flotter, observer, monter, descendre, admirer.",
+                    adjectifs: "silencieux, magnifique, haut, coloré, chaud, paisible.",
+                    debuts: "Quand je monte dans le panier..., Tout en bas je peux voir..., À la fin de la journée..."
+                },
+                { 
+                    id: "ecr-2-2", titre: "✍️ Projet 2 : Perdu dans la gare", desc: "Invente une histoire où quelqu'un cherche son train à grande vitesse (TGV) dans une énorme gare bondée.", 
+                    noms: "un billet, un quai, une horloge, des rails, des voyageurs, une valise lourde.",
+                    verbes: "chercher, courir, regarder, demander, composter, monter.",
+                    adjectifs: "en retard, stressé, rapide, grand, bruyant.",
+                    debuts: "Il ne reste que cinq minutes..., Je regarde la grande horloge..., Finalement je trouve..."
+                }
+            ],
+            expose: "Imagine que tu es un pilote de fusée qui s'apprête à partir pour la planète Mars. Parle à ton équipage.\n\n*Exemple :* « Attention équipage ! Attachez vos ceintures très serrées. Nous allons décoller dans quelques minutes. Préparez-vous à voir les étoiles de très près... »"
+        },
+        {
+            title: "Cours 3 : Sur l'eau",
+            words: [
+                {n:"Navire", i:"🚢", d:"Le gros navire de croisière voyage sur l'océan."}, {n:"Voilier", i:"⛵", d:"Le voilier avance sur l'eau grâce au vent."},
+                {n:"Sous-marin", i:"🌊", d:"Le sous-marin plonge très profond sous l'eau."}, {n:"Kayak", i:"🛶", d:"La personne rame dans le kayak avec une pagaie."},
+                {n:"Canot", i:"🚣", d:"Nous pêchons tranquillement dans notre petit canot."}, {n:"Motomarine", i:"🚤", d:"La motomarine (jet-ski) saute par-dessus les vagues."},
+                {n:"Traversier", i:"⛴️", d:"Le traversier transporte les voitures de l'autre côté du fleuve."}, {n:"Pédalo", i:"🦢", d:"On pédale pour faire avancer le pédalo sur le petit lac."},
+                {n:"Radeau", i:"🪵", d:"Les explorateurs ont construit un radeau avec des troncs d'arbres."}, {n:"Bateau de pêche", i:"🎣", d:"Le bateau de pêche ramène de gros filets pleins de poissons."}
+            ],
+            devinettes: [
+                {q:"Je me cache au fond de l'océan avec les poissons. Qui suis-je ?", r:"Sous-marin"},
+                {q:"J'ai de grandes voiles blanches pour attraper le vent. Qui suis-je ?", r:"Voilier"},
+                {q:"Je suis comme un hôtel géant sur l'eau avec des piscines. Qui suis-je ?", r:"Navire"},
+                {q:"Je suis petit, tu t'assois dedans et tu utilises une pagaie double. Qui suis-je ?", r:"Kayak"},
+                {q:"Je suis fait de morceaux de bois attachés ensemble pour survivre. Qui suis-je ?", r:"Radeau"}
+            ],
+            histoires: [
+                {txt: "Le capitaine Haddock regarde au loin avec ses jumelles. Sur son magnifique voilier, il attend qu'un bon coup de vent gonfle ses toiles blanches pour enfin quitter le port. Il part à la recherche d'une île mystérieuse.", q: "Qu'est-ce que le capitaine attend pour partir ?", react: "🗣️ Réagir à l'oral : Est-ce que tu as déjà eu le mal de mer ?"},
+                {txt: "La sirène d'alarme sonne ! Le grand sous-marin gris plonge rapidement à plus de deux cents mètres de profondeur. À l'intérieur, les marins regardent l'écran radar pour observer les requins et les baleines qui nagent autour d'eux dans l'eau très froide et sombre.", q: "Quels animaux les marins voient-ils sur le radar ?", react: "🗣️ Réagir à l'oral : Aimerais-tu visiter le fond de l'océan ? Pourquoi ?"},
+                {txt: "Pendant les vacances d'été, Léo et sa soeur louent un beau pédalo en forme de cygne sur le lac. Ils doivent pédaler très fort avec leurs jambes pour faire avancer l'embarcation de plastique. À la fin de la journée, ils sont épuisés mais très heureux.", q: "Quelle forme a le pédalo de Léo ?", react: "🗣️ Réagir à l'oral : Es-tu bon nageur ? Aimes-tu jouer dans les lacs ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-3-1", titre: "✍️ Projet 1 : Le trésor sous-marin", desc: "Raconte une expédition dans un sous-marin pour trouver un coffre caché.", 
+                    noms: "un trésor, l'océan, des poissons, une lumière, un plongeur, un hublot.",
+                    verbes: "descendre, chercher, briller, trouver, observer, remonter.",
+                    adjectifs: "profond, sombre, mystérieux, émerveillé, courageux.",
+                    debuts: "Dans notre sous-marin jaune..., Soudain, par la fenêtre..., Nous avons découvert..."
+                },
+                { 
+                    id: "ecr-3-2", titre: "✍️ Projet 2 : La tempête en mer", desc: "Invente une histoire d'aventure sur un voilier pris dans une grosse tempête.", 
+                    noms: "le vent, des grosses vagues, de la pluie, une voile, un capitaine, un gouvernail.",
+                    verbes: "souffler, balancer, tenir bon, crier, se calmer, réparer.",
+                    adjectifs: "dangereux, fort, mouillé, effrayant, solide.",
+                    debuts: "Le ciel devient tout noir..., Les vagues commencent à..., Heureusement le soleil..."
+                }
+            ],
+            expose: "Tu vends des billets pour une croisière de luxe. Convaincs tes clients d'acheter un billet !\n\n*Exemple :* « Venez avec nous sur notre magnifique navire de croisière ! Il y a trois piscines, de la pizza à volonté et nous allons visiter de belles îles... »"
+        },
+        {
+            title: "Cours 4 : Véhicules spéciaux",
+            words: [
+                {n:"Déneigeuse", i:"🚜", d:"La déneigeuse pousse la grosse neige en hiver."}, {n:"Camion-poubelle", i:"🚛", d:"Le camion-poubelle ramasse les déchets de la rue."},
+                {n:"Chariot élévateur", i:"🛻", d:"Le chariot élévateur soulève des boîtes lourdes dans l'entrepôt."}, {n:"Grue", i:"🏗️", d:"La grande grue déplace du métal pour construire les tours."},
+                {n:"Bulldozer", i:"🚜", d:"Le bulldozer aplatit la terre sur le chantier."}, {n:"Voiture de police", i:"🚓", d:"La voiture de police allume ses gyrophares bleus."},
+                {n:"Roulotte (VR)", i:"🚐", d:"La famille campe dans son véhicule récréatif."}, {n:"Limousine", i:"🚘", d:"La limousine très longue transporte la vedette de cinéma."},
+                {n:"Traîneau", i:"🛷", d:"Les chiens courageux tirent le traîneau sur la glace."}, {n:"Motoneige", i:"🏔️", d:"La motoneige glisse très vite sur la neige."}
+            ],
+            devinettes: [
+                {q:"Je passe très tôt le matin pour ramasser tes sacs verts et noirs. Qui suis-je ?", r:"Camion-poubelle"},
+                {q:"Je suis indispensable au Québec en hiver pour nettoyer les routes. Qui suis-je ?", r:"Déneigeuse"},
+                {q:"Je suis une voiture noire et très, très longue pour les personnes riches. Qui suis-je ?", r:"Limousine"},
+                {q:"Je suis comme une petite maison qui roule pour faire du camping. Qui suis-je ?", r:"Roulotte (VR)"},
+                {q:"J'ai un très long bras métallique pour construire des gratte-ciel. Qui suis-je ?", r:"Grue"}
+            ],
+            histoires: [
+                {txt: "Hier soir, une énorme tempête a laissé quarante centimètres de neige sur la ville. Dès 4 heures du matin, les immenses déneigeuses jaunes sont sorties. Avec leurs puissantes pelles en métal, elles ont poussé la neige sur le côté pour que les autobus puissent circuler en toute sécurité.", q: "Combien de centimètres de neige sont tombés ?", react: "🗣️ Réagir à l'oral : Aimes-tu les grosses tempêtes de neige ? Pourquoi ?"},
+                {txt: "Sur le grand chantier de construction, le bruit est assourdissant. Le puissant bulldozer jaune pousse des tonnes de roche et de terre pour préparer le terrain. Plus loin, une grue géante soulève délicatement un bloc de béton de cinq tonnes jusqu'au dixième étage du nouvel immeuble.", q: "Quel véhicule prépare le terrain sur le chantier ?", react: "🗣️ Réagir à l'oral : As-tu déjà vu des grues géantes en ville ? Sont-elles grandes ?"},
+                {txt: "Pour son bal de fin d'année, Julie et ses amis ont loué une superbe limousine blanche. À l'intérieur, c'est comme un salon de luxe avec des lumières colorées, de la musique forte et même un petit frigo pour les jus. Ils se sentent comme de véritables vedettes de cinéma !", q: "Qu'est-ce qu'il y a à l'intérieur de la limousine ?", react: "🗣️ Réagir à l'oral : Quel est le véhicule le plus bizarre que tu as déjà vu ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-4-1", titre: "✍️ Projet 1 : Le chien de traîneau", desc: "Raconte l'aventure d'un chien courageux qui tire un traîneau dans une tempête de neige.", 
+                    noms: "de la neige, le froid, un sentier, une forêt, des aboiements, un maître.",
+                    verbes: "courir, tirer, japper, glisser, trouver le chemin, réchauffer.",
+                    adjectifs: "blanc, glacé, fatigué, fier, rapide.",
+                    debuts: "Dans la grande forêt blanche..., Le vent souffle fort et..., Quand on arrive au chalet..."
+                },
+                { 
+                    id: "ecr-4-2", titre: "✍️ Projet 2 : Le grand nettoyage", desc: "Imagine que tu conduis le camion-poubelle le plus moderne du monde. Que fait-il de spécial ?", 
+                    noms: "des poubelles, un bras mécanique, un écran, du recyclage, une rue propre.",
+                    verbes: "attraper, vider, trier, nettoyer, écraser, rouler.",
+                    adjectifs: "géant, technologique, propre, silencieux, incroyable.",
+                    debuts: "Mon super camion s'appelle..., Il est capable de..., Les gens sont contents car..."
+                }
+            ],
+            expose: "Imagine que tu es un vendeur de véhicules récréatifs (VR / Roulottes). Présente le modèle de l'année à une famille.\n\n*Exemple :* « Regardez cette belle roulotte ! Elle est parfaite pour vous. Il y a un grand lit, une petite cuisine, et vous pouvez l'amener partout dans la forêt... »"
+        }
+    ];
+
+    // --- VARIABLES GLOBALES ---
+    let currentCourse = 0;
+    let assocSelected = null;
+
+    // --- NAVIGATION ---
+    function goHome() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById('menu').classList.add('active-screen');
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    // --- CHARGEMENT DU COURS ---
+    function loadCourse(index) {
+        currentCourse = index;
+        const c = data[index];
+        document.getElementById('course-title').innerText = c.title;
+        
+        // 1. Imagier
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        c.words.forEach(w => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.onclick = () => {
+                if(!card.classList.contains('revealed')) playClick();
+                card.classList.add('revealed');
+            };
+            card.innerHTML = `
+                <div class="emoji">${w.i}</div>
+                <div>${w.n}</div>
+                <div class="hidden-content">
+                    <div class="sentence">${w.d}</div>
+                    <div class="audio-icon" onclick="event.stopPropagation(); lireMot('${w.n}')">🔊 Écouter</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // 2. Association
+        setupAssociation(c.words);
+
+        // 3. Devinettes
+        const devContainer = document.getElementById('dev-container');
+        devContainer.innerHTML = `<h3 style="color: #e67e22; margin-top:0;">🤔 Résous les devinettes !</h3>`;
+        c.devinettes.forEach((d, i) => {
+            devContainer.innerHTML += `
+                <div class="devinette-item">
+                    <div style="font-size:1.1rem; font-weight:bold;">${i+1}. ${d.q}</div>
+                    <input type="text" class="devinette-input" id="dev-ans-${i}" data-correct="${d.r}" placeholder="Écris ta réponse ici...">
+                    <div class="devinette-feedback" id="dev-feed-${i}"></div>
+                </div>
+            `;
+        });
+
+        // 4. Histoires
+        const histContainer = document.getElementById('hist-container');
+        histContainer.innerHTML = '';
+        c.histoires.forEach((h, i) => {
+            histContainer.innerHTML += `
+                <div class="box" style="border-left-color: #1abc9c;">
+                    <h3 style="color: #1abc9c; margin-top:0;">📖 Histoire ${i+1}</h3>
+                    <p style="font-size: 1.2rem; line-height: 1.6;">${h.txt}</p>
+                    <div class="question">❓ Question : ${h.q}</div>
+                    <textarea rows="2" placeholder="Écris ta réponse complète ici..."></textarea>
+                    <div class="react">${h.react}</div>
+                </div>
+            `;
+        });
+
+        // 5. Écriture
+        const ecrContainer = document.getElementById('ecriture-container');
+        ecrContainer.innerHTML = '';
+        c.ecriture.forEach(e => {
+            ecrContainer.innerHTML += `
+                <div class="box" id="${e.id}" style="border-left-color: #2ecc71;">
+                    <h3 style="color: #27ae60; margin-top:0;">${e.titre}</h3>
+                    <p style="font-size: 1.1rem;"><strong>Ta mission :</strong> ${e.desc}</p>
+                    <div class="inspiration-box">
+                        <h4>💡 Ta boîte à outils :</h4>
+                        <ul>
+                            <li><strong>Des noms :</strong> ${e.noms}</li>
+                            <li><strong>Des verbes :</strong> ${e.verbes}</li>
+                            <li><strong>Des adjectifs :</strong> ${e.adjectifs}</li>
+                            <li><strong>Pour commencer tes phrases :</strong> ${e.debuts}</li>
+                        </ul>
+                    </div>
+                    <textarea rows="6" placeholder="Il était une fois..."></textarea>
+                    <div style="text-align: right;"><button class="btn-print" onclick="playClick(); printSection('${e.id}')">🖨️ Imprimer mon texte</button></div>
+                </div>
+            `;
+        });
+
+        // 6. Exposé
+        const expContainer = document.getElementById('expose-container');
+        expContainer.innerHTML = `
+            <h3 style="color: #34495e; margin-top:0;">🎤 L'Entrevue Orale</h3>
+            <p style="font-size: 1.2rem; line-height: 1.6;">${c.expose.replace(/\n\n/g, '<br><br>')}</p>
+        `;
+
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById('course-view').classList.add('active-screen');
+        showTab('imagier');
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireMot(mot) {
+        let utterance = new SpeechSynthesisUtterance(mot);
+        utterance.lang = 'fr-CA'; 
+        utterance.rate = 0.9; 
+        speechSynthesis.speak(utterance);
+    }
+
+    // --- JEU D'ASSOCIATION ---
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function setupAssociation(words) {
+        // Prendre 5 mots au hasard
+        let selectedWords = shuffle([...words]).slice(0, 5);
+        
+        let emojis = selectedWords.map(w => ({ type: 'emoji', val: w.i, id: w.n }));
+        let texts = selectedWords.map(w => ({ type: 'text', val: w.n, id: w.n }));
+        
+        emojis = shuffle(emojis);
+        texts = shuffle(texts);
+
+        const area = document.getElementById('assoc-game-area');
+        area.innerHTML = `
+            <div class="assoc-col" id="col-emojis"></div>
+            <div class="assoc-col" id="col-texts"></div>
+        `;
+
+        const colEmojis = document.getElementById('col-emojis');
+        const colTexts = document.getElementById('col-texts');
+
+        emojis.forEach(e => {
+            let div = document.createElement('div');
+            div.className = 'assoc-item emoji-item';
+            div.textContent = e.val;
+            div.dataset.id = e.id;
+            div.onclick = () => handleAssocClick(div);
+            colEmojis.appendChild(div);
+        });
+
+        texts.forEach(t => {
+            let div = document.createElement('div');
+            div.className = 'assoc-item';
+            div.textContent = t.val;
+            div.dataset.id = t.id;
+            div.onclick = () => handleAssocClick(div);
+            colTexts.appendChild(div);
+        });
+
+        document.getElementById('assoc-message').innerText = "";
+    }
+
+    function handleAssocClick(element) {
+        if(element.classList.contains('matched')) return;
+
+        playClick();
+
+        // Si rien n'est sélectionné
+        if(!assocSelected) {
+            assocSelected = element;
+            element.classList.add('selected');
+            return;
+        }
+
+        // Si on clique sur le même
+        if(assocSelected === element) {
+            element.classList.remove('selected');
+            assocSelected = null;
+            return;
+        }
+
+        // Vérification match
+        if(assocSelected.dataset.id === element.dataset.id && assocSelected.parentElement !== element.parentElement) {
+            assocSelected.classList.remove('selected');
+            assocSelected.classList.add('matched');
+            element.classList.add('matched');
+            playSuccess();
+            assocSelected = null;
+            
+            // Check win
+            if(document.querySelectorAll('.matched').length === 10) {
+                document.getElementById('assoc-message').innerText = "🎉 Bravo ! Tu as trouvé toutes les paires !";
+            }
+        } else {
+            // Mauvais match
+            let prev = assocSelected;
+            prev.classList.remove('selected');
+            prev.style.borderColor = "red";
+            element.style.borderColor = "red";
+            setTimeout(() => {
+                if(!prev.classList.contains('matched')) prev.style.borderColor = "#bdc3c7";
+                if(!element.classList.contains('matched')) element.style.borderColor = "#bdc3c7";
+            }, 500);
+            assocSelected = null;
+        }
+    }
+
+    // --- VÉRIFICATION DEVINETTES ---
+    function removeAccents(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    }
+
+    function checkDevinettes() {
+        let allGood = true;
+        const inputs = document.querySelectorAll('.devinette-input');
+        inputs.forEach((input, index) => {
+            const correct = input.getAttribute('data-correct');
+            const feedback = document.getElementById('dev-feed-' + index);
+            
+            if(removeAccents(input.value) === removeAccents(correct)) {
+                feedback.innerHTML = "✅ Bonne réponse ! (" + correct + ")";
+                feedback.style.color = "var(--success)";
+                input.style.borderColor = "var(--success)";
+            } else {
+                feedback.innerHTML = "❌ Essaye encore...";
+                feedback.style.color = "#c0392b";
+                input.style.borderColor = "#c0392b";
+                allGood = false;
+            }
+        });
+        if(allGood) playSuccess();
+    }
+
+    function finishCourse() {
+        playSuccess();
+        alert("Félicitations ! Tu es un super communicateur ! Demande au professeur ton badge.");
+    }
+
+    // --- MACHINE À PHRASES FOLLES ---
+    const slots = {
+        sujets: ["L'avion ✈️", "Le bateau 🚢", "La bicyclette 🚲", "Le sous-marin 🌊", "La déneigeuse 🚜", "Le train 🚂"],
+        verbes: ["vole", "roule", "flotte", "creuse", "saute", "plonge"],
+        complements: ["dans le ciel bleu.", "sous la terre.", "sur la voie ferrée.", "au fond de l'océan.", "sur l'autoroute.", "dans le salon."]
+    };
+
+    function spinMachine() {
+        const sSujet = document.getElementById('slot-sujet');
+        const sVerbe = document.getElementById('slot-verbe');
+        const sComp = document.getElementById('slot-complement');
+
+        // Animation rapide
+        let ticks = 0;
+        const interval = setInterval(() => {
+            sSujet.innerText = slots.sujets[Math.floor(Math.random() * slots.sujets.length)];
+            sVerbe.innerText = slots.verbes[Math.floor(Math.random() * slots.verbes.length)];
+            sComp.innerText = slots.complements[Math.floor(Math.random() * slots.complements.length)];
+            ticks++;
+            if(ticks > 10) {
+                clearInterval(interval);
+                playSuccess();
+            }
+        }, 100);
+    }
+
+</script>
+
+</body>
+</html>
