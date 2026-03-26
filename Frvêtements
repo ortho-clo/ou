@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module : Les Vêtements - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; 
+            --bg: #fdfefe;
+            --success: #27ae60;
+            --c1: #3498db; /* Hiver (Bleu) */
+            --c2: #f1c40f; /* Été (Jaune) */
+            --c3: #2ecc71; /* Pluie (Vert) */
+            --c4: #9b59b6; /* Accessoires (Mauve) */
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: white; text-align: left; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .course-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-1 { background: var(--c1); border-color: #2980b9; }
+        .btn-2 { background: var(--c2); border-color: #d4ac0d; color: #2c3e50; text-shadow: none; }
+        .btn-3 { background: var(--c3); border-color: #27ae60; }
+        .btn-4 { background: var(--c4); border-color: #8e44ad; }
+
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s; text-shadow: none;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        /* Projet Final Enrichi */
+        .final-project-box { background: #fef9e7; border: 4px dashed #f39c12; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #f39c12; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .boite-mots { background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical; margin-bottom: 10px;}
+        
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-tab-1 { background: #34495e; } 
+        .btn-tab-2 { background: #e67e22; } 
+        .btn-tab-3 { background: #9b59b6; } 
+        .btn-tab-4 { background: #f1c40f; color: #2c3e50; } 
+        .btn-tab-5 { background: #16a085; } 
+        .btn-tab-6 { background: #e74c3c; } /* Le Défilé */
+        .btn-menu { background: #7f8c8d; }
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s;
+        }
+        .word-card:hover { border-color: #3498db; transform: translateY(-5px); box-shadow: 0 5px 10px rgba(0,0,0,0.1);}
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #eaf2f8; border-color: #3498db; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+
+        /* Casse-tête */
+        .match-container { display: flex; justify-content: space-between; gap: 20px; margin-top: 20px; }
+        .match-col { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .match-item-left { background: #fff; border: 4px solid #bdc3c7; border-radius: 10px; padding: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .match-item-left:hover { transform: scale(1.05); }
+        .match-item-left.selected { border-color: #e67e22; background: #fdf2e9; transform: scale(1.05); box-shadow: 0 0 15px rgba(230, 126, 34, 0.5); }
+        .match-item-left.solved { border-color: var(--success); background: #eafaf1; opacity: 0.7; pointer-events: none; }
+        .match-item-right { background: #f4f6f7; border: 3px dashed #95a5a6; border-radius: 10px; padding: 20px; font-size: 1.1rem; cursor: pointer; transition: 0.2s; user-select: none; display: flex; align-items: center; justify-content: center; text-align: left; }
+        .match-item-right:hover { background: #ebedef; border-color: #7f8c8d; }
+        .match-item-right.solved { border-color: var(--success); border-style: solid; background: #eafaf1; color: #145a32; font-weight: bold; pointer-events: none; }
+        .match-item-right.error-shake { animation: shake 0.4s; border-color: #e74c3c; background: #fdedec; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+
+        /* Les Intrus (La Valise) */
+        .gear-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 20px; }
+        .gear-item { background: white; border: 4px solid #bdc3c7; border-radius: 15px; padding: 15px; font-size: 2rem; cursor: pointer; transition: 0.2s; user-select: none; font-weight:bold;}
+        .gear-item:hover { transform: scale(1.05); }
+        .gear-item.selected { border-color: #9b59b6; background: #f4ecf7; transform: scale(1.05); box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);}
+
+        /* Texte Troué */
+        .troue-box { background: #fef9e7; padding: 30px; border-radius: 10px; border: 3px solid #f1c40f; text-align: left; font-size: 1.2rem; line-height: 2.2;}
+        .trou-select { font-family: 'Century Gothic'; font-size: 1.1rem; padding: 5px; border: 2px solid #3498db; border-radius: 5px; background: white; color: #2980b9; font-weight: bold; margin: 0 5px;}
+        .trou-select:focus { outline: none; border-color: #e67e22; }
+
+        /* Contenu & Écriture */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .boite-outils { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background: #eaf2f8; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; margin: 20px 0;}
+        .boite-outils h4 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px;}
+        .boite-outils ul { margin: 0; padding-left: 20px; font-size: 1rem; color: #34495e;}
+        
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            button, .nav-bar, .badge { display: none !important; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary); font-size: 2.8rem;">👗 Les Vêtements et les Saisons</h1>
+        <p style="font-size: 1.3rem;">Apprends le vocabulaire des vêtements pour t'habiller peu importe la météo !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn btn-1" onclick="playClick(); loadCourse(0)">❄️ 1. L'hiver<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-2" onclick="playClick(); loadCourse(1)">☀️ 2. L'été<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-3" onclick="playClick(); loadCourse(2)">🌧️ 3. La pluie et le printemps<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-4" onclick="playClick(); loadCourse(3)">👟 4. Accessoires et chaussures<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Donner la médaille">🏆</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #e67e22; margin-top: 0; font-size: 2rem; text-align: center;">🎨 Projet Final : Mon costume de rêve</h2>
+            <p style="font-size: 1.2rem; text-align: center;">Imagine l'habit le plus incroyable du monde et décris-le !</p>
+            
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #e67e22; margin-top: 0;">📋 Les détails de ta création</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>La tête :</strong> Que portes-tu sur ta tête ? (Chapeau magique, lunettes spatiales...)</li>
+                        <li><strong>Le corps :</strong> Quelle est la pièce principale de ton vêtement ?</li>
+                        <li><strong>Les pieds et accessoires :</strong> As-tu des chaussures spéciales ou des gadgets ?</li>
+                    </ul>
+                    <div class="boite-mots">
+                        <h4>💡 Outils pour t'inspirer :</h4>
+                        <p><strong>Couleurs :</strong> Brillant, multicolore, fluo, doré, argenté.</p>
+                        <p><strong>Exemple :</strong> <em>"Mon costume de rêve a un manteau invisible et des bottes qui font voler !"</em></p>
+                    </div>
+                </div>
+                
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold;">1. Sur ma tête, il y a :</label>
+                    <textarea rows="3" placeholder="Je porte un immense chapeau..."></textarea>
+                    <label style="font-weight: bold;">2. Sur mon corps, je porte :</label>
+                    <textarea rows="3" placeholder="Mon chandail est fait de..."></textarea>
+                    <label style="font-weight: bold;">3. À mes pieds et dans mes mains :</label>
+                    <textarea rows="3" placeholder="J'ai des bottes spéciales qui..."></textarea>
+                    <div style="text-align: right;"><button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer ma création</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Titre</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Vocabulaire</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('association')">2. L'Association</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('garde-robe')">3. La Valise</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('troue')">4. L'Aventure</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. L'Écrivain</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('theatre')">6. Le Défilé</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3 style="color: #34495e;">Clique sur la carte pour entendre le mot et découvrir l'image !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #e67e22;">
+                <h3 style="color: #e67e22; margin-top:0;">🧩 Le Casse-tête de l'Habillement</h3>
+                <p style="font-size:1.1rem; font-weight:bold;">Relie le vêtement à gauche avec la bonne partie du corps ou la bonne situation à droite !</p>
+                <div class="match-container" id="match-container"></div>
+                <div id="match-success-msg" style="display:none; text-align:center; font-size:1.5rem; color:var(--success); font-weight:bold; margin-top:20px; animation: pop 0.5s;">🎉 Bravo ! Tu sais bien t'habiller !</div>
+            </div>
+        </div>
+
+        <div id="tab-garde-robe" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #9b59b6; text-align: center;">
+                <h3 style="color: #9b59b6; margin-top:0;">🧳 Fais ta valise !</h3>
+                <p style="font-size: 1.2rem;">Choisis **les 4 vêtements** qui vont dans la bonne valise de saison !</p>
+                <div class="gear-grid" id="gear-container"></div>
+                <button class="btn-action" style="background:#9b59b6;" onclick="playClick(); checkGear()">Fermer la valise !</button>
+                <div id="gear-message" style="margin-top:20px; font-weight:bold; font-size:1.5rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-troue" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #f1c40f;">
+                <h3 style="color: #d4ac0d; margin-top:0; font-size: 1.8rem;">L'Aventure de Léo et Mia</h3>
+                <p style="font-size: 1.1rem; font-weight:bold;">Aide les enfants à choisir les bons vêtements. Clique sur les mots manquants !</p>
+                <div class="troue-box" id="troue-text-container"></div>
+                <button class="btn-action" style="background:#f1c40f; color:#2c3e50; width:100%;" onclick="playClick(); checkTroue()">Vérifier l'histoire</button>
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 10px; border: 2px solid #ccc;">
+                    <h4 style="color: #34495e; margin-top:0;">❓ Questions de compréhension :</h4>
+                    <div id="troue-questions-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-theatre" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #e74c3c; text-align: center; background: #fdf2e9;">
+                <h3 style="color: #e74c3c; font-size: 2rem; margin-top:0;">👗 Le Défilé de Mode Farfelu</h3>
+                <p style="font-size: 1.2rem;">Appuie sur le bouton pour générer une tenue rigolote. Tu dois la dessiner au tableau ou la mimer !</p>
+                
+                <div style="background: #2c3e50; padding: 20px; border-radius: 20px; border: 8px solid #c0392b; margin-top: 20px; position: relative;">
+                    <div style="background: white; border-radius: 10px; padding: 40px 20px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.2);">
+                        <div id="theatre-resultat" style="font-size: 1.8rem; font-weight: normal; color: #2c3e50; line-height: 1.6;">
+                            <em>Le mannequin est prêt dans les coulisses...</em>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-action" style="background: #c0392b; font-size: 1.5rem; padding: 15px 40px; margin-top: 30px;" onclick="genererTenue()">✨ Créer une tenue !</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+    function playSuccess() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12); gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+    function playError() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; 
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function toggleBadge(event, id) { event.stopPropagation(); playSuccess(); document.getElementById('badge-' + id).classList.toggle('earned'); }
+    function printSection(elementId) { document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area')); document.getElementById(elementId).classList.add('print-area'); window.print(); }
+
+    // --- DONNÉES DES COURS (LES VÊTEMENTS) ---
+    const data = [
+        {   // 0: L'HIVER
+            title: "❄️ 1. Les vêtements d'hiver", color: "#3498db",
+            words: [
+                {n:"Manteau", i:"🧥", d:"Un vêtement très chaud qu'on met par-dessus nos autres vêtements."}, {n:"Tuque", i:"🧶", d:"Un chapeau en laine pour garder nos oreilles au chaud."},
+                {n:"Mitaines", i:"🧤", d:"Pour protéger nos mains du froid et faire des bonhommes de neige."}, {n:"Foulard", i:"🧣", d:"On le roule autour de notre cou pour que le vent n'entre pas."},
+                {n:"Bottes", i:"👢", d:"De grandes chaussures chaudes pour marcher dans la grosse neige."}, {n:"Pantalon de neige", i:"👖", d:"Un gros pantalon imperméable pour jouer dehors l'hiver."},
+                {n:"Chandail", i:"🪢", d:"Un vêtement chaud à manches longues, souvent en laine ou en coton."}, {n:"Bas de laine", i:"🧦", d:"De très gros bas pour que nos orteils ne gèlent pas."},
+                {n:"Patins", i:"⛸️", d:"Des chaussures avec des lames pour glisser sur la glace."}, {n:"Cache-cou", i:"🧣", d:"Un tube en tissu qu'on glisse dans notre cou. C'est plus rapide qu'un foulard !"}
+            ],
+            association: [
+                { id: "a1", emotion: "🧤 Mitaines", text: "Je les mets sur mes mains." },
+                { id: "a2", emotion: "🧶 Tuque", text: "Je la mets sur ma tête." },
+                { id: "a3", emotion: "🧣 Foulard", text: "Je l'enroule autour de mon cou." },
+                { id: "a4", emotion: "👢 Bottes d'hiver", text: "Je les mets dans mes pieds." }
+            ],
+            habits: [
+                {n:"Manteau", i:"🧥", correct:true}, {n:"Bottes", i:"👢", correct:true}, {n:"Tuque", i:"🧶", correct:true}, {n:"Mitaines", i:"🧤", correct:true},
+                {n:"Maillot", i:"🩱", correct:false}, {n:"Sandales", i:"🩴", correct:false}, {n:"Casquette", i:"🧢", correct:false},
+                {n:"Shorts", i:"🩳", correct:false}, {n:"Lunettes de soleil", i:"🕶️", correct:false}, {n:"T-shirt", i:"👕", correct:false}
+            ], 
+            troue: {
+                texte: "C'est la tempête ! Léo veut aller faire un bonhomme de neige. Avant de sortir, il doit bien s'habiller. D'abord, il met son gros [TROU] pour ne pas avoir froid au corps. Ensuite, il met sa [TROU] sur sa tête pour protéger ses oreilles. Pour ne pas geler ses doigts dans la neige, il enfile ses [TROU]. Finalement, il glisse ses pieds dans ses grandes [TROU] d'hiver. Le voilà prêt à jouer !",
+                choix: [
+                    ["manteau", "t-shirt", "maillot"], 
+                    ["casquette", "tuque", "ceinture"], 
+                    ["bottes", "mitaines", "chaussettes"], 
+                    ["sandales", "bottes", "patins"]
+                ],
+                reponses: ["manteau", "tuque", "mitaines", "bottes"],
+                questions: ["1. Pourquoi Léo doit-il mettre sa tuque ?", "2. Quel vêtement lui permet de faire un bonhomme de neige sans geler ses mains ?"]
+            },
+            ecriture: { 
+                id: "ecr-0", titre: "✍️ Ma journée dans la neige", desc: "Raconte ce que tu aimes faire quand tu es bien habillé en hiver.", 
+                noms: "la neige, un igloo, le froid, la glissade, mes mitaines, mes bottes.",
+                verbes: "glisser, pelleter, jouer, geler, lancer, construire.",
+                adjectifs: "froid, blanc, chaud, amusant, glacé, grand.",
+                liaisons: "Tout d'abord, ensuite, pendant ce temps, à la fin.",
+                debuts: "Quand je mets mon habit de neige complet, j'adore aller..." 
+            }
+        },
+        {   // 1: L'ÉTÉ
+            title: "☀️ 2. Les vêtements d'été", color: "#f1c40f",
+            words: [
+                {n:"T-shirt", i:"👕", d:"Un petit chandail à manches courtes pour ne pas avoir trop chaud."}, {n:"Short", i:"🩳", d:"Un pantalon très court pour que l'air touche nos jambes."},
+                {n:"Maillot de bain", i:"🩱", d:"Le vêtement parfait pour aller nager dans la piscine ou à la plage."}, {n:"Sandales", i:"🩴", d:"Des chaussures ouvertes pour que nos pieds respirent en été."},
+                {n:"Casquette", i:"🧢", d:"Un chapeau avec une palette pour cacher nos yeux du soleil."}, {n:"Lunettes de soleil", i:"🕶️", d:"Pour protéger nos yeux quand la lumière est trop forte."},
+                {n:"Robe", i:"👗", d:"Un vêtement souvent léger qui couvre le corps et descend sur les jambes."}, {n:"Jupe", i:"🥻", d:"Un vêtement qui s'attache à la taille et laisse les jambes libres."},
+                {n:"Chapeau", i:"👒", d:"On le met sur la tête pour ne pas attraper un coup de soleil."}, {n:"Camisole", i:"🎽", d:"Un t-shirt sans aucune manche, parfait pour la canicule !"}
+            ],
+            association: [
+                { id: "a1", emotion: "🩱 Maillot de bain", text: "Je vais nager dans la piscine." },
+                { id: "a2", emotion: "🕶️ Lunettes de soleil", text: "Le soleil brille très fort dans mes yeux." },
+                { id: "a3", emotion: "🧢 Casquette", text: "Je vais jouer au baseball au parc." },
+                { id: "a4", emotion: "🩴 Sandales", text: "Je marche sur le sable chaud à la plage." }
+            ],
+            habits: [
+                {n:"T-shirt", i:"👕", correct:true}, {n:"Short", i:"🩳", correct:true}, {n:"Maillot de bain", i:"🩱", correct:true}, {n:"Lunettes", i:"🕶️", correct:true},
+                {n:"Tuque", i:"🧶", correct:false}, {n:"Bottes", i:"👢", correct:false}, {n:"Manteau", i:"🧥", correct:false},
+                {n:"Foulard", i:"🧣", correct:false}, {n:"Mitaines", i:"🧤", correct:false}, {n:"Patins", i:"⛸️", correct:false}
+            ],
+            troue: {
+                texte: "Il fait une chaleur terrible aujourd'hui ! Mia décide d'aller à la plage. Elle enlève son pantalon et enfile un petit [TROU] très léger. Pour aller dans l'eau, elle a mis son [TROU] fleuri. Le soleil est tellement fort qu'elle doit mettre sa [TROU] sur sa tête et ses [TROU] noires sur ses yeux. Enfin, elle glisse ses pieds dans ses [TROU] pour ne pas se brûler sur le sable chaud.",
+                choix: [
+                    ["manteau", "short", "pyjama"], 
+                    ["chandail", "maillot de bain", "pantalon de neige"], 
+                    ["tuque", "casquette", "chaussette"], 
+                    ["mains", "lunettes de soleil", "mitaines"],
+                    ["bottes", "patins", "sandales"]
+                ],
+                reponses: ["short", "maillot de bain", "casquette", "lunettes de soleil", "sandales"],
+                questions: ["1. Où Mia va-t-elle aujourd'hui ?", "2. Pourquoi met-elle des sandales ?"]
+            },
+            ecriture: { 
+                id: "ecr-1", titre: "✍️ Mon vêtement d'été préféré", desc: "Quel est ton vêtement préféré à porter quand il fait très chaud ? Pourquoi l'aimes-tu ?", 
+                noms: "la chaleur, l'eau, la piscine, mon t-shirt, ma casquette, le soleil.",
+                verbes: "nager, courir, transpirer, briller, adorer, protéger.",
+                adjectifs: "chaud, léger, coloré, confortable, frais, rayé.",
+                liaisons: "Parce que, car, même si, pour cette raison.",
+                debuts: "Mon vêtement préféré en été c'est... parce que..." 
+            }
+        },
+        {   // 2: LA PLUIE ET LE PRINTEMPS
+            title: "🌧️ 3. La pluie et le printemps", color: "#27ae60",
+            words: [
+                {n:"Imperméable", i:"🧥", d:"Un manteau spécial où l'eau glisse au lieu de mouiller le tissu."}, {n:"Bottes de pluie", i:"👢", d:"Des bottes en caoutchouc parfaites pour sauter dans les flaques ! (Souvent jaunes)."},
+                {n:"Parapluie", i:"☂️", d:"Un petit toit qu'on tient dans notre main pour bloquer la pluie."}, {n:"Coupe-vent", i:"🌬️", d:"Une petite veste très mince qui bloque le vent au printemps."},
+                {n:"Veste", i:"🧥", d:"Un petit manteau léger avec une fermeture éclair, parfait pour la mi-saison."}, {n:"Pantalon de pluie", i:"👖", d:"Un pantalon en plastique qu'on met par-dessus nos vrais pantalons."},
+                {n:"Salopette", i:"🩳", d:"Un pantalon avec des bretelles qui passent par-dessus les épaules."}, {n:"Chaussettes", i:"🧦", d:"On les met dans nos bottes de pluie pour ne pas avoir d'ampoules."},
+                {n:"Chapeau de pluie", i:"👒", d:"Un chapeau en plastique, souvent avec un grand bord pour protéger la nuque."}, {n:"Gilet", i:"👕", d:"Un chandail qui s'attache avec des boutons ou une fermeture éclair."}
+            ],
+            association: [
+                { id: "a1", emotion: "☂️ Parapluie", text: "Je le tiens ouvert au-dessus de moi." },
+                { id: "a2", emotion: "👢 Bottes de pluie", text: "Je veux sauter dans la grosse flaque d'eau !" },
+                { id: "a3", emotion: "🧥 Imperméable", text: "L'eau de la pluie glisse sur ce manteau." },
+                { id: "a4", emotion: "🌬️ Coupe-vent", text: "Il y a une grosse brise à l'automne." }
+            ],
+            habits: [
+                {n:"Imperméable", i:"🧥", correct:true}, {n:"Parapluie", i:"☂️", correct:true}, {n:"Bottes de pluie", i:"👢", correct:true}, {n:"Coupe-vent", i:"🌬️", correct:true},
+                {n:"Maillot", i:"🩱", correct:false}, {n:"Sandales", i:"🩴", correct:false}, {n:"Tuque", i:"🧶", correct:false},
+                {n:"Mitaines", i:"🧤", correct:false}, {n:"Short", i:"🩳", correct:false}, {n:"Patins", i:"⛸️", correct:false}
+            ],
+            troue: {
+                texte: "Plitch, platch ! Il pleut beaucoup ce matin au printemps. Léo veut aller dehors chercher des vers de terre. Il met son [TROU] jaune pour que l'eau ne mouille pas son chandail. Ensuite, il enfile ses grandes [TROU] en caoutchouc. Sa maman lui donne aussi un grand [TROU] noir pour qu'il le tienne au-dessus de sa tête. Léo est enfin prêt à sauter dans la grosse flaque d'eau !",
+                choix: [
+                    ["pyjama", "imperméable", "t-shirt"], 
+                    ["bottes de pluie", "sandales", "chaussettes"], 
+                    ["parapluie", "livre", "oiseau"]
+                ],
+                reponses: ["imperméable", "bottes de pluie", "parapluie"],
+                questions: ["1. Quel bruit fait la pluie dans l'histoire ?", "2. En quelle matière sont faites les bottes de Léo ?"]
+            },
+            ecriture: { 
+                id: "ecr-2", titre: "✍️ Plitch platch !", desc: "Que fais-tu quand tu portes tes bottes de pluie ? Aimes-tu jouer dans l'eau ?", 
+                noms: "la pluie, les flaques, l'eau, les bottes, la boue, le printemps.",
+                verbes: "sauter, éclabousser, courir, se mouiller, rire, salir.",
+                adjectifs: "mouillé, sale, amusant, gris, glissant, drôle.",
+                liaisons: "Pendant que, soudain, c'est alors que.",
+                debuts: "Quand je mets mes bottes de pluie, la première chose que je fais c'est..." 
+            }
+        },
+        {   // 3: ACCESSOIRES ET CHAUSSURES
+            title: "👟 4. Accessoires et chaussures", color: "#8e44ad",
+            words: [
+                {n:"Souliers", i:"👟", d:"Ce qu'on met dans nos pieds tous les jours pour aller à l'école."}, {n:"Ceinture", i:"👖", d:"Une lanière qui sert à tenir nos pantalons pour ne pas qu'ils tombent !"},
+                {n:"Montre", i:"⌚", d:"Un bracelet qui nous dit l'heure qu'il est."}, {n:"Bague", i:"💍", d:"Un petit anneau en métal ou en plastique qu'on glisse sur son doigt."},
+                {n:"Collier", i:"📿", d:"Un bijou qu'on porte autour du cou pour faire joli."}, {n:"Sac à dos", i:"🎒", d:"Pour transporter nos livres et notre boîte à lunch dans notre dos."},
+                {n:"Lunettes", i:"👓", d:"Elles nous aident à mieux voir le tableau ou à lire notre livre."}, {n:"Cravate", i:"👔", d:"Un long ruban chic qu'on attache au collet d'une chemise."},
+                {n:"Nœud papillon", i:"🎀", d:"Très chic ! Ça ressemble à un petit papillon attaché dans le cou."}, {n:"Pantoufles", i:"🥿", d:"Des chaussures très douces et confortables pour marcher dans la maison."}
+            ],
+            association: [
+                { id: "a1", emotion: "🎒 Sac à dos", text: "Je transporte mes livres d'école dedans." },
+                { id: "a2", emotion: "⌚ Montre", text: "Je regarde mon poignet pour savoir l'heure." },
+                { id: "a3", emotion: "👓 Lunettes", text: "Je les mets sur mon nez pour bien voir le tableau." },
+                { id: "a4", emotion: "👖 Ceinture", text: "Mon pantalon est trop grand, j'ai besoin de ça." }
+            ],
+            habits: [
+                {n:"Ceinture", i:"👖", correct:true}, {n:"Montre", i:"⌚", correct:true}, {n:"Collier", i:"📿", correct:true}, {n:"Lunettes", i:"👓", correct:true},
+                {n:"Manteau", i:"🧥", correct:false}, {n:"T-shirt", i:"👕", correct:false}, {n:"Pantalon de neige", i:"👖", correct:false},
+                {n:"Bottes de pluie", i:"👢", correct:false}, {n:"Maillot", i:"🩱", correct:false}, {n:"Tuque", i:"🧶", correct:false}
+            ],
+            troue: {
+                texte: "Aujourd'hui, c'est la rentrée scolaire. Mia se prépare. Elle met ses beaux [TROU] neufs dans ses pieds pour courir vite dans la cour. Comme son pantalon est un peu grand, elle attache une [TROU] autour de sa taille. Elle regarde l'heure sur sa petite [TROU] rose : vite, il faut partir ! Elle accroche son gros [TROU] rempli de cahiers sur ses épaules et part vers l'autobus.",
+                choix: [
+                    ["patins", "souliers", "bottes de pluie"], 
+                    ["tuque", "ceinture", "cravate"], 
+                    ["montre", "bague", "chaussette"], 
+                    ["sac à dos", "parapluie", "manteau"]
+                ],
+                reponses: ["souliers", "ceinture", "montre", "sac à dos"],
+                questions: ["1. Pourquoi Mia met-elle une ceinture ?", "2. Que met-elle sur ses épaules pour l'école ?"]
+            },
+            ecriture: { 
+                id: "ecr-3", titre: "✍️ L'accessoire magique", desc: "Invente un accessoire magique (ex: des lunettes qui voient à travers les murs). À quoi sert-il ?", 
+                noms: "une montre, des lunettes, une bague, la magie, un pouvoir, un secret.",
+                verbes: "voler, disparaître, voir, courir, transformer, aider.",
+                adjectifs: "magique, invisible, super, rapide, incroyable, brillant.",
+                liaisons: "Si j'avais..., je pourrais..., grâce à cet objet.",
+                debuts: "Si je pouvais avoir un accessoire magique, ce serait..." 
+            }
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        const titleEl = document.getElementById('course-title');
+        titleEl.innerText = course.title;
+        titleEl.style.color = course.color;
+        
+        // 1. Imagier
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `<div class="mot-seul">${w.n}</div><div class="hidden-content"><div class="emoji">${w.i}</div><div class="sentence">${w.d}</div></div>`;
+            div.onclick = () => { div.classList.add('revealed'); lireTexte(w.n); }; 
+            grid.appendChild(div);
+        });
+
+        // 2. JEU D'ASSOCIATION
+        const matchContainer = document.getElementById('match-container');
+        matchContainer.innerHTML = '';
+        document.getElementById('match-success-msg').style.display = 'none';
+
+        const colLeft = document.createElement('div'); colLeft.className = 'match-col';
+        const colRight = document.createElement('div'); colRight.className = 'match-col';
+
+        let leftItems = [...course.association].sort(() => 0.5 - Math.random());
+        let rightItems = [...course.association].sort(() => 0.5 - Math.random());
+
+        leftItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'match-item-left'; div.innerText = item.emotion; div.dataset.matchId = item.id;
+            div.onclick = () => selectLeftMatch(div); colLeft.appendChild(div);
+        });
+        rightItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'match-item-right'; div.innerText = item.text; div.dataset.matchId = item.id;
+            div.onclick = () => selectRightMatch(div); colRight.appendChild(div);
+        });
+
+        matchContainer.appendChild(colLeft); matchContainer.appendChild(colRight);
+        window.selectedMatchLeft = null; window.matchesSolved = 0; window.totalMatches = course.association.length;
+
+        // 3. Intrus (La Valise)
+        const gearContainer = document.getElementById('gear-container');
+        gearContainer.innerHTML = ''; document.getElementById('gear-message').innerText = "";
+        let gearList = [...course.habits].sort(() => 0.5 - Math.random());
+        gearList.forEach((g, index) => {
+            const div = document.createElement('div');
+            div.className = 'gear-item'; div.id = `gear-${index}`; div.dataset.correct = g.correct; div.innerHTML = `${g.n}`; 
+            div.onclick = function() { playClick(); this.classList.toggle('selected'); };
+            gearContainer.appendChild(div);
+        });
+
+        const consigneH3 = document.querySelector('#tab-garde-robe h3');
+        const consigneP = document.querySelector('#tab-garde-robe p');
+        if(id === 0) { consigneH3.innerText = "🧳 Valise pour l'Hiver !"; consigneP.innerHTML = "Choisis les 4 vêtements parfaits pour jouer dans la neige !"; }
+        if(id === 1) { consigneH3.innerText = "🧳 Valise pour la Plage !"; consigneP.innerHTML = "Choisis les 4 choses à apporter s'il fait très chaud !"; }
+        if(id === 2) { consigneH3.innerText = "🧳 Valise pour la Pluie !"; consigneP.innerHTML = "Choisis les 4 objets pour sauter dans les flaques !"; }
+        if(id === 3) { consigneH3.innerText = "🧳 La boîte à Bijoux et Chaussures"; consigneP.innerHTML = "Trouve 4 mots qui sont des accessoires ou des chaussures !"; }
+
+        // 4. Texte Troué
+        const troueContainer = document.getElementById('troue-text-container');
+        const questionsContainer = document.getElementById('troue-questions-container');
+        let texteHTML = course.troue.texte;
+        let numTrous = (texteHTML.match(/\[TROU\]/g) || []).length;
+        for(let i=0; i<numTrous; i++) {
+            let selectHTML = `<select class="trou-select" id="trou-${i}"><option value="">-- ? --</option>`;
+            let shuffledOptions = [...course.troue.choix[i]].sort(() => 0.5 - Math.random());
+            shuffledOptions.forEach(opt => { selectHTML += `<option value="${opt}">${opt}</option>`; });
+            selectHTML += `</select>`;
+            texteHTML = texteHTML.replace("[TROU]", selectHTML);
+        }
+        troueContainer.innerHTML = texteHTML;
+        
+        questionsContainer.innerHTML = '';
+        course.troue.questions.forEach(q => {
+            questionsContainer.innerHTML += `<p style="font-weight:bold; color:var(--primary); font-size:1.1rem; margin-bottom:5px;">${q}</p><textarea rows="2" style="margin-bottom: 15px;" placeholder="Écris ta réponse ici..."></textarea>`;
+        });
+
+        // 5. L'Écrivain
+        const ecrDiv = document.getElementById('ecriture-container');
+        ecrDiv.innerHTML = `
+            <div class="box" id="${course.ecriture.id}" style="border-left: 5px solid ${course.color}; background: #fafafa; padding: 30px;">
+                <h3 style="color: ${course.color}; margin-top:0; font-size: 1.8rem;">${course.ecriture.titre}</h3>
+                <p style="font-size: 1.2rem; font-weight: bold;">${course.ecriture.desc}</p>
+                <div class="boite-outils">
+                    <div><h4>🧱 Noms utiles</h4><ul><li>${course.ecriture.noms.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🏃 Verbes</h4><ul><li>${course.ecriture.verbes.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🎨 Adjectifs</h4><ul><li>${course.ecriture.adjectifs.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🔗 Mots de liaison</h4><ul><li>${course.ecriture.liaisons.split(', ').join('</li><li>')}</li></ul></div>
+                </div>
+                <p style="color:#7f8c8d; font-style:italic; font-size: 1.1rem;">💡 <strong>Idée pour commencer :</strong> "${course.ecriture.debuts}"</p>
+                <textarea rows="8" placeholder="Écris ton texte ici..."></textarea>
+                <div style="text-align:right;"><button class="btn-print" onclick="playClick(); printSection('${course.ecriture.id}')">🖨️ Imprimer mon texte</button></div>
+            </div>`;
+
+        showTab('imagier');
+    }
+
+    // --- LOGIQUE JEU D'ASSOCIATION ---
+    function selectLeftMatch(element) {
+        if(element.classList.contains('solved')) return;
+        playClick();
+        document.querySelectorAll('.match-item-left').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        window.selectedMatchLeft = element;
+    }
+
+    function selectRightMatch(element) {
+        if(element.classList.contains('solved') || !window.selectedMatchLeft) return;
+        if(window.selectedMatchLeft.dataset.matchId === element.dataset.matchId) {
+            playSuccess();
+            window.selectedMatchLeft.classList.remove('selected');
+            window.selectedMatchLeft.classList.add('solved');
+            element.classList.add('solved');
+            window.selectedMatchLeft = null;
+            window.matchesSolved++;
+            if(window.matchesSolved === window.totalMatches) document.getElementById('match-success-msg').style.display = 'block';
+        } else {
+            playError();
+            element.classList.add('error-shake');
+            setTimeout(() => element.classList.remove('error-shake'), 400);
+        }
+    }
+
+    // --- LOGIQUE AUTRES JEUX ---
+    function checkGear() {
+        const items = document.querySelectorAll('.gear-item');
+        let selectedCount = 0; let correctCount = 0;
+        items.forEach(item => { if (item.classList.contains('selected')) { selectedCount++; if(item.dataset.correct === "true") correctCount++; } });
+        const msgDiv = document.getElementById('gear-message');
+        if (selectedCount !== 4) {
+            playError(); msgDiv.style.color = "#e74c3c"; msgDiv.innerText = `Tu dois sélectionner exactement 4 mots ! (Tu en as choisi ${selectedCount})`;
+        } else if (correctCount === 4) {
+            playSuccess(); msgDiv.style.color = "var(--success)"; msgDiv.innerText = "✅ Excellent ! Ta valise est prête !";
+        } else {
+            playError(); msgDiv.style.color = "#e74c3c"; msgDiv.innerText = "❌ Oups ! Tu as pris le mauvais vêtement pour cette saison !";
+        }
+    }
+
+    function checkTroue() {
+        const course = data[currentCourseId]; let score = 0;
+        const selects = document.querySelectorAll('.trou-select');
+        selects.forEach((sel, i) => {
+            if (sel.value === course.troue.reponses[i]) { sel.style.backgroundColor = "#abebc6"; sel.style.borderColor = "var(--success)"; score++; } 
+            else { sel.style.backgroundColor = "#fdedec"; sel.style.borderColor = "#e74c3c"; }
+        });
+        if (score === selects.length) { playSuccess(); alert("✨ Bravo ! Les enfants sont bien habillés !"); } else { playError(); }
+    }
+
+    // --- LE DÉFILÉ DE MODE FARFELU ---
+    const mannequins = [
+        "Un vieux pirate grincheux 🏴‍☠️", "Une ballerine très gracieuse 🩰", "Un monstre avec trois yeux 👾", 
+        "Un astronaute sur la lune 👨‍🚀", "Un ninja silencieux 🥷", "Un fermier dans son champ 🧑‍🌾",
+        "Un robot très maladroit 🤖", "Un super-héros costaud 🦸", "La directrice de l'école 👩‍🏫"
+    ];
+    
+    const haut = [
+        "un vieux t-shirt trop petit 👕", "un immense manteau de fourrure 🧥", "une camisole jaune fluo 🎽", 
+        "un imperméable transparent 🧥", "une cape de magicien 🪄", "un chandail de laine qui pique 🪢",
+        "un maillot de bain à pois 🩱", "une chemise avec un nœud papillon 👔"
+    ];
+    
+    const bas = [
+        "des pantalons de neige roses 👖", "un short de bain hawaïen 🩳", "une belle jupe de flamenco 🥻", 
+        "une salopette de construction 🩳", "un tutu qui brille ✨", "un pantalon de pyjama à carreaux 👖",
+        "une grosse couche pour bébé 👶"
+    ];
+
+    const accessoire = [
+        "des bottes de pluie pleines de boue 👢", "des lunettes de soleil en forme d'étoile 🕶️", 
+        "un chapeau avec des fruits dessus 👒", "des grandes palmes de plongée 🤿",
+        "une énorme montre en or ⌚", "des patins à glace très glissants ⛸️",
+        "un parapluie brisé ☂️", "un sac à dos en forme de dinosaure 🎒"
+    ];
+
+    function genererTenue() {
+        playSuccess();
+        const m = mannequins[Math.floor(Math.random() * mannequins.length)];
+        const h = haut[Math.floor(Math.random() * haut.length)];
+        const b = bas[Math.floor(Math.random() * bas.length)];
+        const a = accessoire[Math.floor(Math.random() * accessoire.length)];
+        
+        const affichage = document.getElementById('theatre-resultat');
+        affichage.style.animation = 'none';
+        setTimeout(() => { affichage.style.animation = 'fadeIn 0.5s'; }, 10);
+        
+        affichage.innerHTML = `Voici notre mannequin : <br><strong style="color: #9b59b6; font-size: 2rem;">${m}</strong><br><br>Il/Elle porte : <br><strong>${h}</strong> avec <strong>${b}</strong><br><br>Et comme accessoire : <br><strong style="color: #e74c3c;">${a}</strong>`;
+    }
+
+    // --- NAVIGATION ---
+    function showTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.style.display = 'none'); document.getElementById('tab-' + tabId).style.display = 'block'; }
+    function goHome() { document.getElementById('course-view').classList.remove('active'); document.getElementById('menu').classList.add('active'); }
+</script>
+</body>
+</html>
