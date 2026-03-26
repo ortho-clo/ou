@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5 : Le Corps Humain - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; 
+            --bg: #f4f6f7;
+            --success: #27ae60;
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active-screen { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal & Projet Final */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            background: #ecf0f1; border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: var(--primary); text-align: left;
+        }
+        .course-btn:hover { background: var(--primary); color: white; transform: scale(1.02); }
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        .final-project-box { background: #f9ebea; border: 4px dashed #c0392b; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; position: relative; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #e74c3c; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .exemples-box { background: #fdf2e9; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; font-size: 0.95rem; margin-top: 15px;}
+        .redaction-col { display: flex; flex-direction: column; gap: 15px; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .word-card:hover { border-color: #e74c3c; }
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #fdedec; border-color: #e74c3c; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+        .audio-icon { display: none; font-size: 1rem; margin-top: 5px; cursor: pointer; background: #e74c3c; color: white; padding: 8px 12px; border-radius: 5px; font-weight: bold;}
+        .word-card.revealed .audio-icon { display: inline-block; }
+        .audio-icon:hover { background: #c0392b; transform: scale(1.05); }
+
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .btn-tab-1 { background: #3498db; } 
+        .btn-tab-2 { background: #9b59b6; } 
+        .btn-tab-3 { background: #e67e22; } 
+        .btn-tab-4 { background: #1abc9c; } 
+        .btn-tab-5 { background: #2ecc71; } 
+        .btn-tab-6 { background: #34495e; } 
+        .btn-tab-7 { background: #e74c3c; border: 2px solid #c0392b;} 
+        .btn-menu { background: #7f8c8d; }
+
+        .btn-action { background: #e74c3c; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #c0392b; }
+        
+        /* Contenu */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; border-left: 5px solid #bdc3c7; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .question { font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-top: 15px;}
+        .react { font-style: italic; color: var(--success); margin-top: 15px; font-weight: bold; background: #eafaf1; padding: 10px; border-radius: 5px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical;}
+        
+        .inspiration-box { background: #fef9e7; border: 2px dashed #f1c40f; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 1rem; color: #34495e; line-height: 1.6;}
+        .inspiration-box h4 { margin-top: 0; color: #d4ac0d; margin-bottom: 10px; font-size: 1.2rem;}
+        .inspiration-box ul { margin: 0; padding-left: 20px; }
+        .inspiration-box li { margin-bottom: 5px; }
+
+        /* Jeu Association */
+        .assoc-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; }
+        .assoc-col { display: flex; flex-direction: column; gap: 10px; width: 45%; }
+        .assoc-item { padding: 15px; background: white; border: 3px solid #bdc3c7; border-radius: 10px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: 0.2s; user-select: none; text-align:center; }
+        .assoc-item.emoji-item { font-size: 2.5rem; }
+        .assoc-item:hover:not(.matched) { border-color: #9b59b6; }
+        .assoc-item.selected { background: #f4ecf7; border-color: #9b59b6; transform: scale(1.05); }
+        .assoc-item.matched { background: #abebc6; border-color: var(--success); color: var(--success); cursor: default; opacity: 0.6; pointer-events: none; }
+
+        /* Devinettes */
+        .devinette-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
+        .devinette-input { padding: 10px; font-size: 1.1rem; border: 2px solid #bdc3c7; border-radius: 5px; margin-top: 10px; width: 80%; font-family: 'Century Gothic'; text-transform: capitalize;}
+        .devinette-feedback { font-weight: bold; margin-top: 5px; display: block; }
+
+        /* MACHINE À PHRASES FOLLES */
+        .slot-machine {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin: 30px 0;
+            background: #2c3e50; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .slot-window {
+            background: white; border: 4px solid #f1c40f; border-radius: 10px; padding: 20px;
+            width: 30%; font-size: 1.5rem; font-weight: bold; text-align: center; min-height: 80px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .slot-label { font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .slot-text { color: #e74c3c; font-size: 1.4rem; }
+        .btn-spin {
+            background: #e74c3c; color: white; font-size: 1.5rem; padding: 15px 40px; border: 4px solid #c0392b; 
+            border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 0 #c0392b; transition: 0.1s; margin-bottom: 20px;
+        }
+        .btn-spin:active { transform: translateY(5px); box-shadow: 0 0 0 #c0392b; }
+
+        /* CSS POUR L'IMPRESSION PROPRE */
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 0; margin: 0; border: none; box-shadow: none; }
+            button, .nav-bar, .badge, .audio-icon { display: none !important; }
+            textarea { border: 1px solid #ccc; background: transparent; resize: none; overflow: hidden; min-height: 150px; }
+            .inspiration-box { display: none !important; }
+            .plan-box { border: none; box-shadow: none; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+        .btn-print:hover { background: #2c3e50; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active-screen">
+        <h1 style="color: #e74c3c; font-size: 2.5rem;">🧬 Le Corps Humain</h1>
+        <p style="font-size: 1.2rem;">Découvre comment ton corps fonctionne, de la tête aux pieds, avec Madame Claudia !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn" onclick="playClick(); loadCourse(0)">👤 Cours 1 : Mon visage<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(1)">💪 Cours 2 : Mes membres<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(2)">🫀 Cours 3 : Mes organes<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+            <button class="course-btn" onclick="playClick(); loadCourse(3)">🩺 Cours 4 : Ma santé<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Professeur : Cliquez pour donner la médaille !">🏅</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #c0392b; margin-top: 0; font-size: 2rem; text-align: center;">🌟 Projet Final : Le guide de la pleine forme</h2>
+            <p style="font-size: 1.2rem; text-align: center;">C'est le moment de briller ! Écris un texte divisé en <strong>trois paragraphes</strong> pour expliquer comment prendre soin de son corps.</p>
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #c0392b; margin-top: 0;">📋 Ton plan de travail</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>Paragraphe 1 : L'alimentation.</strong> Explique ce qu'il faut manger et boire pour donner de l'énergie à ton estomac et tes muscles.</li>
+                        <li><strong>Paragraphe 2 : L'hygiène.</strong> Décris comment tu gardes tes dents, tes cheveux et ton corps propres.</li>
+                        <li><strong>Paragraphe 3 : Le repos.</strong> Explique pourquoi le sommeil est important pour ton cerveau et ton cœur.</li>
+                    </ul>
+                    <h3 style="color: #e67e22; margin-top: 25px;">💡 Exemples pour t'inspirer :</h3>
+                    <div class="exemples-box">
+                        <p><strong>🍎 L'alimentation :</strong> Pour être fort, je bois beaucoup d'<strong>eau</strong>. Mon <strong>estomac</strong> aime quand je mange des pommes et des légumes verts.</p>
+                        <hr style="border: 0; border-top: 1px solid #f0d0b5; margin: 10px 0;">
+                        <p><strong>💤 Le repos :</strong> Le soir, je dors dans mon lit pour reposer mon <strong>cerveau</strong>. Quand je dors bien, mes <strong>yeux</strong> ne sont pas fatigués le matin.</p>
+                    </div>
+                </div>
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold; color: #34495e;">1. L'alimentation (Ce que je mange/bois) :</label>
+                    <textarea rows="3" placeholder="Ex: Pour avoir de l'énergie, il faut manger..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">2. L'hygiène (Rester propre) :</label>
+                    <textarea rows="4" placeholder="Ex: Tous les jours, je me brosse les... et je lave..."></textarea>
+                    
+                    <label style="font-weight: bold; color: #34495e; margin-top: 10px;">3. Le repos (Dormir et relaxer) :</label>
+                    <textarea rows="3" placeholder="Ex: Le soir, c'est important de dormir parce que..."></textarea>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer mon texte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2rem; color: #e74c3c;">Titre du cours</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Mots</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('association')">2. Paires</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('devinettes')">3. Quiz</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('histoires')">4. Lecture</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. Écrire</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('expose')">6. Entrevue</button>
+            <button class="btn btn-tab-7" onclick="playClick(); showTab('erreurs')">7. 🎰 Phrases Folles</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active-screen">
+            <div class="imagier-container">
+                <h3 style="color: #3498db;">L'Imagier : Clique sur la carte pour voir la phrase, puis sur le bouton pour entendre le mot !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-association" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #9b59b6;">
+                <h3 style="color: #9b59b6; margin-top:0;">🧩 Trouve les paires !</h3>
+                <p>Associe la bonne image avec le mot. Clique sur une image à gauche, puis sur le mot à droite.</p>
+                <div class="assoc-container" id="assoc-game-area"></div>
+                <div id="assoc-message" style="margin-top:20px; font-weight:bold; font-size:1.2rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-devinettes" class="tab" style="display:none;">
+            <div class="box" id="dev-container" style="border-left-color: #e67e22;"></div>
+            <button class="btn btn-action" style="background:#e67e22;" onclick="playClick(); checkDevinettes()">Vérifier mes réponses</button>
+        </div>
+
+        <div id="tab-histoires" class="tab" style="display:none; text-align: left;">
+            <div id="hist-container"></div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-expose" class="tab" style="display:none;">
+            <div class="box" id="expose-container" style="border-left-color: #34495e;"></div>
+            <button class="btn btn-action" style="background:#27ae60;" onclick="playClick(); goHome()">✅ J'ai réussi mon entrevue !</button>
+        </div>
+
+        <div id="tab-erreurs" class="tab" style="display:none;">
+            <div class="box" style="border-left-color: #e74c3c; background: #fdedec; text-align: center;">
+                <h3 style="color: #c0392b; font-size: 2rem; margin-top:0;">🎰 La Machine à Phrases Bizarroïdes !</h3>
+                <p style="font-size: 1.2rem;">Clique sur le gros bouton rouge. Lis l'erreur à voix haute, puis corrige la phrase !</p>
+                <button class="btn-spin" onclick="playClick(); spinMachine()">🔴 CRÉER UNE ERREUR</button>
+
+                <div class="slot-machine">
+                    <div class="slot-window"><div class="slot-label">1. Le Sujet</div><div class="slot-text" id="slot-sujet">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">2. L'Action</div><div class="slot-text" id="slot-verbe">❓</div></div>
+                    <div class="slot-window"><div class="slot-label">3. L'Endroit / L'Objet</div><div class="slot-text" id="slot-complement">❓</div></div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px dashed #e74c3c; text-align: left;">
+                    <p style="font-size: 1.3rem; color: #c0392b; font-weight: bold;">🗣️ À ton tour de jouer avec le professeur :</p>
+                    <textarea rows="2" placeholder="Exemple : Le nez ne regarde pas la télévision. Ce sont les yeux qui regardent la télévision !"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playSuccess() {
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; 
+        let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+
+    // --- BADGES ET IMPRESSION ---
+    function toggleBadge(event, id) {
+        event.stopPropagation(); 
+        playSuccess(); 
+        const badge = document.getElementById('badge-' + id);
+        badge.classList.toggle('earned');
+    }
+
+    function printSection(elementId) {
+        document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area'));
+        document.getElementById(elementId).classList.add('print-area');
+        window.print();
+    }
+
+    // Synthèse vocale
+    function speakWord(word) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'fr-CA';
+            speechSynthesis.speak(utterance);
+        } else {
+            alert("La lecture vocale n'est pas supportée par ton navigateur.");
+        }
+    }
+
+    // --- DONNÉES ENRICHIES (LE CORPS HUMAIN) ---
+    const data = [
+        {
+            title: "Cours 1 : Mon visage et ma tête",
+            words: [
+                {n:"Yeux", i:"👀", d:"Je ferme mes yeux pour dormir la nuit."}, {n:"Nez", i:"👃", d:"Mon nez me permet de sentir la bonne soupe."},
+                {n:"Bouche", i:"👄", d:"J'ouvre grand la bouche chez le dentiste."}, {n:"Oreilles", i:"👂", d:"J'écoute de la musique avec mes deux oreilles."},
+                {n:"Cheveux", i:"💇", d:"Je brosse mes cheveux tous les matins."}, {n:"Dents", i:"🦷", d:"Je me brosse les dents pour qu'elles soient blanches."},
+                {n:"Langue", i:"👅", d:"La langue m'aide à goûter les aliments sucrés."}, {n:"Front", i:"🤕", d:"Quand je suis malade, j'ai le front très chaud."},
+                {n:"Joues", i:"😊", d:"Mes joues deviennent rouges quand il fait froid."}, {n:"Menton", i:"🧔", d:"Le menton est situé tout en bas de mon visage."}
+            ],
+            devinettes: [
+                {q:"Nous sommes deux. Nous te permettons de voir les couleurs et la lumière. Qui sommes-nous ?", r:"yeux"},
+                {q:"Je suis au milieu de ton visage. Je sers à respirer et à sentir l'odeur du gâteau. Qui suis-je ?", r:"nez"},
+                {q:"Nous sommes toutes blanches, dures, et nous coupons la nourriture quand tu manges. Qui sommes-nous ?", r:"dents"},
+                {q:"Je pousse sur le dessus de ta tête. On me coupe quand je suis trop long. Qui suis-je ?", r:"cheveux"},
+                {q:"Nous sommes sur les côtés de ta tête. Nous te permettons d'entendre les gens parler. Qui sommes-nous ?", r:"oreilles"}
+            ],
+            histoires: [
+                {txt: "Ce matin, Léo se lève. Il a encore les yeux fermés. Il va dans la salle de bain et se lave le visage avec de l'eau fraîche. Il frotte ses joues, son front et son menton avec une serviette douce pour bien se réveiller.", q: "Avec quoi Léo frotte-t-il son visage ?", react: "🗣️ Réagir à l'oral : Raconte comment tu te prépares le matin."},
+                {txt: "Chez le dentiste, Mia ouvre grand la bouche. Le dentiste allume une lumière forte pour bien voir à l'intérieur. Il regarde les dents de Mia, une par une, avec un petit miroir pour vérifier qu'il n'y a pas de caries.", q: "Pourquoi le dentiste regarde-t-il les dents de Mia ?", react: "🗣️ Réagir à l'oral : Comment prends-tu soin de tes dents ?"},
+                {txt: "Dans la cour d'école, il fait très froid. Thomas a oublié sa tuque. Le vent souffle fort et ses oreilles deviennent toutes rouges. Son nez coule un peu. Heureusement, la cloche sonne pour rentrer au chaud !", q: "Quelle partie du visage de Thomas devient rouge à cause du froid ?", react: "🗣️ Réagir à l'oral : Qu'est-ce que tu portes en hiver pour protéger ta tête ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-1-1", titre: "✍️ Projet 1 : Mon monstre rigolo", desc: "Invente un monstre gentil. Décris son visage de façon amusante.", 
+                    noms: "des yeux, un nez, une bouche, des oreilles, des cheveux, des dents.",
+                    verbes: "avoir, regarder, sourire, faire, ressembler.",
+                    adjectifs: "grand, pointu, poilu, drôle, vert, rond.",
+                    debuts: "Mon monstre s'appelle..., Il a trois gros..., Sur sa tête, il y a..."
+                },
+                { 
+                    id: "ecr-1-2", titre: "✍️ Projet 2 : Chez le coiffeur", desc: "Raconte ta visite chez le coiffeur pour faire couper tes cheveux.", 
+                    noms: "des ciseaux, un miroir, une chaise, des cheveux, le plancher.",
+                    verbes: "couper, laver, asseoir, regarder, tomber.",
+                    adjectifs: "court, long, mouillé, content, chatouilleux.",
+                    debuts: "Quand j'arrive chez le coiffeur..., Je m'assois sur..., À la fin, mes cheveux sont..."
+                }
+            ],
+            expose: "Pour cette présentation, décris ton visage à la classe comme si tu faisais un portrait-robot.\n\n*Exemple :* « Bonjour ! Moi, j'ai les yeux bruns et les cheveux bruns un peu frisés. J'ai un petit nez et quand je souris, on voit mes dents blanches... »"
+        },
+        {
+            title: "Cours 2 : Mes membres et mon corps",
+            words: [
+                {n:"Bras", i:"💪", d:"Je lève les bras pour poser une question."}, {n:"Jambes", i:"🦵", d:"Mes jambes m'aident à courir vite dans le parc."},
+                {n:"Mains", i:"🖐️", d:"Je lave mes mains avec du savon avant de manger."}, {n:"Pieds", i:"🦶", d:"Je mets des chaussettes chaudes dans mes pieds."},
+                {n:"Dos", i:"🔙", d:"Je porte mon gros sac d'école sur mon dos."}, {n:"Ventre", i:"🤰", d:"Mon ventre fait du bruit quand j'ai faim."},
+                {n:"Épaules", i:"🤷", d:"Je lève les épaules quand je ne connais pas la réponse."}, {n:"Genoux", i:"🧎", d:"J'ai mis un pansement sur mon genou écorché."},
+                {n:"Doigts", i:"☝️", d:"J'utilise mes doigts pour tenir mon crayon."}, {n:"Cou", i:"🧣", d:"J'attache une belle écharpe autour de mon cou."}
+            ],
+            devinettes: [
+                {q:"Nous sommes au bout de tes bras. Nous avons cinq doigts chacune pour attraper des choses. Qui sommes-nous ?", r:"mains"},
+                {q:"Je suis au milieu de ta jambe. Je plie quand tu veux t'asseoir ou marcher. Qui suis-je ?", r:"genou"},
+                {q:"Nous sommes tout en bas de ton corps. Tu nous mets dans des souliers avant de sortir. Qui sommes-nous ?", r:"pieds"},
+                {q:"Je relie ta tête à tes épaules. En hiver, tu mets un foulard autour de moi. Qui suis-je ?", r:"cou"},
+                {q:"Je suis grand et plat derrière toi. C'est là que tu accroches ton sac d'école. Qui suis-je ?", r:"dos"}
+            ],
+            histoires: [
+                {txt: "C'est l'heure de la course ! Julien plie ses genoux. À vos marques, prêts, partez ! Il pousse très fort sur ses jambes et balance ses bras de chaque côté pour courir le plus vite possible. À la fin, il a gagné la médaille !", q: "Quelles parties de son corps Julien utilise-t-il pour courir ?", react: "🗣️ Réagir à l'oral : Quel est ton sport préféré où tu dois courir ?"},
+                {txt: "Le sac à dos de Sarah est lourd aujourd'hui. Il y a beaucoup de livres. Elle le met sur ses épaules. Son dos est bien droit. En marchant, elle sent que c'est lourd, alors elle décide de tenir ses bretelles avec ses mains.", q: "Où Sarah met-elle son sac lourd ?", react: "🗣️ Réagir à l'oral : Qu'y a-t-il dans ton sac d'école aujourd'hui ?"},
+                {txt: "Le bébé rit aux éclats ! Papa utilise ses doigts pour lui faire des guilis. Il chatouille son petit ventre rond, puis il chatouille le dessous de ses petits pieds. Le bébé donne des coups de jambes de joie.", q: "Où le papa fait-il des chatouilles au bébé ?", react: "🗣️ Réagir à l'oral : Es-tu chatouilleux ? Quelle partie de ton corps est la plus chatouilleuse ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-2-1", titre: "✍️ Projet 1 : Le défi sportif", desc: "Raconte un cours d'éducation physique où tu dois utiliser tes bras et tes jambes.", 
+                    noms: "un ballon, un mur, un saut, des jambes, des bras, des mains.",
+                    verbes: "sauter, lancer, attraper, courir, s'étirer.",
+                    adjectifs: "rapide, fort, fatigué, souple, amusant.",
+                    debuts: "Aujourd'hui, dans le gymnase..., Je plie mes jambes pour..., Avec mes mains, je..."
+                },
+                { 
+                    id: "ecr-2-2", titre: "✍️ Projet 2 : Le bonhomme de neige", desc: "Explique comment tu construis un bonhomme de neige dehors, avec tout ton corps.", 
+                    noms: "la neige, des mitaines, un ventre, un dos, le froid, une boule.",
+                    verbes: "pousser, rouler, lever, forcer, construire.",
+                    adjectifs: "gros, lourd, froid, rond, beau.",
+                    debuts: "Avec mes mains, je prends de la neige..., Je pousse fort avec mes jambes pour..., Finalement, le bonhomme est..."
+                }
+            ],
+            expose: "Fais l'animateur sportif ! Donne trois instructions à tes camarades de classe pour qu'ils bougent leur corps.\n\n*Exemple :* « Bonjour la classe ! Tout le monde debout ! Un : Touchez vos pieds avec vos mains ! Deux : Levez les bras très haut ! Trois : Pliez vos genoux ! »"
+        },
+        {
+            title: "Cours 3 : À l'intérieur de moi (Mes organes)",
+            words: [
+                {n:"Cœur", i:"❤️", d:"Mon cœur bat très fort dans ma poitrine après la course."}, {n:"Cerveau", i:"🧠", d:"Le cerveau est dans ma tête pour m'aider à penser."},
+                {n:"Poumons", i:"🫁", d:"Je remplis mes poumons d'air pour respirer."}, {n:"Estomac", i:"🍲", d:"La nourriture va dans mon estomac pour me donner de l'énergie."},
+                {n:"Os", i:"🦴", d:"J'ai beaucoup d'os solides dans mon corps."}, {n:"Sang", i:"🩸", d:"Le sang rouge voyage partout dans mon corps."},
+                {n:"Muscles", i:"💪", d:"Mes muscles me donnent la force de soulever des objets."}, {n:"Intestins", i:"🍝", d:"Les intestins sont comme un long tuyau dans mon ventre."},
+                {n:"Squelette", i:"💀", d:"L'ensemble de tous mes os s'appelle le squelette."}, {n:"Salive", i:"💧", d:"La salive dans ma bouche m'aide à avaler."}
+            ],
+            devinettes: [
+                {q:"Je fais 'boum-boum' dans ta poitrine. Quand tu cours, je bats plus vite pour faire circuler le sang. Qui suis-je ?", r:"coeur"},
+                {q:"Je suis caché à l'intérieur de ta tête. C'est grâce à moi que tu peux apprendre à l'école, rêver et bouger. Qui suis-je ?", r:"cerveau"},
+                {q:"Nous sommes deux comme des ballons dans ta poitrine. Tu nous remplis d'air quand tu respires. Qui sommes-nous ?", r:"poumons"},
+                {q:"Tout ce que tu manges et que tu bois descend à l'intérieur de moi pour être digéré. Qui suis-je ?", r:"estomac"},
+                {q:"Nous sommes durs et blancs à l'intérieur de toi. Sans nous, tu serais tout mou comme une méduse ! Qui sommes-nous ?", r:"os"}
+            ],
+            histoires: [
+                {txt: "Aujourd'hui en classe de sciences, madame Claudia montre une affiche du corps humain. Elle explique que le cerveau est le grand chef. C'est lui qui envoie des messages invisibles pour dire aux bras de bouger et aux poumons de respirer.", q: "Quelle partie du corps est le grand chef ?", react: "🗣️ Réagir à l'oral : Qu'est-ce que ton cerveau a appris de nouveau aujourd'hui ?"},
+                {txt: "Marc a couru sans s'arrêter pendant dix minutes. Il met sa main sur sa poitrine. Il sent son cœur qui fait 'boum-boum' très rapidement ! Il prend une grande inspiration pour remplir ses poumons d'air frais, et il se calme doucement.", q: "Pourquoi le cœur de Marc bat-il très vite ?", react: "🗣️ Réagir à l'oral : As-tu déjà senti ton cœur battre très fort ? Quand ?"},
+                {txt: "Au dîner, Alice mange un bon bol de spaghetti. Ses dents mâchent bien la nourriture. Ensuite, tout descend dans son estomac, qui travaille comme une machine pour transformer les pâtes en énergie pour l'après-midi.", q: "Où la nourriture va-t-elle après avoir été mâchée ?", react: "🗣️ Réagir à l'oral : Quelle nourriture donne le plus d'énergie, selon toi ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-3-1", titre: "✍️ Projet 1 : Le voyage d'une pomme", desc: "Raconte ce qui arrive quand tu manges un morceau de pomme. Par où passe-t-il ?", 
+                    noms: "une pomme, une bouche, des dents, la salive, un estomac, de l'énergie.",
+                    verbes: "croquer, mâcher, avaler, descendre, digérer.",
+                    adjectifs: "délicieux, petit, rond, fort, important.",
+                    debuts: "Quand je croque dans la pomme..., Ensuite, la pomme descend dans..., Enfin, mon corps a..."
+                },
+                { 
+                    id: "ecr-3-2", titre: "✍️ Projet 2 : Le rayon X", desc: "Imagine que tu as des lunettes magiques qui permettent de voir à l'intérieur du corps. Que vois-tu ?", 
+                    noms: "le cœur, le sang, le cerveau, des poumons, un squelette, des os.",
+                    verbes: "battre, gonfler, voir, ressembler, bouger.",
+                    adjectifs: "rouge, blanc, incroyable, fascinant, rapide.",
+                    debuts: "Avec mes lunettes magiques, je vois..., Dans la poitrine, je regarde..., C'est incroyable de voir..."
+                }
+            ],
+            expose: "Imagine que tu es un médecin. Explique à la classe pourquoi il faut boire de l'eau pour protéger nos organes.\n\n*Exemple :* « Bonjour ! Je suis le docteur. Il est très important de boire de l'eau car notre sang a besoin de liquide pour circuler. Aussi, le cerveau travaille beaucoup mieux quand on n'a pas soif ! »"
+        },
+        {
+            title: "Cours 4 : Les 5 sens et ma santé",
+            words: [
+                {n:"Vue", i:"👁️", d:"Je porte des lunettes pour avoir une meilleure vue."}, {n:"Ouïe", i:"🎧", d:"L'ouïe est le sens qui me permet d'entendre les sons."},
+                {n:"Odorat", i:"👃", d:"L'odorat me permet de sentir l'odeur du pain chaud."}, {n:"Goût", i:"👅", d:"J'aime le goût sucré du chocolat sur ma langue."},
+                {n:"Toucher", i:"🖐️", d:"Le toucher me fait sentir que la couverture est très douce."}, {n:"Médecin", i:"👨‍⚕️", d:"Le médecin écoute mon cœur avec son stéthoscope."},
+                {n:"Médicament", i:"💊", d:"Je prends un médicament pour guérir ma toux."}, {n:"Pansement", i:"🩹", d:"Maman met un petit pansement sur ma coupure."},
+                {n:"Thermomètre", i:"🌡️", d:"Le thermomètre sert à mesurer la fièvre."}, {n:"Sommeil", i:"💤", d:"Le sommeil est important pour se reposer la nuit."}
+            ],
+            devinettes: [
+                {q:"Je suis le sens qui utilise tes oreilles pour écouter de la musique. Qui suis-je ?", r:"ouïe"},
+                {q:"On m'utilise pour prendre ta température et savoir si tu as de la fièvre. Qui suis-je ?", r:"thermomètre"},
+                {q:"Je suis le sens qui te permet de savoir si un citron est très sûr ou sucré. Qui suis-je ?", r:"goût"},
+                {q:"Je suis la personne que tu vas voir quand tu es très malade pour qu'elle t'aide à guérir. Qui suis-je ?", r:"médecin"},
+                {q:"On me colle sur ta peau quand tu te fais une petite écorchure pour te protéger. Qui suis-je ?", r:"pansement"}
+            ],
+            histoires: [
+                {txt: "Clara a très chaud et elle tousse beaucoup. Son papa prend le thermomètre et découvre qu'elle a de la fièvre. Ils vont chez le médecin. Le médecin écoute les poumons de Clara et lui donne un médicament magique au goût de cerise pour l'aider à guérir.", q: "Pourquoi Clara et son papa vont-ils chez le médecin ?", react: "🗣️ Réagir à l'oral : Est-ce que tu as peur d'aller chez le médecin ? Pourquoi ?"},
+                {txt: "Le nez en l'air, Hugo utilise son odorat. Ça sent très bon dans la cuisine ! Il s'approche de la table et utilise sa vue pour regarder la belle tarte aux pommes. Enfin, il utilise son goût pour manger une grosse pointe de tarte. Délicieux !", q: "Quels sont les trois sens utilisés par Hugo dans l'histoire ?", react: "🗣️ Réagir à l'oral : Quelle est ton odeur préférée ?"},
+                {txt: "Pour être en bonne santé, il ne faut pas seulement manger des légumes. Le sommeil est très important. Quand on dort neuf heures par nuit, le cerveau se nettoie et le corps grandit. Sans sommeil, on devient grognon !", q: "Que fait le corps pendant la nuit ?", react: "🗣️ Réagir à l'oral : À quelle heure vas-tu te coucher le soir ?"}
+            ],
+            ecriture: [
+                { 
+                    id: "ecr-4-1", titre: "✍️ Projet 1 : Mes 5 sens au parc", desc: "Raconte une journée au parc en utilisant tes 5 sens (ce que tu vois, entends, touches, sens, goûtes).", 
+                    noms: "les yeux, les oreilles, les mains, une odeur, un goût, le gazon, les oiseaux.",
+                    verbes: "voir, entendre, toucher, sentir, goûter.",
+                    adjectifs: "doux, bruyant, vert, sucré, chaud.",
+                    debuts: "Au parc, avec mes yeux je vois..., Mes oreilles entendent..., Je touche l'herbe et c'est..."
+                },
+                { 
+                    id: "ecr-4-2", titre: "✍️ Projet 2 : Comment soigner un rhume", desc: "Écris un petit guide pour aider ton ami qui est malade à la maison (rhume).", 
+                    noms: "du repos, un lit, un mouchoir, de l'eau, un thermomètre.",
+                    verbes: "dormir, boire, moucher, rester, guérir.",
+                    adjectifs: "chaud, fatigué, important, beaucoup.",
+                    debuts: "Si tu es malade, tu dois d'abord..., N'oublie pas de boire..., Pour guérir vite, il faut..."
+                }
+            ],
+            expose: "Fais semblant d'être à la télévision pour une émission de cuisine ! Décris le goût et l'odeur de ton repas préféré.\n\n*Exemple :* « Bienvenue à mon émission ! Aujourd'hui on parle de la pizza. Avec mon odorat, je sens l'odeur du fromage fondu. Quand je croque, mon goût me dit que la pâte est croustillante et que la sauce tomate est parfaite ! »"
+        }
+    ];
+
+    // Phrases Bizarroïdes data
+    const slotSujets = ["Le nez", "Le cerveau", "Le médecin", "Le pied", "Le thermomètre", "Le cœur", "L'oreille", "L'estomac"];
+    const slotVerbes = ["mange", "écoute", "pompe", "lit", "court", "chante", "respire", "pédale"];
+    const slotComplements = ["de la soupe.", "de la musique.", "des kilomètres.", "avec ses yeux.", "du sang.", "dans la cuisine.", "un livre.", "dans les poumons."];
+
+    let currentCourseIndex = 0;
+    let selectedAssocItem = null;
+    let assocPairsMatched = 0;
+
+    // --- NAVIGATION PRINCIPALE ---
+    function loadCourse(index) {
+        currentCourseIndex = index;
+        document.getElementById('menu').classList.remove('active-screen');
+        document.getElementById('course-view').classList.add('active-screen');
+        
+        document.getElementById('course-title').innerText = data[index].title;
+        
+        // Initialiser tous les onglets
+        showTab('imagier');
+        renderImagier(index);
+        renderAssoc(index);
+        renderDevinettes(index);
+        renderHistoires(index);
+        renderEcriture(index);
+        renderExpose(index);
+    }
+
+    function goHome() {
+        document.getElementById('course-view').classList.remove('active-screen');
+        document.getElementById('menu').classList.add('active-screen');
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(el => el.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+    }
+
+    // --- ONGLETS : LOGIQUE ---
+
+    // 1. Imagier
+    function renderImagier(index) {
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        data[index].words.forEach(w => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.innerHTML = `
+                <div class="emoji">${w.i}</div>
+                <div>${w.n}</div>
+                <div class="hidden-content">
+                    <div class="sentence">${w.d}</div>
+                    <div class="audio-icon" onclick="event.stopPropagation(); playClick(); speakWord('${w.n}')">🔊 Écouter</div>
+                </div>
+            `;
+            card.onclick = () => { playClick(); card.classList.toggle('revealed'); };
+            grid.appendChild(card);
+        });
+    }
+
+    // 2. Jeu Association
+    function renderAssoc(index) {
+        const area = document.getElementById('assoc-game-area');
+        area.innerHTML = '';
+        selectedAssocItem = null;
+        assocPairsMatched = 0;
+        document.getElementById('assoc-message').innerText = "";
+
+        // Prendre 5 mots au hasard
+        let words = [...data[index].words].sort(() => 0.5 - Math.random()).slice(0, 5);
+        
+        let colEmoji = document.createElement('div'); colEmoji.className = 'assoc-col';
+        let colText = document.createElement('div'); colText.className = 'assoc-col';
+
+        let emojis = [...words].sort(() => 0.5 - Math.random());
+        let texts = [...words].sort(() => 0.5 - Math.random());
+
+        emojis.forEach(w => {
+            let el = document.createElement('div');
+            el.className = 'assoc-item emoji-item';
+            el.innerText = w.i;
+            el.dataset.val = w.n;
+            el.dataset.type = "emoji";
+            el.onclick = () => handleAssocClick(el);
+            colEmoji.appendChild(el);
+        });
+
+        texts.forEach(w => {
+            let el = document.createElement('div');
+            el.className = 'assoc-item';
+            el.innerText = w.n;
+            el.dataset.val = w.n;
+            el.dataset.type = "text";
+            el.onclick = () => handleAssocClick(el);
+            colText.appendChild(el);
+        });
+
+        area.appendChild(colEmoji);
+        area.appendChild(colText);
+    }
+
+    function handleAssocClick(el) {
+        if (el.classList.contains('matched')) return;
+        playClick();
+
+        if (!selectedAssocItem) {
+            el.classList.add('selected');
+            selectedAssocItem = el;
+            return;
+        }
+
+        if (selectedAssocItem === el) {
+            el.classList.remove('selected');
+            selectedAssocItem = null;
+            return;
+        }
+
+        if (selectedAssocItem.dataset.type === el.dataset.type) {
+            selectedAssocItem.classList.remove('selected');
+            el.classList.add('selected');
+            selectedAssocItem = el;
+            return;
+        }
+
+        if (selectedAssocItem.dataset.val === el.dataset.val) {
+            // Match!
+            playSuccess();
+            el.classList.remove('selected');
+            selectedAssocItem.classList.remove('selected');
+            el.classList.add('matched');
+            selectedAssocItem.classList.add('matched');
+            assocPairsMatched++;
+            selectedAssocItem = null;
+            
+            if (assocPairsMatched === 5) {
+                document.getElementById('assoc-message').innerText = "Bravo ! Tu as trouvé toutes les paires ! 🎉";
+            }
+        } else {
+            // Pas de match
+            selectedAssocItem.classList.remove('selected');
+            el.classList.add('selected');
+            setTimeout(() => { el.classList.remove('selected'); }, 500);
+            selectedAssocItem = null;
+        }
+    }
+
+    // 3. Devinettes (Quiz)
+    function renderDevinettes(index) {
+        const container = document.getElementById('dev-container');
+        container.innerHTML = `<h3 style="color: #e67e22; margin-top:0;">❓ Devinettes</h3><p>Lis la phrase et écris le mot (pas besoin de majuscules).</p>`;
+        
+        data[index].devinettes.forEach((d, i) => {
+            container.innerHTML += `
+                <div class="devinette-item">
+                    <div style="font-weight:bold; font-size:1.1rem;">${i+1}. ${d.q}</div>
+                    <input type="text" class="devinette-input" id="dev-ans-${i}" data-ans="${d.r}">
+                    <span class="devinette-feedback" id="dev-feed-${i}"></span>
+                </div>
+            `;
+        });
+    }
+
+    function checkDevinettes() {
+        const inputs = document.querySelectorAll('.devinette-input');
+        let allGood = true;
+        inputs.forEach((inp, i) => {
+            const feed = document.getElementById(`dev-feed-${i}`);
+            const userAns = inp.value.trim().toLowerCase();
+            const correctAns = inp.dataset.ans.toLowerCase();
+            
+            // Acceptation souple (sans accent / pluriels basiques)
+            const cleanUser = userAns.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/s$/, "");
+            const cleanCorrect = correctAns.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/s$/, "");
+
+            if (cleanUser === cleanCorrect && cleanUser !== "") {
+                feed.innerText = "✅ Bravo ! C'est : " + correctAns;
+                feed.style.color = "var(--success)";
+            } else {
+                feed.innerText = "❌ Essaie encore !";
+                feed.style.color = "#c0392b";
+                allGood = false;
+            }
+        });
+        if(allGood) playSuccess();
+    }
+
+    // 4. Histoires
+    function renderHistoires(index) {
+        const container = document.getElementById('hist-container');
+        container.innerHTML = `<h3 style="color: #1abc9c; margin-top:0;">📖 Lecture</h3>`;
+        data[index].histoires.forEach((h, i) => {
+            container.innerHTML += `
+                <div class="box" style="border-left-color: #1abc9c;">
+                    <p style="font-size:1.2rem; line-height:1.6; color:#2c3e50;">${h.txt}</p>
+                    <div class="question">❓ Question : ${h.q}</div>
+                    <div class="react">${h.react}</div>
+                </div>
+            `;
+        });
+    }
+
+    // 5. Écriture
+    function renderEcriture(index) {
+        const container = document.getElementById('ecriture-container');
+        container.innerHTML = `<h3 style="color: #2ecc71; margin-top:0;">✍️ À tes crayons !</h3>`;
+        data[index].ecriture.forEach((e) => {
+            container.innerHTML += `
+                <div class="box" style="border-left-color: #2ecc71;">
+                    <h4 style="color:#27ae60; font-size:1.3rem; margin-top:0;">${e.titre}</h4>
+                    <p style="font-size:1.1rem;">${e.desc}</p>
+                    
+                    <div class="inspiration-box">
+                        <h4>Boîte à mots pour t'aider :</h4>
+                        <ul>
+                            <li><strong>Noms :</strong> ${e.noms}</li>
+                            <li><strong>Verbes :</strong> ${e.verbes}</li>
+                            <li><strong>Adjectifs :</strong> ${e.adjectifs}</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="font-weight:bold; color:#7f8c8d;">Idées pour commencer tes phrases : <em>${e.debuts}</em></p>
+                    <textarea rows="6" placeholder="Écris ton histoire ici..."></textarea>
+                    <button class="btn-print" onclick="playClick(); window.print()">🖨️ Imprimer</button>
+                </div>
+            `;
+        });
+    }
+
+    // 6. Exposé
+    function renderExpose(index) {
+        const container = document.getElementById('expose-container');
+        container.innerHTML = `
+            <h3 style="color: #34495e; margin-top:0;">🎤 Entrevue avec le professeur</h3>
+            <p style="font-size:1.2rem; line-height:1.6;">${data[index].expose}</p>
+            <div style="text-align:center; font-size:5rem; margin: 20px 0;">🧑‍🏫</div>
+            <p style="text-align:center; font-weight:bold; color:#e67e22;">Respire un grand coup, et parle fort !</p>
+        `;
+    }
+
+    // 7. Phrases folles (Machine)
+    function spinMachine() {
+        let i = 0;
+        const speed = 50;
+        const maxSpins = 20;
+        
+        const spinInterval = setInterval(() => {
+            document.getElementById('slot-sujet').innerText = slotSujets[Math.floor(Math.random() * slotSujets.length)];
+            document.getElementById('slot-verbe').innerText = slotVerbes[Math.floor(Math.random() * slotVerbes.length)];
+            document.getElementById('slot-complement').innerText = slotComplements[Math.floor(Math.random() * slotComplements.length)];
+            i++;
+            if(i >= maxSpins) {
+                clearInterval(spinInterval);
+                playSuccess();
+            }
+        }, speed);
+    }
+
+</script>
+
+</body>
+</html>
