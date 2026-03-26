@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7 : L'Arbre Généalogique - La Classe de Madame Claudia</title>
+    <style>
+        :root {
+            --primary: #2c3e50; 
+            --bg: #f4f7f6;
+            --success: #27ae60;
+            --c1: #e74c3c; /* Rouge */
+            --c2: #8e44ad; /* Mauve */
+            --c3: #3498db; /* Bleu */
+            --c4: #f39c12; /* Orange */
+        }
+
+        body {
+            font-family: 'Century Gothic', 'AppleGothic', sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .screen { display: none; animation: fadeIn 0.4s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Menu Principal */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
+        .course-btn {
+            border: 4px solid var(--primary); padding: 30px; border-radius: 15px;
+            font-size: 1.5rem; font-family: 'Century Gothic'; font-weight: bold; cursor: pointer;
+            transition: 0.3s; position: relative; color: white; text-align: left; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .course-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-1 { background: var(--c1); border-color: #c0392b; }
+        .btn-2 { background: var(--c2); border-color: #71368a; }
+        .btn-3 { background: var(--c3); border-color: #2980b9; }
+        .btn-4 { background: var(--c4); border-color: #d68910; }
+
+        .badge { 
+            font-size: 2.5rem; position: absolute; top: 15px; right: 15px; 
+            opacity: 0.2; filter: grayscale(100%); cursor: pointer; transition: 0.3s; text-shadow: none;
+        }
+        .badge:hover { transform: scale(1.2); }
+        .badge.earned { opacity: 1; filter: grayscale(0%); animation: pop 0.5s; }
+        @keyframes pop { 50% { transform: scale(1.5); } }
+
+        /* Projet Final Enrichi */
+        .final-project-box { background: #e8f8f5; border: 4px dashed #1abc9c; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: left; }
+        .projet-flex { display: flex; gap: 25px; flex-wrap: wrap; margin-top: 20px; }
+        .projet-col { flex: 1; min-width: 320px; }
+        .plan-box { background: white; padding: 20px; border-radius: 10px; border: 2px solid #1abc9c; box-shadow: 0 4px 10px rgba(0,0,0,0.05);}
+        .boite-mots { background: #fdfefe; padding: 15px; border-radius: 8px; border-left: 4px solid #f1c40f; font-size: 0.95rem; margin-top: 15px;}
+        textarea { width: 100%; font-family: 'Century Gothic'; font-size: 1.1rem; padding: 10px; border-radius: 8px; border: 2px solid #ccc; box-sizing: border-box; resize: vertical; margin-bottom: 10px;}
+        
+        /* Navigation */
+        .nav-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; border-top: 2px solid #eee; padding-top: 20px; }
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-family: 'Century Gothic'; font-weight: bold; transition: 0.2s;}
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-tab-1 { background: #34495e; } 
+        .btn-tab-2 { background: #e74c3c; } 
+        .btn-tab-3 { background: #9b59b6; } 
+        .btn-tab-4 { background: #f1c40f; color: #2c3e50; } 
+        .btn-tab-5 { background: #16a085; } 
+        .btn-tab-6 { background: #d35400; } 
+        .btn-menu { background: #7f8c8d; }
+        .btn-action { background: #f39c12; font-size: 1.2rem; padding: 15px 30px; color: white; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:15px;}
+        .btn-action:hover { background: #d68910; }
+
+        /* Imagier */
+        .imagier-container { border: 6px solid var(--primary); padding: 20px; border-radius: 15px; background: #ffffff; margin-bottom: 30px; }
+        .word-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+        .word-card {
+            background: white; border: 2px solid #bdc3c7; padding: 20px 10px; border-radius: 10px;
+            cursor: pointer; font-weight: bold; font-size: 1.2rem; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s;
+        }
+        .word-card:hover { border-color: #3498db; transform: translateY(-5px); box-shadow: 0 5px 10px rgba(0,0,0,0.1);}
+        .word-card .hidden-content { display: none; margin-top: 10px; }
+        .word-card.revealed { background: #eaf2f8; border-color: #3498db; color: var(--primary); }
+        .word-card.revealed .hidden-content { display: block; }
+        .emoji { font-size: 3rem; margin: 5px 0; }
+        .sentence { font-size: 0.95rem; font-weight: normal; color: #34495e; padding: 10px 0;}
+
+        /* Détecteur de mensonges */
+        .lie-box { background: white; border: 3px solid #e74c3c; padding: 20px; border-radius: 10px; margin-bottom: 15px; text-align: left;}
+        .lie-statement { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; color: #c0392b;}
+        .btn-tf { font-size: 1rem; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; color: white;}
+        .btn-vrai { background: #27ae60; } .btn-faux { background: #c0392b; }
+        .btn-vrai:hover { background: #1e8449; } .btn-faux:hover { background: #922b21; }
+        .correction { display: none; margin-top: 15px; padding: 10px; background: #fdedec; border-left: 4px solid #c0392b; font-style: italic;}
+
+        /* Les Objets / Catégories */
+        .gear-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 20px; }
+        .gear-item { background: white; border: 4px solid #bdc3c7; border-radius: 15px; padding: 15px; font-size: 2rem; cursor: pointer; transition: 0.2s; user-select: none; font-weight:bold;}
+        .gear-item:hover { transform: scale(1.05); }
+        .gear-item.selected { border-color: #9b59b6; background: #f4ecf7; transform: scale(1.05); box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);}
+        .gear-name { font-size: 1rem; font-weight: normal; display: block; margin-top: 10px; color: #34495e;}
+
+        /* Texte Troué */
+        .troue-box { background: #fef9e7; padding: 30px; border-radius: 10px; border: 3px solid #f1c40f; text-align: left; font-size: 1.2rem; line-height: 2.2;}
+        .trou-select { font-family: 'Century Gothic'; font-size: 1.1rem; padding: 5px; border: 2px solid #3498db; border-radius: 5px; background: white; color: #2980b9; font-weight: bold; margin: 0 5px;}
+        .trou-select:focus { outline: none; border-color: #e67e22; }
+
+        /* Qui suis-je ? (Logique Familiale) */
+        .tv-frame { background: #2c3e50; padding: 20px; border-radius: 20px; border: 10px solid #1a252f; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); margin-top: 20px;}
+        .tv-screen { background: #d5f5e3; border-radius: 10px; padding: 30px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+        .tv-text { font-size: 1.8rem; font-weight: bold; color: #145a32; line-height: 1.4; text-shadow: 1px 1px 0px white;}
+        .btn-live { background: #e74c3c; color: white; padding: 10px 30px; font-size: 1.5rem; font-weight: bold; border-radius: 50px; border: 4px solid white; cursor: pointer; animation: pulse 1.5s infinite; margin-top: 20px;}
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px #e74c3c; } 100% { transform: scale(1); } }
+
+        /* Contenu & Écriture */
+        .box { background: #fdfefe; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .boite-outils { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background: #eaf2f8; padding: 20px; border-radius: 10px; border-left: 5px solid #3498db; margin: 20px 0;}
+        .boite-outils h4 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px;}
+        .boite-outils ul { margin: 0; padding-left: 20px; font-size: 1rem; color: #34495e;}
+        
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            button, .nav-bar, .badge { display: none !important; }
+        }
+        .btn-print { background: #34495e; margin-top: 20px; font-size: 1.1rem; padding: 10px 25px; border-radius: 8px; color: white; border: none; cursor: pointer; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="menu" class="screen active">
+        <h1 style="color: var(--primary); font-size: 2.8rem;">🌳 L'Arbre Généalogique</h1>
+        <p style="font-size: 1.3rem;">Apprends à nommer les membres de la famille et à comprendre les liens qui les unissent !</p>
+        
+        <div class="menu-grid">
+            <button class="course-btn btn-1" onclick="playClick(); loadCourse(0)">👨‍👩‍👧‍👦 1. Les parents et enfants<span id="badge-0" class="badge" onclick="toggleBadge(event, 0)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-2" onclick="playClick(); loadCourse(1)">👵 2. Les générations<span id="badge-1" class="badge" onclick="toggleBadge(event, 1)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-3" onclick="playClick(); loadCourse(2)">🧑‍🤝‍🧑 3. La famille élargie<span id="badge-2" class="badge" onclick="toggleBadge(event, 2)" title="Donner la médaille">🏆</span></button>
+            <button class="course-btn btn-4" onclick="playClick(); loadCourse(3)">🔗 4. Les liens familiaux<span id="badge-3" class="badge" onclick="toggleBadge(event, 3)" title="Donner la médaille">🏆</span></button>
+        </div>
+
+        <div class="final-project-box" id="final-project">
+            <h2 style="color: #1abc9c; margin-top: 0; font-size: 2rem; text-align: center;">🖼️ Projet Final : L'arbre de ma famille</h2>
+            <p style="font-size: 1.2rem; text-align: center;">Dessine ton arbre généalogique sur une feuille, puis utilise cette boîte pour présenter ta famille !</p>
+            
+            <div class="projet-flex">
+                <div class="projet-col plan-box">
+                    <h3 style="color: #1abc9c; margin-top: 0;">📋 Ton plan de présentation</h3>
+                    <ul style="font-size: 1.1rem; line-height: 1.6; padding-left: 20px;">
+                        <li><strong>Paragraphe 1 : Les racines.</strong> Présente tes grands-parents. Où habitent-ils ?</li>
+                        <li><strong>Paragraphe 2 : Le tronc.</strong> Présente tes parents. Combien as-tu d'oncles et de tantes ?</li>
+                        <li><strong>Paragraphe 3 : Les branches.</strong> Parle de toi, de tes frères, tes sœurs ou tes cousins/cousines. Es-tu l'aîné ou le cadet ?</li>
+                    </ul>
+                    
+                    <div class="boite-mots">
+                        <h4>💡 Outils pour t'inspirer :</h4>
+                        <p><strong>Mots utiles :</strong> Du côté de ma mère, du côté de mon père, le plus vieux, la plus jeune, enfant unique.</p>
+                        <p><strong>Exemple :</strong> <em>"Le frère de mon père s'appelle Ali. C'est mon oncle. Il a deux fils, ce sont mes cousins."</em></p>
+                    </div>
+                </div>
+                
+                <div class="projet-col redaction-col">
+                    <label style="font-weight: bold;">1. Les grands-parents :</label>
+                    <textarea rows="3" placeholder="Mes grands-parents maternels s'appellent..."></textarea>
+                    
+                    <label style="font-weight: bold;">2. Les parents, oncles et tantes :</label>
+                    <textarea rows="3" placeholder="Mes parents sont... Ma mère a une sœur, c'est ma tante..."></textarea>
+                    
+                    <label style="font-weight: bold;">3. Frères, sœurs et cousins :</label>
+                    <textarea rows="3" placeholder="Je suis le cadet. J'ai une sœur aînée. Nous avons trois cousins..."></textarea>
+                    
+                    <div style="text-align: right;"><button class="btn-print" onclick="playClick(); printSection('final-project')">🖨️ Imprimer ma présentation</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="course-view" class="screen">
+        <h2 id="course-title" style="font-size: 2.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Titre</h2>
+        
+        <div class="nav-bar">
+            <button class="btn btn-tab-1" onclick="playClick(); showTab('imagier')">1. Vocabulaire</button>
+            <button class="btn btn-tab-2" onclick="playClick(); showTab('mensonges')">2. Détecteur</button>
+            <button class="btn btn-tab-3" onclick="playClick(); showTab('garde-robe')">3. Les Intrus</button>
+            <button class="btn btn-tab-4" onclick="playClick(); showTab('troue')">4. L'Aventure</button>
+            <button class="btn btn-tab-5" onclick="playClick(); showTab('ecriture')">5. L'Écrivain</button>
+            <button class="btn btn-tab-6" onclick="playClick(); showTab('meteo')">6. Devinettes</button>
+            <button class="btn btn-menu" onclick="playClick(); goHome()">🏠 Menu</button>
+        </div>
+
+        <div id="tab-imagier" class="tab active">
+            <div class="imagier-container">
+                <h3 style="color: #34495e;">Clique sur la carte pour entendre le mot et découvrir l'explication !</h3>
+                <div class="word-grid" id="grid-words"></div>
+            </div>
+        </div>
+
+        <div id="tab-mensonges" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #e74c3c;">
+                <h3 style="color: #e74c3c; margin-top:0;">🕵️ Le Détecteur de Logique Familiale</h3>
+                <p style="font-size:1.1rem;">Lis les 6 phrases sur les liens familiaux. Est-ce logique ? Clique sur VRAI ou FAUX.</p>
+                <div id="lie-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-garde-robe" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #9b59b6; text-align: center;">
+                <h3 style="color: #9b59b6; margin-top:0;">🔍 Cherche et Trouve !</h3>
+                <p style="font-size: 1.2rem;">Choisis **les 3 mots** qui font partie de la bonne catégorie (lis la consigne en dessous) !</p>
+                <div class="gear-grid" id="gear-container"></div>
+                <button class="btn-action" style="background:#9b59b6;" onclick="playClick(); checkGear()">Vérifier les mots !</button>
+                <div id="gear-message" style="margin-top:20px; font-weight:bold; font-size:1.5rem; color:var(--success); min-height: 30px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-troue" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #f1c40f;">
+                <h3 style="color: #d4ac0d; margin-top:0; font-size: 1.8rem;">L'arbre de Tarik</h3>
+                <p style="font-size: 1.1rem; font-weight:bold;">Tarik a dessiné son arbre généalogique. Aide-le à compléter les phrases pour l'expliquer !</p>
+                
+                <div class="troue-box" id="troue-text-container"></div>
+                
+                <button class="btn-action" style="background:#f1c40f; color:#2c3e50; width:100%;" onclick="playClick(); checkTroue()">Vérifier l'arbre</button>
+
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 10px; border: 2px solid #ccc;">
+                    <h4 style="color: #34495e; margin-top:0;">❓ Questions de compréhension :</h4>
+                    <div id="troue-questions-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ecriture" class="tab" style="display:none; text-align: left;">
+            <div id="ecriture-container"></div>
+        </div>
+
+        <div id="tab-meteo" class="tab" style="display:none;">
+            <div class="box" style="border-left: 5px solid #1abc9c; text-align: center; background: #e8f8f5;">
+                <h3 style="color: #1abc9c; font-size: 2rem; margin-top:0;">🧠 Le remue-méninges de la famille</h3>
+                <p style="font-size: 1.2rem;">Lis la devinette à tes amis. Ils doivent trouver le bon lien de parenté !</p>
+                
+                <div class="tv-frame">
+                    <div class="tv-screen">
+                        <div id="tv-prompter" class="tv-text">Appuyez sur "Tirer une carte" pour jouer !</div>
+                        <div id="tv-answer" style="display: none; margin-top: 15px; font-size: 1.5rem; color: #c0392b; font-weight: bold; animation: fadeIn 0.4s;"></div>
+                    </div>
+                </div>
+                
+                <button class="btn-live" onclick="playClick(); generateRiddle()">🃏 Tirer une carte</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- GESTION DES SONS ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() { if (!audioCtx) { audioCtx = new AudioContext(); } }
+
+    function playClick() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+    function playSuccess() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25]; let startTime = audioCtx.currentTime;
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, startTime + i*0.12); gain.gain.exponentialRampToValueAtTime(0.01, startTime + i*0.12 + 0.4);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(startTime + i*0.12); osc.stop(startTime + i*0.12 + 0.4);
+        });
+    }
+    function playError() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+    function playTick() {
+        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireTexte(texte) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; 
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function toggleBadge(event, id) { event.stopPropagation(); playSuccess(); document.getElementById('badge-' + id).classList.toggle('earned'); }
+    function printSection(elementId) { document.querySelectorAll('.print-area').forEach(el => el.classList.remove('print-area')); document.getElementById(elementId).classList.add('print-area'); window.print(); }
+
+    // --- DONNÉES DES COURS ---
+    const data = [
+        {   // 0: PARENTS ET ENFANTS
+            title: "👨‍👩‍👧‍👦 1. Les parents et enfants", color: "#e74c3c",
+            words: [
+                {n:"Père", i:"👨", d:"L'homme qui a un ou plusieurs enfants."}, {n:"Mère", i:"👩", d:"La femme qui a un ou plusieurs enfants."},
+                {n:"Fils", i:"👦", d:"L'enfant garçon des parents."}, {n:"Fille", i:"👧", d:"L'enfant fille des parents."},
+                {n:"Frère", i:"👦", d:"Un autre garçon qui a les mêmes parents que toi."}, {n:"Sœur", i:"👧", d:"Une autre fille qui a les mêmes parents que toi."},
+                {n:"Aîné(e)", i:"1️⃣", d:"Le plus vieil enfant de la famille, celui qui est né le premier."}, {n:"Cadet(te)", i:"2️⃣", d:"L'enfant qui vient après l'aîné (souvent le plus jeune)."},
+                {n:"Jumeaux", i:"👬", d:"Deux enfants nés le même jour de la même maman."}, {n:"Enfant unique", i:"🧍", d:"Un enfant qui n'a pas de frère ni de sœur."}
+            ],
+            mensonges: [
+                {txt: "Le fils de ta mère, c'est ton frère (ou c'est toi-même si tu es un garçon !).", ans: true, corr: "Vrai ! Vous avez la même mère."},
+                {txt: "L'enfant aîné est le bébé qui vient tout juste de naître.", ans: false, corr: "Faux ! L'aîné est le plus vieux des enfants."},
+                {txt: "Si tu es une fille, tes parents t'appellent leur 'fille'.", ans: true, corr: "Vrai ! Un garçon est un fils, une fille est une fille."},
+                {txt: "Des jumeaux sont toujours un frère et une sœur.", ans: false, corr: "Faux ! Ça peut être deux frères, deux sœurs, ou un frère et une sœur."},
+                {txt: "Un enfant unique a beaucoup de frères et de sœurs pour jouer avec lui.", ans: false, corr: "Faux ! 'Unique' veut dire qu'il est le seul enfant."},
+                {txt: "Si tu as une sœur, tu as les mêmes parents qu'elle.", ans: true, corr: "Vrai ! Vous formez une fratrie."}
+            ],
+            habits: [
+                {n:"Frère", i:"👦", correct:true}, {n:"Mère", i:"👩", correct:true}, {n:"Fille", i:"👧", correct:true},
+                {n:"Oncle", i:"🧔", correct:false}, {n:"Grand-mère", i:"👵", correct:false}, {n:"Cousin", i:"🧒", correct:false},
+                {n:"Tante", i:"👩‍🦰", correct:false}, {n:"Neveu", i:"👶", correct:false}, {n:"Grand-père", i:"👴", correct:false}, {n:"Nièce", i:"👧", correct:false}
+            ], 
+            troue: {
+                texte: "À la maison, nous sommes cinq. Il y a mon [TROU] et ma mère, ce sont mes parents. Moi, je m'appelle Tarik et je suis un garçon, donc je suis leur [TROU]. Ma grande sœur s'appelle Nora. Comme elle est née la première, elle est l'[TROU] de la famille. Mon petit frère s'appelle Sami. Il a 3 ans de moins que moi, c'est le [TROU]. Parfois, j'aimerais être un [TROU] unique pour avoir tous les jouets pour moi, mais finalement, c'est beaucoup plus amusant d'avoir des frères et [TROU] !",
+                choix: [
+                    ["oncle", "père", "grand-père"], 
+                    ["neveu", "fils", "cousin"], 
+                    ["aînée", "cadette", "jumelle"], 
+                    ["cadet", "aîné", "patron"],
+                    ["garçon", "enfant", "bébé"],
+                    ["sœurs", "tantes", "amies"]
+                ],
+                reponses: ["père", "fils", "aînée", "cadet", "enfant", "sœurs"],
+                questions: ["1. Qui est l'aînée dans la famille de Tarik ?", "2. Pourquoi Tarik trouve-t-il que c'est bien de ne pas être enfant unique ?"]
+            },
+            ecriture: { 
+                id: "ecr-0", titre: "✍️ Ma fratrie", desc: "Décris ta place dans ta famille. Es-tu l'aîné, le cadet, le benjamin ou enfant unique ?", 
+                noms: "un frère, une sœur, l'âge, une ressemblance, les parents, la maison.",
+                verbes: "partager, grandir, ressembler, jouer, se disputer, s'aider.",
+                adjectifs: "vieux, jeune, grand, petit, drôle, tannant.",
+                liaisons: "Cependant, puisque, d'un côté, par contre.",
+                debuts: "Dans ma famille, je suis..." 
+            }
+        },
+        {   // 1: LES GÉNÉRATIONS
+            title: "👵 2. Les générations", color: "#8e44ad",
+            words: [
+                {n:"Grand-père", i:"👴", d:"Le père de ton père ou de ta mère."}, {n:"Grand-mère", i:"👵", d:"La mère de ton père ou de ta mère."},
+                {n:"Petit-fils", i:"👦", d:"Le fils de l'enfant d'un grand-parent."}, {n:"Petite-fille", i:"👧", d:"La fille de l'enfant d'un grand-parent."},
+                {n:"Arrière-grand-père", i:"🕰️", d:"Le père de ton grand-père. Il est très vieux !"}, {n:"Génération", i:"🌱", d:"L'ensemble des personnes qui ont environ le même âge (ex: les grands-parents, les parents, les enfants)."},
+                {n:"Ancêtres", i:"📜", d:"Les membres de ta famille qui vivaient il y a très, très longtemps."}, {n:"Mari", i:"🤵", d:"L'homme avec qui une femme est mariée."},
+                {n:"Femme (Épouse)", i:"👰", d:"La femme avec qui un homme est marié."}, {n:"Vieillir", i:"⏳", d:"L'action de prendre de l'âge année après année."}
+            ],
+            mensonges: [
+                {txt: "Le père de ta mère est ton arrière-grand-père.", ans: false, corr: "Faux ! C'est ton grand-père. L'arrière-grand-père est encore avant !"},
+                {txt: "Si tu es un garçon, tu es le petit-fils de ta grand-mère.", ans: true, corr: "Vrai ! C'est comme ça qu'elle t'appelle."},
+                {txt: "Tes ancêtres sont les enfants qui vont naître dans le futur.", ans: false, corr: "Faux ! Tes ancêtres sont les personnes de ta famille qui vivaient dans le passé."},
+                {txt: "Le mari de ta grand-mère est généralement ton grand-père.", ans: true, corr: "Vrai ! Ils sont mariés ensemble."},
+                {txt: "La mère de ton père est ta tante.", ans: false, corr: "Faux ! La mère de ton père est ta grand-mère maternelle."},
+                {txt: "Une génération, c'est comme une étape dans l'arbre généalogique.", ans: true, corr: "Vrai ! (Grands-parents = 1 génération, parents = 1 génération)."}
+            ],
+            habits: [
+                {n:"Grand-père", i:"👴", correct:true}, {n:"Arrière-grand-mère", i:"👵", correct:true}, {n:"Ancêtres", i:"📜", correct:true},
+                {n:"Neveu", i:"👶", correct:false}, {n:"Cousin", i:"🧒", correct:false}, {n:"Fils", i:"👦", correct:false},
+                {n:"Sœur", i:"👧", correct:false}, {n:"Nièce", i:"👧", correct:false}, {n:"Cadet", i:"2️⃣", correct:false}, {n:"Oncle", i:"🧔", correct:false}
+            ],
+            troue: {
+                texte: "Dans mon arbre généalogique, les racines sont mes [TROU]. Ce sont les plus vieux de la famille ! Par exemple, le père de mon père est mon [TROU] Youssef. Lui et ma grand-mère Aïcha sont mariés, elle est donc sa [TROU]. Moi, comme je suis un garçon, je suis leur [TROU]. Sur une très vieille photo en noir et blanc, j'ai vu le père de Youssef. C'est mon [TROU] ! Il fait partie de mes [TROU], ceux qui vivaient il y a très longtemps.",
+                choix: [
+                    ["enfants", "cousins", "grands-parents"], 
+                    ["oncle", "grand-père", "frère"], 
+                    ["fille", "sœur", "femme"], 
+                    ["neveu", "petit-fils", "cousin"],
+                    ["arrière-grand-père", "beau-frère", "fils"],
+                    ["voisins", "amis", "ancêtres"]
+                ],
+                reponses: ["grands-parents", "grand-père", "femme", "petit-fils", "arrière-grand-père", "ancêtres"],
+                questions: ["1. Comment s'appelle le grand-père de Tarik ?", "2. Qui est la personne sur la très vieille photo ?"]
+            },
+            ecriture: { 
+                id: "ecr-1", titre: "✍️ Mes grands-parents", desc: "Raconte ce que tu sais de tes grands-parents ou pose-leur des questions pour écrire leur histoire !", 
+                noms: "une époque, une photo, une histoire, un pays, le mariage, la jeunesse.",
+                verbes: "naître, raconter, voyager, travailler, se souvenir, aimer.",
+                adjectifs: "ancien, lointain, courageux, intéressant, vieux, jeune.",
+                liaisons: "Dans le passé, avant que, à cette époque, maintenant.",
+                debuts: "Mon grand-père / Ma grand-mère est né(e) en..." 
+            }
+        },
+        {   // 2: LA FAMILLE ÉLARGIE
+            title: "🧑‍🤝‍🧑 3. La famille élargie", color: "#2980b9",
+            words: [
+                {n:"Oncle", i:"🧔", d:"Le frère de ton père ou de ta mère."}, {n:"Tante", i:"👩‍🦰", d:"La sœur de ton père ou de ta mère."},
+                {n:"Cousin", i:"👦", d:"Le fils de ton oncle ou de ta tante."}, {n:"Cousine", i:"👧", d:"La fille de ton oncle ou de ta tante."},
+                {n:"Neveu", i:"👶", d:"Le fils de ton frère ou de ta sœur."}, {n:"Nièce", i:"👧", d:"La fille de ton frère ou de ta sœur."},
+                {n:"Parrain", i:"🎁", d:"Un homme choisi pour être un protecteur spécial pour un enfant."}, {n:"Marraine", i:"🧚‍♀️", d:"Une femme choisie pour être une protectrice spéciale pour un enfant."},
+                {n:"Rassembler", i:"🫂", d:"Mettre toute la famille ensemble au même endroit."}, {n:"Fête de famille", i:"🎉", d:"Un grand souper où oncles, tantes et cousins viennent célébrer."}
+            ],
+            mensonges: [
+                {txt: "Le frère de ton père est ton cousin.", ans: false, corr: "Faux ! Le frère de ton père est ton oncle."},
+                {txt: "Si ton oncle a une petite fille, elle est ta cousine.", ans: true, corr: "Vrai ! Les enfants de nos oncles/tantes sont nos cousins/cousines."},
+                {txt: "Le fils de ton grand frère est ton neveu.", ans: true, corr: "Vrai ! Tu deviens un oncle (ou une tante) !"},
+                {txt: "Le parrain et la marraine sont toujours les grands-parents.", ans: false, corr: "Faux ! Ça peut être des amis ou des oncles/tantes choisis par les parents."},
+                {txt: "La sœur de ta mère est ta tante.", ans: true, corr: "Vrai ! Et tu es son neveu ou sa nièce."},
+                {txt: "Ta nièce est la mère de ton cousin.", ans: false, corr: "Faux ! Ta nièce est la fille de ton propre frère ou de ta sœur."}
+            ],
+            habits: [
+                {n:"Cousin", i:"👦", correct:true}, {n:"Oncle", i:"🧔", correct:true}, {n:"Tante", i:"👩‍🦰", correct:true},
+                {n:"Père", i:"👨", correct:false}, {n:"Mère", i:"👩", correct:false}, {n:"Fils", i:"👦", correct:false},
+                {n:"Grand-père", i:"👴", correct:false}, {n:"Grand-mère", i:"👵", correct:false}, {n:"Sœur", i:"👧", correct:false}, {n:"Frère", i:"👦", correct:false}
+            ],
+            troue: {
+                texte: "Ce dimanche, nous avons fait une grande [TROU] ! Toute la famille élargie était là. Le frère de ma mère, mon [TROU] Farid, est arrivé en premier. Avec lui, il y avait ses deux enfants : Karim et Leïla, ce sont mes [TROU] préférés ! Ensuite, la sœur de mon père, ma [TROU] Sarah, est arrivée. Elle avait un petit bébé dans les bras. C'est le fils de mon grand frère ! Moi qui n'ai que 10 ans, je suis déjà un oncle, et ce petit bébé est mon [TROU]. C'est bruyant quand on veut [TROU] toute la famille, mais c'est tellement joyeux !",
+                choix: [
+                    ["chicane", "fête de famille", "punition"], 
+                    ["cousin", "oncle", "neveu"], 
+                    ["cousins", "frères", "amis"], 
+                    ["nièce", "tante", "grand-mère"],
+                    ["neveu", "fils", "petit-fils"],
+                    ["séparer", "rassembler", "cacher"]
+                ],
+                reponses: ["fête de famille", "oncle", "cousins", "tante", "neveu", "rassembler"],
+                questions: ["1. Qui sont Karim et Leïla pour Tarik ?", "2. Pourquoi Tarik est-il déjà un oncle ?"]
+            },
+            ecriture: { 
+                id: "ecr-2", titre: "✍️ Les réunions de famille", desc: "Raconte la dernière fois que tu as vu tes oncles, tantes ou cousins.", 
+                noms: "un repas, un jeu, du bruit, le salon, une fête, les cousins.",
+                verbes: "jouer, courir, manger, rire, parler, se cacher.",
+                adjectifs: "bruyant, nombreux, joyeux, amusant, délicieux, grand.",
+                liaisons: "Quand ils arrivent, d'abord, ensuite, à la fin.",
+                debuts: "Quand mes cousins viennent à la maison, nous..." 
+            }
+        },
+        {   // 3: LES LIENS FAMILIAUX (LOGIQUE)
+            title: "🔗 4. Les liens familiaux", color: "#f39c12",
+            words: [
+                {n:"Demi-frère", i:"👦", d:"Un frère avec qui tu partages seulement un parent (le père ou la mère)."}, {n:"Beau-père", i:"👨", d:"Le nouveau mari de ta maman, ou le père de ton mari/ta femme."},
+                {n:"Belle-mère", i:"👩", d:"La nouvelle femme de ton papa, ou la mère de ton mari/ta femme."}, {n:"Adopté", i:"❤️", d:"Un enfant qui a été accueilli par des parents qui ne sont pas ses parents biologiques."},
+                {n:"Orphelin", i:"🌌", d:"Un enfant dont les deux parents sont décédés."}, {n:"Fratrie", i:"👦👧👦", d:"L'ensemble des frères et sœurs d'une famille."},
+                {n:"Lien de sang", i:"🩸", d:"Être de la même famille par la naissance (biologique)."}, {n:"Arbre généalogique", i:"🌳", d:"Un dessin avec des branches pour montrer tous les membres de ta famille."},
+                {n:"Racines", i:"🌿", d:"L'origine de ta famille, tes ancêtres."}, {n:"Descendance", i:"👶", d:"Les enfants, petits-enfants et arrière-petits-enfants d'une personne."}
+            ],
+            mensonges: [
+                {txt: "Un demi-frère a exactement les mêmes deux parents que toi.", ans: false, corr: "Faux ! Vous partagez seulement le père OU la mère."},
+                {txt: "L'arbre généalogique est un vrai arbre en bois que tu plantes dans le jardin.", ans: false, corr: "Faux ! C'est un dessin ou un schéma qui explique ta famille."},
+                {txt: "Ta fratrie, c'est l'ensemble de tes frères et de tes sœurs.", ans: true, corr: "Vrai ! C'est le mot utilisé pour dire 'mes frères et sœurs'."},
+                {txt: "Si tes parents adoptent un enfant, il devient officiellement ton frère ou ta sœur.", ans: true, corr: "Vrai ! L'adoption crée une vraie famille avec beaucoup d'amour."},
+                {txt: "La descendance de ton grand-père inclut ton père, toi et tes futurs enfants.", ans: true, corr: "Vrai ! Ce sont tous ceux qui viennent 'après' lui dans l'arbre."},
+                {txt: "Un oncle fait partie de tes parents (père/mère).", ans: false, corr: "Faux ! Ton oncle fait partie de la famille élargie."}
+            ],
+            habits: [
+                {n:"Arbre généalogique", i:"🌳", correct:true}, {n:"Racines", i:"🌿", correct:true}, {n:"Descendance", i:"👶", correct:true},
+                {n:"Vélo", i:"🚲", correct:false}, {n:"Balançoire", i:"🛝", correct:false}, {n:"Maison", i:"🏠", correct:false},
+                {n:"Nuage", i:"☁️", correct:false}, {n:"Chien", i:"🐕", correct:false}, {n:"Pomme", i:"🍎", correct:false}, {n:"Crayon", i:"✏️", correct:false}
+            ],
+            troue: {
+                texte: "Aujourd'hui en classe, Madame Claudia nous a demandé de dessiner notre [TROU]. Au début, j'ai dessiné les [TROU] : ce sont mes ancêtres et mes grands-parents. Ensuite, j'ai dessiné le tronc pour mes parents. Les branches, ce sont ma [TROU], c'est-à-dire mes frères et sœurs. Mon ami Léo a dessiné une branche un peu différente, car il a un [TROU] : son papa s'est remarié, donc il partage un seul parent avec lui. Léo dit que même s'ils n'ont pas exactement le même [TROU], ils s'aiment comme de vrais frères. L'important dans une famille, c'est l'amour !",
+                choix: [
+                    ["chien", "arbre généalogique", "portrait"], 
+                    ["racines", "feuilles", "fleurs"], 
+                    ["classe", "fratrie", "école"], 
+                    ["cousin", "voisin", "demi-frère"],
+                    ["lien de sang", "nom", "âge"],
+                    ["rien", "rien", "rien"] // 5 trous seulement ici
+                ],
+                reponses: ["arbre généalogique", "racines", "fratrie", "demi-frère", "lien de sang"],
+                questions: ["1. Que représentent les racines de l'arbre ?", "2. Pourquoi le frère de Léo est-il appelé un 'demi-frère' ?"]
+            },
+            ecriture: { 
+                id: "ecr-3", titre: "✍️ Ma famille unique", desc: "Il n'y a pas deux familles pareilles ! Explique pourquoi ta famille est spéciale pour toi.", 
+                noms: "l'amour, la différence, la maison, un moment, la joie, les règles.",
+                verbes: "aimer, comprendre, accepter, s'amuser, protéger, écouter.",
+                adjectifs: "différent, spécial, grand, petit, uni, fort.",
+                liaisons: "Même si, de plus, en fait, pour conclure.",
+                debuts: "Ma famille n'est peut-être pas comme les autres, car..." 
+            }
+        }
+    ];
+
+    let currentCourseId = 0;
+
+    function loadCourse(id) {
+        currentCourseId = id;
+        const course = data[id];
+        document.getElementById('menu').classList.remove('active');
+        document.getElementById('course-view').classList.add('active');
+        const titleEl = document.getElementById('course-title');
+        titleEl.innerText = course.title;
+        titleEl.style.color = course.color;
+        
+        // 1. Imagier
+        const grid = document.getElementById('grid-words');
+        grid.innerHTML = '';
+        course.words.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'word-card';
+            div.innerHTML = `<div class="mot-seul">${w.n}</div><div class="hidden-content"><div class="emoji">${w.i}</div><div class="sentence">${w.d}</div></div>`;
+            div.onclick = () => { div.classList.add('revealed'); lireTexte(w.n); }; 
+            grid.appendChild(div);
+        });
+
+        // 2. Détecteur de Mensonges
+        const lieContainer = document.getElementById('lie-container');
+        lieContainer.innerHTML = '';
+        course.mensonges.forEach((m, index) => {
+            lieContainer.innerHTML += `
+                <div class="lie-box">
+                    <div class="lie-statement">"${m.txt}"</div>
+                    <button class="btn-tf btn-vrai" onclick="checkLie(${index}, true)">VRAI</button>
+                    <button class="btn-tf btn-faux" onclick="checkLie(${index}, false)">FAUX</button>
+                    <div class="correction" id="corr-${index}">${m.corr}</div>
+                </div>`;
+        });
+
+        // 3. Objets/Intrus (10 items)
+        const gearContainer = document.getElementById('gear-container');
+        gearContainer.innerHTML = '';
+        document.getElementById('gear-message').innerText = "";
+        let gearList = [...course.habits].sort(() => 0.5 - Math.random());
+        gearList.forEach((g, index) => {
+            const div = document.createElement('div');
+            div.className = 'gear-item';
+            div.id = `gear-${index}`;
+            div.dataset.correct = g.correct;
+            div.innerHTML = `${g.n}`; // On affiche le mot, plus simple pour la famille
+            div.onclick = function() { playClick(); this.classList.toggle('selected'); };
+            gearContainer.appendChild(div);
+        });
+
+        // Textes de consignes spécifiques pour l'onglet "Intrus"
+        const consigneH3 = document.querySelector('#tab-garde-robe h3');
+        const consigneP = document.querySelector('#tab-garde-robe p');
+        if(id === 0) { consigneH3.innerText = "👨‍👩‍👦 La famille nucléaire"; consigneP.innerHTML = "Trouve les 3 mots qui désignent les parents directs ou les enfants !"; }
+        if(id === 1) { consigneH3.innerText = "🕰️ Le passé"; consigneP.innerHTML = "Trouve les 3 mots liés aux générations précédentes (les plus vieux) !"; }
+        if(id === 2) { consigneH3.innerText = "🏕️ La famille élargie"; consigneP.innerHTML = "Trouve les 3 mots de la famille élargie (pas les parents directs ni les grands-parents) !"; }
+        if(id === 3) { consigneH3.innerText = "🌳 Autour de l'arbre"; consigneP.innerHTML = "Trouve les 3 mots qui sont liés au vocabulaire de l'arbre généalogique !"; }
+
+        // 4. Texte Troué
+        const troueContainer = document.getElementById('troue-text-container');
+        const questionsContainer = document.getElementById('troue-questions-container');
+        
+        let texteHTML = course.troue.texte;
+        // Gérer le cas où on a moins de trous que 6
+        let numTrous = (texteHTML.match(/\[TROU\]/g) || []).length;
+        for(let i=0; i<numTrous; i++) {
+            let selectHTML = `<select class="trou-select" id="trou-${i}"><option value="">-- ? --</option>`;
+            let shuffledOptions = [...course.troue.choix[i]].sort(() => 0.5 - Math.random());
+            shuffledOptions.forEach(opt => { selectHTML += `<option value="${opt}">${opt}</option>`; });
+            selectHTML += `</select>`;
+            texteHTML = texteHTML.replace("[TROU]", selectHTML);
+        }
+        troueContainer.innerHTML = texteHTML;
+        
+        questionsContainer.innerHTML = '';
+        course.troue.questions.forEach(q => {
+            questionsContainer.innerHTML += `
+                <p style="font-weight:bold; color:var(--primary); font-size:1.1rem; margin-bottom:5px;">${q}</p>
+                <textarea rows="2" style="margin-bottom: 15px;" placeholder="Écris ta réponse ici..."></textarea>
+            `;
+        });
+
+        // 5. L'Écrivain
+        const ecrDiv = document.getElementById('ecriture-container');
+        ecrDiv.innerHTML = `
+            <div class="box" id="${course.ecriture.id}" style="border-left: 5px solid ${course.color}; background: #fafafa; padding: 30px;">
+                <h3 style="color: ${course.color}; margin-top:0; font-size: 1.8rem;">${course.ecriture.titre}</h3>
+                <p style="font-size: 1.2rem; font-weight: bold;">${course.ecriture.desc}</p>
+                
+                <div class="boite-outils">
+                    <div><h4>🧱 Noms utiles</h4><ul><li>${course.ecriture.noms.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🏃 Verbes</h4><ul><li>${course.ecriture.verbes.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🎨 Adjectifs</h4><ul><li>${course.ecriture.adjectifs.split(', ').join('</li><li>')}</li></ul></div>
+                    <div><h4>🔗 Mots de liaison</h4><ul><li>${course.ecriture.liaisons.split(', ').join('</li><li>')}</li></ul></div>
+                </div>
+                
+                <p style="color:#7f8c8d; font-style:italic; font-size: 1.1rem;">💡 <strong>Idée pour commencer :</strong> "${course.ecriture.debuts}"</p>
+                
+                <textarea rows="8" placeholder="Écris ton texte ici..."></textarea>
+                <div style="text-align:right;"><button class="btn-print" onclick="playClick(); printSection('${course.ecriture.id}')">🖨️ Imprimer mon histoire</button></div>
+            </div>`;
+
+        showTab('imagier');
+    }
+
+    // --- LOGIQUE DES JEUX ---
+    function checkLie(index, answer) {
+        const correctAns = data[currentCourseId].mensonges[index].ans;
+        const corrDiv = document.getElementById(`corr-${index}`);
+        if(answer === correctAns) {
+            playSuccess();
+            corrDiv.style.display = "block"; corrDiv.style.borderLeftColor = "var(--success)"; corrDiv.style.background = "#eafaf1";
+            corrDiv.innerHTML = data[currentCourseId].mensonges[index].corr;
+        } else {
+            playError();
+            corrDiv.style.display = "block"; corrDiv.style.borderLeftColor = "#c0392b"; corrDiv.style.background = "#fdedec";
+            corrDiv.innerHTML = "❌ Oups ! Ce n'est pas la bonne réponse. Relis bien la phrase !";
+            setTimeout(() => { if(corrDiv.innerHTML.includes("Oups")) corrDiv.style.display = "none"; }, 1500);
+        }
+    }
+
+    function checkGear() {
+        const items = document.querySelectorAll('.gear-item');
+        let allCorrect = true; let selectedCount = 0;
+        items.forEach(item => {
+            const isSelected = item.classList.contains('selected');
+            const isCorrect = item.dataset.correct === "true";
+            if (isSelected) selectedCount++;
+            if (isSelected && !isCorrect) allCorrect = false;
+            if (!isSelected && isCorrect) allCorrect = false;
+        });
+
+        const msgDiv = document.getElementById('gear-message');
+        if (selectedCount !== 3) {
+            playError();
+            msgDiv.style.color = "#e74c3c";
+            msgDiv.innerText = `Tu dois sélectionner exactement 3 mots ! (Tu en as choisi ${selectedCount})`;
+        } else if (allCorrect) {
+            playSuccess();
+            msgDiv.style.color = "var(--success)";
+            msgDiv.innerText = "✅ Excellent ! Tu as trouvé les 3 bons mots !";
+        } else {
+            playError();
+            msgDiv.style.color = "#e74c3c";
+            msgDiv.innerText = "❌ Oups ! Il y a un intrus. Cherche bien !";
+        }
+    }
+
+    function checkTroue() {
+        const course = data[currentCourseId];
+        let score = 0;
+        const selects = document.querySelectorAll('.trou-select');
+        
+        selects.forEach((sel, i) => {
+            if (sel.value === course.troue.reponses[i]) {
+                sel.style.backgroundColor = "#abebc6"; sel.style.borderColor = "var(--success)";
+                score++;
+            } else {
+                sel.style.backgroundColor = "#fdedec"; sel.style.borderColor = "#e74c3c";
+            }
+        });
+
+        if (score === selects.length) {
+            playSuccess();
+            alert("✨ Bravo ! Tu as complété l'histoire !");
+        } else {
+            playError();
+        }
+    }
+
+    // --- DEVIN ET QUI SUIS-JE ---
+    const devinettes = [
+        "Je suis le frère de ton père. Qui suis-je ? | Ton oncle",
+        "Je suis la fille de ta tante. Qui suis-je ? | Ta cousine",
+        "Je suis le père de ta mère. Qui suis-je ? | Ton grand-père",
+        "Je suis le fils de ta sœur. Qui suis-je ? | Ton neveu",
+        "Je suis né(e) le même jour que toi, de la même maman. Qui suis-je ? | Ton jumeau ou ta jumelle",
+        "Je suis l'enfant fille de tes parents. Si tu es un garçon, je suis ta... | Sœur",
+        "Je suis le plus vieux des enfants de la famille. Qui suis-je ? | L'aîné",
+        "Je suis le mari de ta grand-mère. Qui suis-je ? | Ton grand-père"
+    ];
+
+    let currentAnswer = ""; 
+
+    function generateRiddle() {
+        playTick();
+        const r = devinettes[Math.floor(Math.random() * devinettes.length)];
+        
+        // On sépare maintenant avec la barre verticale |
+        const split = r.split('|');
+        const question = split[0].trim();
+        currentAnswer = split[1] ? split[1].trim() : ''; 
+        
+        document.getElementById('tv-prompter').innerHTML = `
+            ${question}
+            <br><br>
+            <button id="btn-reveal" style="background: #27ae60; color: white; padding: 10px 20px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; border: none; cursor: pointer; font-family: 'Century Gothic', sans-serif; transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="revealAnswer()">👁️ Voir la réponse</button>
+        `;
+        document.getElementById('tv-answer').style.display = 'none'; // On cache la réponse de la carte précédente
+    }
+
+    function revealAnswer() {
+        playSuccess();
+        document.getElementById('btn-reveal').style.display = 'none'; 
+        const answerDiv = document.getElementById('tv-answer');
+        answerDiv.style.display = 'block'; 
+        answerDiv.innerHTML = `👉 ${currentAnswer}`;
+    }
+
+    // --- NAVIGATION ---
+    function showTab(tabId) { document.querySelectorAll('.tab').forEach(t => t.style.display = 'none'); document.getElementById('tab-' + tabId).style.display = 'block'; }
+    function goHome() { document.getElementById('course-view').classList.remove('active'); document.getElementById('menu').classList.add('active'); }
+</script>
+</body>
+</html>
