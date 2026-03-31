@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La fabrique Brik-à-mots - Niveau 3</title>
+    <style>
+        /* --- VARIABLES ET RESET (INTERFACE VIOLETTE NIVEAU 3) --- */
+        :root {
+            --fond-principal: #6a1b9a;
+            --fond-clair: #f3e5f5;
+            --jaune-brique: #ffeb3b;
+            --jaune-bordure: #fbc02d;
+            --accent-brique: #ff4081;
+            --accent-bordure: #c2185b;
+            --texte-sombre: #311b92;
+            --gris-robot: #e0e0e0;
+            --gris-fonce: #424242;
+            --blanc: #ffffff;
+            --vert-succes: #4caf50;
+            --route-asphalte: #607d8b;
+            --route-ligne: #cfd8dc;
+            
+            --c-mod1: #ef5350; --c-mod2: #ab47bc; --c-mod3: #5c6bc0; --c-mod4: #29b6f6;
+            --c-mod5: #26a69a; --c-mod6: #9ccc65; --c-mod7: #ffa726; --c-mod8: #8d6e63;
+        }
+
+        * { box-sizing: border-box; font-family: 'Century Gothic', Arial, sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--fond-principal); color: var(--texte-sombre); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app { width: 100%; max-width: 1000px; height: 100vh; display: flex; flex-direction: column; align-items: center; position: relative; }
+
+        /* --- MANETTES --- */
+        .manette { position: absolute; top: 50%; transform: translateY(-50%); width: 120px; height: 50px; background-color: #263238; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 5px 0 #111; z-index: 0; }
+        .manette.gauche { left: 10px; } .manette.droite { right: 10px; flex-direction: row-reverse; }
+        .croix-direction { width: 30px; height: 30px; background: #546e7a; clip-path: polygon(33% 0, 66% 0, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0 66%, 0 33%, 33% 33%); }
+        .boutons-action { display: flex; gap: 5px; }
+        .btn-rouge, .btn-bleu { width: 15px; height: 15px; border-radius: 50%; }
+        .btn-rouge { background-color: #ef5350; margin-top: 10px;} .btn-bleu { background-color: #29b6f6; margin-bottom: 10px;}
+
+        /* --- BOUTON MAISON --- */
+        #btn-maison { position: absolute; top: 20px; right: 20px; background: var(--blanc); border: 4px solid var(--gris-fonce); border-radius: 15px; padding: 10px 20px; font-size: 1.5rem; font-weight: bold; cursor: pointer; display: none; z-index: 100; box-shadow: 0 4px 0 var(--gris-fonce); transition: 0.2s; color: var(--texte-sombre);}
+        #btn-maison:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+
+        /* --- ÉCRANS --- */
+        .ecran { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; flex-grow: 1; animation: fadeIn 0.3s forwards; padding: 10px; z-index: 5; }
+        .ecran.actif { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ACCUEIL --- */
+        .ecran-accueil-centre { justify-content: center; align-items: center; height: 100%; }
+        .btn-demarrer { padding: 20px 40px; font-size: 2.5rem; background: var(--jaune-brique); border: 5px solid white; border-radius: 20px; color: var(--texte-sombre); font-weight: bold; cursor: pointer; box-shadow: 0 8px 0 var(--jaune-bordure); transition: 0.2s; }
+        .btn-demarrer:active { transform: translateY(8px); box-shadow: 0 0 0 transparent; }
+
+        /* --- MENU MODULES (Tapis Route) --- */
+        .tapis-menu { width: 100%; height: 100px; background: var(--route-asphalte); border-bottom: 5px solid var(--gris-fonce); position: relative; overflow: hidden; display: flex; align-items: center; margin-bottom: 15px;}
+        .rail-tapis { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 8px; background: repeating-linear-gradient(90deg, var(--route-ligne), var(--route-ligne) 30px, transparent 30px, transparent 60px); }
+        .mot-tapis { position: absolute; display: flex; align-items: flex-end; animation: defilementMenu 15s linear infinite; white-space: nowrap; bottom: 20px; }
+        .mot-tapis-conteneur { display: flex; align-items: center; background-color: var(--accent-brique); border: 3px solid var(--blanc); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 0 var(--accent-bordure);}
+        .brique-tapis { font-weight: bold; font-size: 1.5rem; color: var(--blanc); padding: 5px 10px; }
+        @keyframes defilementMenu { from { left: 100%; } to { left: -40%; } }
+
+        .en-tete { background-color: var(--blanc); border: 5px solid var(--accent-brique); border-radius: 20px; padding: 10px 40px; font-size: 2.5rem; font-weight: bold; z-index: 10; margin-bottom: 10px; color: var(--texte-sombre); box-shadow: 0 6px 0 var(--accent-bordure); text-align: center;}
+        
+        .grille-modules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 20px; width: 90%; max-width: 800px; max-height: 60vh; overflow-y: auto;}
+        .carte-module { background: white; border: 3px solid var(--gris-fonce); border-radius: 15px; padding: 15px; cursor: pointer; transition: transform 0.2s; text-align: center; position: relative; }
+        .carte-module:hover { transform: scale(1.05); border-color: var(--accent-brique); }
+        .badge-numero { position: absolute; top: -10px; left: -10px; color: white; width: 30px; height: 30px; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .badge-etoile { position: absolute; top: -15px; right: -15px; background: white; border: 3px solid #ddd; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: #ddd; opacity: 0.5; transition: 0.3s;}
+        .badge-etoile.obtenu { background-color: var(--jaune-brique); border-color: white; color: white; opacity: 1; box-shadow: 0 0 15px var(--jaune-brique); transform: scale(1.1); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .nom-module { margin-top: 10px; font-weight: bold; font-size: 1.2rem; }
+
+        /* --- ROBOTS (Pastilles Agrandies) --- */
+        .robot-visuel { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-bottom: 10px; width: 220px; }
+        .tete-robot { background: var(--gris-robot); border: 3px solid var(--gris-fonce); border-radius: 15px 15px 5px 5px; padding: 10px; display: flex; justify-content: center; align-items: center; margin: 0 auto; min-width: 80px; }
+        .oeil-cyclope { width: 25px; height: 25px; background: white; border-radius: 50%; border: 3px solid #333; display: flex; justify-content: center; align-items: center; }
+        .trois-yeux { display: flex; gap: 5px; } .petit-oeil { width: 15px; height: 15px; background: white; border-radius: 50%; border: 2px solid #333; }
+        .pupille { width: 10px; height: 10px; background: #333; border-radius: 50%; } .pupille-petite { width: 6px; height: 6px; background: #333; border-radius: 50%; margin: 2px auto;}
+        .cou-robot { width: 20px; height: 15px; background: #90a4ae; border-left: 3px solid #333; border-right: 3px solid #333; margin: 0 auto; }
+        .corps-robot { background: var(--jaune-brique); border: 3px solid var(--gris-fonce); border-radius: 10px; padding: 10px; display: flex; justify-content: center; align-items: center; margin: 0 auto; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);}
+        
+        /* LETTRES AGRANDIES */
+        .plaque-structure { background: white; border-radius: 20px; padding: 8px 15px; display: flex; gap: 8px; border: 2px solid rgba(0,0,0,0.1); }
+        .lettre-structure { background: var(--accent-brique); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; }
+        .lettre-coeur { background: white; color: red; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; border: 2px solid #ccc; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);}
+        
+        .bulle-robot { position: absolute; left: 160px; top: -10px; background: white; border: 4px solid var(--accent-brique); border-radius: 20px; padding: 10px 20px; font-size: 2.2rem; font-weight: bold; display: none; animation: pop 0.3s forwards; z-index: 10; color: var(--texte-sombre); }
+        .bulle-robot::before { content: ''; position: absolute; left: -15px; top: 15px; border-width: 10px 15px 10px 0; border-style: solid; border-color: transparent var(--accent-brique) transparent transparent; }
+
+        /* --- PHASE 1 (Ronds Agrandis) --- */
+        .zone-ronds-gris { display: flex; gap: 15px; background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; margin-bottom: 10px; }
+        .rond-gris { width: 70px; height: 70px; border-radius: 50%; background: #eceff1; border: 4px dashed #b0bec5; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: bold; color: #b0bec5; transition: 0.1s; }
+        .rond-gris.decouvert { background: var(--jaune-brique); border: 4px solid white; color: var(--texte-sombre); border-style: solid; box-shadow: 0 4px 0 rgba(0,0,0,0.2);}
+        .rond-gris.decouvert.coeur { background: white; color: red; border: 4px solid red; }
+
+        .brique-nom-final { margin-top: 10px; background: var(--accent-brique); border: 5px solid var(--blanc); padding: 20px 50px; border-radius: 20px; font-size: 3rem; font-weight: bold; color: var(--blanc); display: none; animation: pop 0.3s forwards; text-shadow: 2px 2px 0 var(--accent-bordure);}
+
+        .grille-briques { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .brique-jaune { background: var(--jaune-brique); border: 4px solid var(--jaune-bordure); color: var(--texte-sombre); font-size: 2rem; font-weight: bold; padding: 10px 25px; border-radius: 15px; cursor: pointer; box-shadow: 0 6px 0 var(--jaune-bordure); transition: all 0.1s; text-transform: lowercase;}
+        .brique-jaune:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* --- PHASE 2 : ROUTE & VOITURES --- */
+        .zone-route-jeu { width: 100%; max-width: 800px; height: 160px; background: var(--route-asphalte); border: 5px solid #37474f; border-radius: 10px; position: relative; overflow: hidden; margin-top: 20px; box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);}
+        .route-marquage { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 6px; background: repeating-linear-gradient(90deg, #fff, #fff 40px, transparent 40px, transparent 80px); opacity: 0.7;}
+        
+        .voiture-item { position: absolute; top: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.1s;}
+        .voiture-item:hover { transform: scale(1.1); }
+        .voiture-carrosserie { background: var(--accent-brique); border: 3px solid var(--blanc); color: white; padding: 10px 20px; border-radius: 15px 15px 5px 5px; font-size: 1.5rem; font-weight: bold; text-shadow: 1px 1px 0 rgba(0,0,0,0.3); z-index: 2; position: relative;}
+        .voiture-roues { display: flex; justify-content: space-between; width: 80%; margin-top: -5px; z-index: 1;}
+        .roue { width: 20px; height: 20px; background: #212121; border: 3px solid #e0e0e0; border-radius: 50%; }
+
+        .objectifs-p2 { display: flex; gap: 10px; margin-top: 15px; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 15px;}
+        .objectif-rond { width: 60px; height: 60px; border-radius: 50%; background: white; border: 4px dashed var(--accent-brique); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.5rem; color: var(--texte-sombre); transition: 0.3s; }
+        .objectif-rond.trouve { background: var(--vert-succes); border-color: white; color: white; border-style: solid; box-shadow: 0 0 10px var(--vert-succes);}
+
+        /* --- PHASE 3 --- */
+        .zone-ecriture { background: white; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; font-size: 2.5rem; font-weight: bold; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2);}
+        .mot-a-completer { display: flex; align-items: center; gap: 10px; background: var(--fond-clair); padding: 10px 20px; border-radius: 15px;}
+        .input-syllabe { min-width: 80px; max-width: 140px; height: 60px; font-size: 2.5rem; text-align: center; border: 4px dashed var(--accent-brique); border-radius: 10px; outline: none; color: var(--texte-sombre); font-weight: bold; text-transform: lowercase; background: white;}
+        .input-syllabe.complet { min-width: 200px; max-width: 300px; } /* Pour le module 13 */
+        .emoji-mot { font-size: 4rem; margin-bottom: 5px; cursor: pointer; transition: 0.2s; }
+        .emoji-mot:hover { transform: scale(1.1); }
+        .btn-audio { background: #29b6f6; color: white; border: 3px solid white; border-radius: 50%; width: 55px; height: 55px; cursor: pointer; font-size: 1.8rem; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 #0288d1; transition: 0.1s;}
+        .btn-audio:active { transform: translateY(4px); box-shadow: 0 0 0 transparent;}
+
+        /* --- PHASE 4 : PHRASES LECTURE --- */
+        .zone-phrase { background: white; padding: 30px; border-radius: 20px; font-size: 1.6rem; text-align: center; line-height: 1.6; border: 5px solid var(--accent-brique); width: 85%; max-width: 800px; color: var(--texte-sombre); box-shadow: 0 8px 0 rgba(0,0,0,0.2);}
+
+        /* --- PHASE 5 : PHRASE RUE --- */
+        .zone-phrase-rue { background: white; padding: 20px; border-radius: 20px; border: 5px solid var(--accent-brique); width: 95%; max-width: 900px; box-shadow: 0 8px 0 rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center;}
+        
+        .rue-container { display: flex; align-items: flex-end; width: 100%; height: 140px; background: var(--route-ligne); border-bottom: 8px solid var(--route-asphalte); padding: 10px; position: relative; gap: 5px; margin-bottom: 30px; border-radius: 10px 10px 0 0;}
+        
+        .lampadaire { font-size: 4rem; margin-bottom: -5px; z-index: 5; text-shadow: 0 0 15px yellow;}
+        .panneau-stop { font-size: 3.5rem; margin-bottom: 0px; z-index: 5;}
+        
+        .emplacements-mots { display: flex; flex-grow: 1; justify-content: space-evenly; align-items: flex-end; padding-bottom: 5px; height: 100%;}
+        
+        .emplacement { height: 70px; border: 3px dashed #78909c; border-radius: 5px; display: flex; justify-content: center; align-items: flex-end; transition: 0.3s; background: rgba(255,255,255,0.5);}
+        .emplacement.rempli { border-style: solid; border-color: transparent; background: transparent; }
+        
+        /* ESPACE DE STATIONNEMENT */
+        .stationnement { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 30px; width: 35px; border-left: 3px dashed white; border-right: 3px dashed white; font-size: 1.2rem; color: white; opacity: 0.8;}
+
+        .zone-choix-maisons { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; min-height: 100px; padding: 15px; background: var(--fond-clair); border-radius: 15px; width: 100%;}
+        
+        /* Maisons (Mots) */
+        .maison { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; position: relative;}
+        .maison:hover { transform: scale(1.05); }
+        .maison:active { transform: scale(0.95); }
+        .toit { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 25px solid var(--accent-brique); margin-bottom: -1px;}
+        .facade { background: var(--jaune-brique); border: 3px solid var(--jaune-bordure); color: var(--texte-sombre); font-weight: bold; font-size: 1.5rem; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-radius: 3px; box-shadow: 0 4px 0 rgba(0,0,0,0.1);}
+        
+        .maison.taille-1 .toit { border-left-width: 25px; border-right-width: 25px; border-bottom-color: #4caf50;} /* Vert */
+        .maison.taille-1 .facade { min-width: 50px; }
+        .maison.taille-2 .toit { border-left-width: 40px; border-right-width: 40px; border-bottom-color: #2196f3;} /* Bleu */
+        .maison.taille-2 .facade { min-width: 80px; }
+        .maison.taille-3 .toit { border-left-width: 60px; border-right-width: 60px; border-bottom-color: #f44336;} /* Rouge */
+        .maison.taille-3 .facade { min-width: 120px; }
+
+        .btn-suivant { margin-top: 20px; padding: 15px 30px; background: var(--vert-succes); color: white; border: 3px solid white; border-radius: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #2e7d32; transition: 0.1s;}
+        .btn-suivant:active { transform: translateY(6px); box-shadow: 0 0 0 transparent;}
+        .btn-recommencer { background: #ff9800; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1.2rem;}
+
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .erreur { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* --- CONFETTIS --- */
+        #confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .confetti { position: absolute; top: -20px; width: 15px; height: 15px; opacity: 0.9; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="manette gauche"><div class="croix-direction"></div><div class="boutons-action"><div class="btn-rouge"></div><div class="btn-bleu"></div></div></div>
+        <div class="manette droite"><div class="croix-direction"></div><div class="boutons-action"><div class="btn-rouge"></div><div class="btn-bleu"></div></div></div>
+
+        <button id="btn-maison" onclick="retourMenu()">🏠 Menu</button>
+        <div id="confetti-container"></div>
+
+        <div id="ecran-accueil" class="ecran actif ecran-accueil-centre">
+            <div class="en-tete" style="margin-bottom: 40px; font-size: 3rem;">La fabrique Brik-à-mots<br><span style="font-size: 2rem; color: var(--accent-brique);">Niveau 3</span></div>
+            <button class="btn-demarrer" onclick="demarrerJeu()">▶️ Démarrer le jeu</button>
+        </div>
+
+        <div id="ecran-menu" class="ecran">
+            <div class="tapis-menu" id="tapis-decoratif"><div class="rail-tapis"></div></div>
+            <div class="en-tete">Choisis ton module</div>
+            <div class="grille-modules" id="grille-modules-container"></div>
+        </div>
+
+        <div id="ecran-phase1a" class="ecran">
+            <div class="consigne" id="consigne-1a"></div>
+            <div class="robot-visuel" id="robot-1a"></div>
+            <div class="zone-ronds-gris" id="ronds-gris-container"></div>
+            <div class="brique-nom-final" id="brique-nom-final">Nom</div>
+        </div>
+
+        <div id="ecran-phase1b" class="ecran">
+            <div class="consigne">Lis la bulle du robot et trouve la bonne brique !</div>
+            <div class="robot-visuel" onclick="montrerBullePhase1b()">
+                 <div id="robot-1b" style="display:flex; flex-direction:column; align-items:center;"></div>
+                 <div class="bulle-robot" id="bulle-1b">?</div>
+            </div>
+            <div class="grille-briques" id="briques-1b-container"></div>
+        </div>
+
+        <div id="ecran-phase2" class="ecran">
+            <div class="consigne">Attrape les 5 voitures syllabes sur la route !</div>
+            <div class="zone-route-jeu" id="tapis-jeu-container">
+                <div class="route-marquage"></div>
+            </div>
+            <div class="objectifs-p2" id="objectifs-p2-container"></div>
+        </div>
+
+        <div id="ecran-phase3" class="ecran">
+            <div class="consigne">Écoute le mot et écris ce qu'il manque !</div>
+            <div class="zone-ecriture">
+                <div class="emoji-mot" id="emoji-p3" onclick="clicAudioPhrase3()">❓</div>
+                <button class="btn-audio" onclick="clicAudioPhrase3()">🔊</button>
+                <div class="mot-a-completer" id="zone-mot-p3"></div>
+            </div>
+            <button class="btn-suivant" id="btn-verifier-p3" onclick="validerEcriture()" style="display:block;">Vérifier</button>
+        </div>
+
+        <div id="ecran-phase4" class="ecran">
+            <div class="consigne">Mission lecture ! Lis les 4 phrases à voix haute.</div>
+            <div class="zone-phrase" id="phrase-finale"></div>
+            <button class="btn-suivant" style="display:block;" onclick="lancerPhase5()">Bâtir la Phrase-Rue</button>
+        </div>
+
+        <div id="ecran-phase5" class="ecran">
+            <div class="consigne">Construis la Phrase-Rue ! Respecte bien les espaces de stationnement.</div>
+            <div class="zone-phrase-rue">
+                <div class="rue-container">
+                    <div class="lampadaire">🏮</div>
+                    <div class="emplacements-mots" id="emplacements-phrase">
+                        </div>
+                    <div class="panneau-stop">🛑</div>
+                </div>
+                
+                <div class="zone-choix-maisons" id="choix-maisons-container">
+                    </div>
+                <button class="btn-recommencer" onclick="reinitialiserPhraseRue()">🔄 Vider la rue</button>
+            </div>
+            <button class="btn-suivant" id="btn-fin-module" style="display:none;" onclick="retourMenuFinale()">Bravo détective ! Retour aux modules</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DONNÉES (NIVEAU 3 - 8 MODULES AVEC CORRECTIONS) ---
+        const baseDonnees = [
+            { id: 9, nom: "Gas", structure: ["c", "v", "c"], affichage: ["g", "a", "s"], yeux: 2, typeYeux: "normaux", syllabes: ["cac", "pal", "cas", "fac", "mar"], bulleP1: "cas", mots: [ { texte: "casquette", syllabe: "cas", type: "debut", reste: "quette", emoji: "🧢" }, { texte: "cactus", syllabe: "cac", type: "debut", reste: "tus", emoji: "🌵" }, { texte: "facteur", syllabe: "fac", type: "debut", reste: "teur", emoji: "✉️" }, { texte: "mardi", syllabe: "mar", type: "debut", reste: "di", emoji: "📅" }, { texte: "palmier", syllabe: "pal", type: "debut", reste: "mier", emoji: "🌴" } ], phrases: ["Le <b>fac</b>teur porte une cas<b>quette</b>.", "Il trouve un <b>cac</b>tus <b>mar</b>di.", "Le <b>fac</b>teur regarde le <b>pal</b>mier.", "Le <b>pal</b>mier est près du <b>cac</b>tus."], phraseMots: [{mot: "Le", taille: 1}, {mot: "facteur", taille: 2}, {mot: "porte", taille: 2}, {mot: "une", taille: 1}, {mot: "casquette", taille: 3}] },
+            { id: 10, nom: "Mol", structure: ["c", "v", "c"], affichage: ["m", "o", "l"], yeux: 1, typeYeux: "cyclope", syllabes: ["vol", "sol", "cul", "sor", "tor"], bulleP1: "sol", mots: [ { texte: "soldat", syllabe: "sol", type: "debut", reste: "dat", emoji: "🪖" }, { texte: "volcan", syllabe: "vol", type: "debut", reste: "can", emoji: "🌋" }, { texte: "sorcière", syllabe: "sor", type: "debut", reste: "cière", emoji: "🧙‍♀️" }, { texte: "tortue", syllabe: "tor", type: "debut", reste: "tue", emoji: "🐢" }, { texte: "cultiver", syllabe: "cul", type: "debut", reste: "tiver", emoji: "🧑‍🌾" } ], phrases: ["Le <b>sol</b>dat regarde le <b>vol</b>can.", "La <b>sor</b>cière a une <b>tor</b>tue.", "Il aime <b>cul</b>tiver le <b>sol</b>.", "La <b>tor</b>tue regarde le <b>sol</b>dat."], phraseMots: [{mot: "Le", taille: 1}, {mot: "soldat", taille: 2}, {mot: "regarde", taille: 3}, {mot: "la", taille: 1}, {mot: "tortue", taille: 2}] },
+            { id: 11, nom: "Clou", structure: ["c", "c", "coeur"], affichage: ["c", "l", "❤️"], yeux: 3, typeYeux: "trois", syllabes: ["trou", "croi", "gran", "clau", "fron"], bulleP1: "trou", mots: [ { texte: "trouver", syllabe: "trou", type: "debut", reste: "ver", emoji: "🔍" }, { texte: "croiser", syllabe: "croi", type: "debut", reste: "ser", emoji: "❌" }, { texte: "grandir", syllabe: "gran", type: "debut", reste: "dir", emoji: "📏" }, { texte: "frontal", syllabe: "fron", type: "debut", reste: "tal", emoji: "🤕" }, { texte: "Claudia", syllabe: "clau", type: "debut", reste: "dia", emoji: "👧" } ], phrases: ["Il veut <b>trou</b>ver son chemin.", "Il va <b>croi</b>ser le mur.", "La fille a mal au <b>fron</b>tal.", "Elle veut <b>gran</b>dir vite."], phraseMots: [{mot: "Claudia", taille: 2}, {mot: "veut", taille: 1}, {mot: "trouver", taille: 2}, {mot: "son", taille: 1}, {mot: "chemin", taille: 2}] },
+            { id: 12, nom: "Plom", structure: ["c", "c", "coeur"], affichage: ["p", "l", "❤️"], yeux: 2, typeYeux: "normaux", syllabes: ["trom", "tram", "cram", "trem", "grim"], bulleP1: "trom", mots: [ { texte: "tromper", syllabe: "trom", type: "debut", reste: "per", emoji: "🤥" }, { texte: "grimper", syllabe: "grim", type: "debut", reste: "per", emoji: "🧗" }, { texte: "plombage", syllabe: "plom", type: "debut", reste: "bage", emoji: "🦷" }, { texte: "tremblement", syllabe: "trem", type: "debut", reste: "blement", emoji: "🫨" }, { texte: "trampette", syllabe: "tram", type: "debut", reste: "pette", emoji: "🦘" } ], phrases: ["Il ne veut pas se <b>trom</b>per.", "Il va <b>grim</b>per la montagne.", "Le dentiste fait un <b>plom</b>bage.", "Il y a un <b>trem</b>blement."], phraseMots: [{mot: "Il", taille: 1}, {mot: "aime", taille: 1}, {mot: "grimper", taille: 2}, {mot: "sur", taille: 1}, {mot: "la", taille: 1}, {mot: "montagne", taille: 3}] },
+            { id: 13, nom: "Mami", structure: ["c", "v", "c", "v"], affichage: ["m", "a", "m", "i"], yeux: 1, typeYeux: "cyclope", syllabes: ["papa", "bébé", "papi", "dodo", "dodu"], bulleP1: "papi", mots: [ { texte: "tofu", type: "complet", emoji: "🧊" }, { texte: "mari", type: "complet", emoji: "🤵" }, { texte: "Sami", type: "complet", emoji: "👦" }, { texte: "rasé", type: "complet", emoji: "🪒" }, { texte: "posé", type: "complet", emoji: "📦" } ], phrases: ["Sami mange du tofu.", "Le mari est content.", "Il a le visage rasé.", "Le colis est posé."], phraseMots: [{mot: "Sami", taille: 2}, {mot: "mange", taille: 1}, {mot: "du", taille: 1}, {mot: "tofu", taille: 2}, {mot: "dodu", taille: 2}] },
+            { id: 14, nom: "Tatou", structure: ["c", "v", "c", "coeur"], affichage: ["t", "a", "t", "❤️"], yeux: 3, typeYeux: "trois", syllabes: ["lapin", "salon", "sapin", "gazon", "cadet"], bulleP1: "sapin", mots: [ { texte: "malin", syllabe: "ma", type: "debut", reste: "lin", emoji: "🦊" }, { texte: "matin", syllabe: "ma", type: "debut", reste: "tin", emoji: "🌅" }, { texte: "radeau", syllabe: "ra", type: "debut", reste: "deau", emoji: "筏" }, { texte: "bison", syllabe: "bi", type: "debut", reste: "son", emoji: "🦬" }, { texte: "suçon", syllabe: "su", type: "debut", reste: "çon", emoji: "🍭" } ], phrases: ["Le lapin est très malin.", "Il se lève tôt le matin.", "Le bison est sur le gazon.", "Il mange un bon suçon."], phraseMots: [{mot: "Le", taille: 1}, {mot: "lapin", taille: 2}, {mot: "malin", taille: 2}, {mot: "est", taille: 1}, {mot: "sur", taille: 1}, {mot: "le", taille: 1}, {mot: "gazon", taille: 2}] },
+            { id: 15, nom: "Raton", structure: ["c", "v", "c", "coeur"], affichage: ["r", "a", "t", "❤️"], yeux: 2, typeYeux: "normaux", syllabes: ["genou", "gamin", "léger", "jupon", "filou"], bulleP1: "filou", mots: [ { texte: "béton", syllabe: "bé", type: "debut", reste: "ton", emoji: "🧱" }, { texte: "bijou", syllabe: "bi", type: "debut", reste: "jou", emoji: "💍" }, { texte: "melon", syllabe: "me", type: "debut", reste: "lon", emoji: "🍈" }, { texte: "patin", syllabe: "pa", type: "debut", reste: "tin", emoji: "⛸️" }, { texte: "tison", syllabe: "ti", type: "debut", reste: "son", emoji: "🔥" } ], phrases: ["Le mur est en béton.", "Elle porte un beau bijou.", "Le gamin mange un melon.", "Il fait du patin."], phraseMots: [{mot: "Ce", taille: 1}, {mot: "gamin", taille: 2}, {mot: "filou", taille: 2}, {mot: "mange", taille: 1}, {mot: "un", taille: 1}, {mot: "melon", taille: 2}] },
+            { id: 16, nom: "Mauve", structure: ["c", "coeur", "c", "v"], affichage: ["m", "❤️", "v", "e"], yeux: 1, typeYeux: "cyclope", syllabes: ["poule", "seize", "rouve", "beige", "noire"], bulleP1: "poule", mots: [ { texte: "soupe", syllabe: "sou", type: "debut", reste: "pe", emoji: "🥣" }, { texte: "boite", syllabe: "boi", type: "debut", reste: "te", emoji: "📦" }, { texte: "cuire", syllabe: "cui", type: "debut", reste: "re", emoji: "🍳" }, { texte: "coupe", syllabe: "cou", type: "debut", reste: "pe", emoji: "✂️" }, { texte: "ronde", syllabe: "ron", type: "debut", reste: "de", emoji: "🟡" } ], phrases: ["La poule boit de la soupe.", "La boite est beige pâle.", "Il faut cuire le repas.", "Elle coupe la forme ronde."], phraseMots: [{mot: "La", taille: 1}, {mot: "poule", taille: 2}, {mot: "noire", taille: 2}, {mot: "mange", taille: 1}, {mot: "la", taille: 1}, {mot: "soupe", taille: 2}] }
+        ];
+
+        let modActif = null;
+        let tapisInterval = null;
+        let syllabesTrouveesP2 = [];
+        let indexMotP3 = 0;
+        let etatProgress = JSON.parse(localStorage.getItem('frikAmotsProgressV3_final')) || {};
+        
+        // Variables Phase 5
+        let ordreOriginal = [];
+        let motsPlaces = [];
+
+        // --- SON DYNAMIQUE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function demarrerJeu() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            window.speechSynthesis.getVoices(); 
+            jouerSon('clic'); initMenu(); changerEcran('ecran-menu');
+        }
+
+        function jouerSon(type) {
+            if(audioCtx.state === 'suspended') return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type === 'clic') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.type = 'sine'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+            if(type === 'succes') { osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.type = 'triangle'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'erreur') { osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.type = 'sawtooth'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'celebration') { 
+                [523, 659, 783, 1046].forEach((freq, i) => {
+                    setTimeout(() => {
+                        const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
+                        o.frequency.value = freq; o.type = 'square';
+                        g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                        o.start(); o.stop(audioCtx.currentTime + 0.2);
+                    }, i * 150);
+                });
+            }
+        }
+
+        function parler(texte) {
+            const utterance = new SpeechSynthesisUtterance(texte);
+            const voices = window.speechSynthesis.getVoices();
+            const voixCanadienne = voices.find(v => v.lang === 'fr-CA');
+            const voixFrancaise = voices.find(v => v.lang.startsWith('fr'));
+            utterance.voice = voixCanadienne || voixFrancaise; 
+            utterance.lang = 'fr-CA'; 
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function clicAudioPhrase3() {
+            jouerSon('clic');
+            if(!modActif || !modActif.mots[indexMotP3]) return;
+            parler(modActif.mots[indexMotP3].texte);
+            document.getElementById('input-p3').focus();
+        }
+
+        // --- OUTILS VISUELS ---
+        function genererTeteRobot(yeux, type) {
+            let htmlYeux = '';
+            if(type === "cyclope") htmlYeux = `<div class="oeil-cyclope"><div class="pupille"></div></div>`;
+            else if(type === "trois") htmlYeux = `<div class="trois-yeux"><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div></div>`;
+            else htmlYeux = `<div class="trois-yeux"><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div></div>`;
+            return `<div style="display:flex; flex-direction:column; align-items:center; width:100%;"><div class="tete-robot">${htmlYeux}</div><div class="cou-robot"></div></div>`;
+        }
+        function genererPlaque(structure) { return `<div class="plaque-structure">` + structure.map(s => s==='coeur' ? `<div class="lettre-coeur">❤️</div>` : `<div class="lettre-structure">${s}</div>`).join('') + `</div>`; }
+
+        function changerEcran(id) {
+            document.querySelectorAll('.ecran').forEach(e => e.classList.remove('actif'));
+            document.getElementById(id).classList.add('actif');
+            const btnMaison = document.getElementById('btn-maison');
+            if(id === 'ecran-accueil' || id === 'ecran-menu') btnMaison.style.display = 'none';
+            else btnMaison.style.display = 'block';
+        }
+
+        // --- MENU ---
+        function initMenu() {
+            if(tapisInterval) clearInterval(tapisInterval);
+            const tapisMenu = document.getElementById('tapis-decoratif'); tapisMenu.innerHTML = '<div class="route-marquage"></div>';
+            const motsTapis = [ ["cas", "quette"], ["sol", "dat"], ["plom", "bage"] ];
+            motsTapis.forEach((mot, indexMot) => {
+                const divMot = document.createElement('div'); divMot.className = 'mot-tapis'; divMot.style.animationDelay = `-${indexMot * 5}s`;
+                // LES VOITURES EN HAUT : syllabes collées (border à l'intérieur)
+                divMot.innerHTML = `<div class="mot-tapis-conteneur"><div class="brique-tapis">${mot[0]}</div><div class="brique-tapis" style="border-left:2px solid rgba(255,255,255,0.3); margin-left:2px;">${mot[1]}</div></div>`;
+                tapisMenu.appendChild(divMot);
+            });
+
+            const conteneur = document.getElementById('grille-modules-container'); conteneur.innerHTML = '';
+            baseDonnees.forEach(mod => {
+                const btn = document.createElement('div'); btn.className = 'carte-module';
+                const clsEtoile = etatProgress[mod.id] ? "obtenu" : "";
+                const iconeEtoile = etatProgress[mod.id] ? "🌟" : "⭐";
+                btn.innerHTML = `
+                    <div class="badge-numero" style="background-color: var(--c-mod${((mod.id-1)%8)+1});">${mod.id}</div>
+                    <div class="badge-etoile ${clsEtoile}">${iconeEtoile}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">${genererTeteRobot(mod.yeux, mod.typeYeux)}<div class="corps-robot">${genererPlaque(mod.structure)}</div></div>
+                    <div class="nom-module">${mod.nom}</div>`;
+                btn.onclick = () => lancerPhase1a(mod);
+                conteneur.appendChild(btn);
+            });
+        }
+        
+        // --- PHASE 1A ---
+        function lancerPhase1a(mod) {
+            jouerSon('clic'); modActif = mod;
+            document.getElementById('brique-nom-final').style.display = 'none';
+            document.getElementById('consigne-1a').innerHTML = `Salut, je suis <b>${mod.nom}</b> ! Écris mon nom.`;
+            document.getElementById('robot-1a').innerHTML = genererTeteRobot(mod.yeux, mod.typeYeux) + `<div class="corps-robot">${genererPlaque(mod.structure)}</div>`;
+            const conteneurRonds = document.getElementById('ronds-gris-container'); conteneurRonds.innerHTML = '';
+            
+            mod.structure.forEach((lettre, index) => {
+                const rond = document.createElement('div'); rond.className = 'rond-gris'; rond.style.borderColor = "white"; 
+                rond.innerText = lettre === 'coeur' ? '❤️' : lettre;
+                rond.onclick = () => decouvrirRond(rond, index);
+                conteneurRonds.appendChild(rond);
+            });
+            changerEcran('ecran-phase1a');
+        }
+
+        function decouvrirRond(rond, index) {
+            if(rond.classList.contains('decouvert')) return;
+            jouerSon('clic'); 
+            const structureType = modActif.structure[index];
+            rond.innerText = modActif.affichage ? modActif.affichage[index] : modActif.nom.toLowerCase().split('')[index];
+            if(structureType === 'coeur' || structureType === 'vc') rond.classList.add('decouvert', 'coeur'); else rond.classList.add('decouvert'); 
+            
+            if(document.querySelectorAll('.rond-gris.decouvert').length === modActif.structure.length) {
+                jouerSon('succes'); 
+                const blocNom = document.getElementById('brique-nom-final');
+                blocNom.innerText = modActif.nom; blocNom.style.display = 'block';
+                setTimeout(lancerPhase1b, 1000);
+            }
+        }
+
+        // --- PHASE 1B ---
+        function lancerPhase1b() {
+            document.getElementById('robot-1b').innerHTML = genererTeteRobot(modActif.yeux, modActif.typeYeux) + `<div class="corps-robot">${genererPlaque(modActif.structure)}</div>`;
+            const bulle = document.getElementById('bulle-1b'); bulle.innerText = '?'; bulle.style.display = 'none'; bulle.dataset.decouvert = "false";
+            const briques = document.getElementById('briques-1b-container'); briques.innerHTML = '';
+            
+            let choix = [modActif.bulleP1, ...modActif.syllabes.filter(s => s !== modActif.bulleP1).slice(0, 4)].sort(() => Math.random() - 0.5);
+            choix.forEach(s => {
+                const btn = document.createElement('div'); btn.className = 'brique-jaune'; btn.innerText = s;
+                btn.onclick = () => verifierPhase1b(btn, s);
+                briques.appendChild(btn);
+            });
+            changerEcran('ecran-phase1b');
+        }
+
+        function montrerBullePhase1b() { jouerSon('clic'); const bulle = document.getElementById('bulle-1b'); bulle.innerText = modActif.bulleP1; bulle.style.display = 'block'; bulle.dataset.decouvert = "true"; }
+        
+        function verifierPhase1b(btn, s) {
+            const bulle = document.getElementById('bulle-1b');
+            if(bulle.dataset.decouvert !== "true") { jouerSon('erreur'); return; }
+            if (s === modActif.bulleP1) { jouerSon('succes'); btn.style.backgroundColor = "var(--vert-succes)"; btn.style.color = "white"; setTimeout(lancerPhase2, 800); }
+            else { jouerSon('erreur'); btn.classList.add('erreur'); setTimeout(() => btn.classList.remove('erreur'), 400); }
+        }
+
+        // --- PHASE 2 : VOITURES SUR LA ROUTE ---
+        function lancerPhase2() {
+            syllabesTrouveesP2 = [];
+            const objContainer = document.getElementById('objectifs-p2-container'); objContainer.innerHTML = '';
+            modActif.syllabes.forEach(s => { const o = document.createElement('div'); o.className = 'objectif-rond'; o.id = 'obj-' + s; o.innerText = s; objContainer.appendChild(o); });
+
+            changerEcran('ecran-phase2'); const tapis = document.getElementById('tapis-jeu-container');
+            document.querySelectorAll('.voiture-item').forEach(e => e.remove());
+
+            tapisInterval = setInterval(() => {
+                const s = modActif.syllabes[Math.floor(Math.random() * modActif.syllabes.length)];
+                const item = document.createElement('div'); item.className = 'voiture-item';
+                
+                item.innerHTML = `
+                    <div class="voiture-carrosserie" style="background-color: var(--c-mod${Math.floor(Math.random()*8)+1})">${s}</div>
+                    <div class="voiture-roues"><div class="roue"></div><div class="roue"></div></div>
+                `;
+                
+                const direction = Math.random() > 0.5 ? 1 : -1;
+                const positionY = Math.random() > 0.5 ? '20px' : '80px';
+                item.style.top = positionY;
+                
+                if(direction === 1) {
+                    item.style.left = '-150px'; item.style.transition = `left 10s linear`; 
+                    tapis.appendChild(item); setTimeout(() => item.style.left = '100%', 50);
+                } else {
+                    item.style.left = '100%'; item.style.transition = `left 10s linear`;
+                    item.style.transform = "scaleX(-1)";
+                    item.querySelector('.voiture-carrosserie').style.transform = "scaleX(-1)";
+                    tapis.appendChild(item); setTimeout(() => item.style.left = '-150px', 50);
+                }
+
+                item.onclick = function() {
+                    const txt = s;
+                    if(!syllabesTrouveesP2.includes(txt)) {
+                        jouerSon('succes'); syllabesTrouveesP2.push(txt); document.getElementById('obj-' + txt).classList.add('trouve');
+                        this.querySelector('.voiture-carrosserie').style.backgroundColor = "var(--vert-succes)"; setTimeout(() => this.remove(), 200);
+                        if(syllabesTrouveesP2.length === 5) { clearInterval(tapisInterval); setTimeout(lancerPhase3, 1500); }
+                    } else { jouerSon('erreur'); this.classList.add('erreur'); setTimeout(() => this.classList.remove('erreur'), 400); }
+                };
+                setTimeout(() => { if(item.parentNode) item.remove(); }, 10000);
+            }, 1500);
+        }
+
+        // --- PHASE 3 : ÉCRITURE ---
+        function lancerPhase3() { if(tapisInterval) clearInterval(tapisInterval); indexMotP3 = 0; changerEcran('ecran-phase3'); afficherMotP3(); }
+
+        function afficherMotP3() {
+            const motObj = modActif.mots[indexMotP3]; document.getElementById('emoji-p3').innerText = motObj.emoji;
+            const zone = document.getElementById('zone-mot-p3'); zone.innerHTML = '';
+            
+            // Si c'est le module Mami (type: "complet"), l'enfant écrit tout le mot.
+            if (motObj.type === "complet") {
+                const input = document.createElement('input'); input.type = 'text'; input.className = 'input-syllabe complet'; input.id = 'input-p3'; input.maxLength = motObj.texte.length + 1;
+                zone.appendChild(input);
+            } else if (motObj.type === "debut") { 
+                const input = document.createElement('input'); input.type = 'text'; input.className = 'input-syllabe'; input.id = 'input-p3'; input.maxLength = motObj.syllabe.length + 1;
+                zone.appendChild(input); zone.innerHTML += `<span>${motObj.reste}</span>`; 
+            } else { 
+                const input = document.createElement('input'); input.type = 'text'; input.className = 'input-syllabe'; input.id = 'input-p3'; input.maxLength = motObj.syllabe.length + 1;
+                zone.innerHTML += `<span>${motObj.debut}</span>`; zone.appendChild(input); 
+            }
+            setTimeout(() => { document.getElementById('input-p3').focus(); }, 100);
+        }
+
+        function validerEcriture() {
+            const input = document.getElementById('input-p3'); const motObj = modActif.mots[indexMotP3]; let reponse = input.value.toLowerCase().trim();
+            const cible = (motObj.type === "complet") ? motObj.texte.toLowerCase() : motObj.syllabe.toLowerCase();
+            
+            if (reponse === cible) {
+                jouerSon('succes'); input.style.borderColor = "var(--vert-succes)"; input.style.color = "var(--vert-succes)";
+                setTimeout(() => { indexMotP3++; if(indexMotP3 < modActif.mots.length) afficherMotP3(); else lancerPhase4(); }, 1000);
+            } else { jouerSon('erreur'); input.classList.add('erreur'); setTimeout(() => input.classList.remove('erreur'), 400); }
+        }
+
+        // --- PHASE 4 : LECTURE ---
+        function lancerPhase4() {
+            changerEcran('ecran-phase4');
+            document.getElementById('phrase-finale').innerHTML = modActif.phrases.join('<br><br>');
+        }
+
+        // --- PHASE 5 : PHRASE RUE (AVEC STATIONNEMENTS) ---
+        function lancerPhase5() {
+            changerEcran('ecran-phase5');
+            document.getElementById('btn-fin-module').style.display = 'none';
+            ordreOriginal = [...modActif.phraseMots];
+            motsPlaces = new Array(ordreOriginal.length).fill(null);
+            
+            preparerRue();
+            preparerMaisons();
+            
+            let phraseComplete = ordreOriginal.map(m => m.mot).join(' ') + ".";
+            setTimeout(() => parler(phraseComplete), 500);
+        }
+
+        function preparerRue() {
+            const conteneur = document.getElementById('emplacements-phrase');
+            conteneur.innerHTML = '';
+            for(let i = 0; i < ordreOriginal.length; i++) {
+                const emp = document.createElement('div');
+                emp.className = 'emplacement';
+                emp.id = 'emp-' + i;
+                emp.style.width = (ordreOriginal[i].taille === 1 ? '70px' : ordreOriginal[i].taille === 2 ? '110px' : '150px');
+                emp.onclick = () => retirerMaisonDeRue(i);
+                conteneur.appendChild(emp);
+
+                // ESPACE DE STATIONNEMENT ENTRE CHAQUE MOT
+                if (i < ordreOriginal.length - 1) {
+                    const park = document.createElement('div');
+                    park.className = 'stationnement';
+                    park.innerHTML = '🅿️';
+                    conteneur.appendChild(park);
+                }
+            }
+        }
+
+        function preparerMaisons() {
+            const conteneur = document.getElementById('choix-maisons-container');
+            conteneur.innerHTML = '';
+            let motsMelanges = [...ordreOriginal].map((m, index) => ({...m, idOrig: index}));
+            motsMelanges.sort(() => Math.random() - 0.5);
+            
+            motsMelanges.forEach(m => {
+                const div = creerElementMaison(m.mot, m.taille);
+                div.id = 'maison-choix-' + m.idOrig;
+                div.onclick = () => placerMaisonDansRue(m, div);
+                conteneur.appendChild(div);
+            });
+        }
+
+        function creerElementMaison(mot, taille) {
+            const div = document.createElement('div');
+            div.className = `maison taille-${taille}`;
+            div.innerHTML = `<div class="toit"></div><div class="facade">${mot}</div>`;
+            return div;
+        }
+
+        function placerMaisonDansRue(motObj, elDiv) {
+            jouerSon('clic');
+            const premierVide = motsPlaces.findIndex(m => m === null);
+            if(premierVide === -1) return;
+            
+            motsPlaces[premierVide] = motObj;
+            elDiv.style.display = 'none';
+            
+            const emp = document.getElementById('emp-' + premierVide);
+            const clone = creerElementMaison(motObj.mot, motObj.taille);
+            emp.innerHTML = '';
+            emp.appendChild(clone);
+            emp.classList.add('rempli');
+            
+            verifierPhraseRue();
+        }
+
+        function retirerMaisonDeRue(index) {
+            if(motsPlaces[index] === null) return;
+            jouerSon('clic');
+            const motObj = motsPlaces[index];
+            motsPlaces[index] = null;
+            
+            const emp = document.getElementById('emp-' + index);
+            emp.innerHTML = '';
+            emp.classList.remove('rempli');
+            
+            document.getElementById('maison-choix-' + motObj.idOrig).style.display = 'flex';
+        }
+
+        function reinitialiserPhraseRue() {
+            jouerSon('clic');
+            motsPlaces.fill(null);
+            preparerRue();
+            document.querySelectorAll('.zone-choix-maisons .maison').forEach(m => m.style.display = 'flex');
+        }
+
+        function verifierPhraseRue() {
+            if(motsPlaces.includes(null)) return;
+            let correct = true;
+            for(let i=0; i < ordreOriginal.length; i++) { if(motsPlaces[i].mot !== ordreOriginal[i].mot) correct = false; }
+            
+            if(correct) {
+                jouerSon('celebration');
+                document.getElementById('emplacements-phrase').style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; 
+                document.getElementById('btn-fin-module').style.display = 'block';
+                lancerConfettis();
+            } else {
+                jouerSon('erreur');
+                document.getElementById('emplacements-phrase').classList.add('erreur');
+                setTimeout(() => {
+                    document.getElementById('emplacements-phrase').classList.remove('erreur');
+                    reinitialiserPhraseRue(); 
+                }, 800);
+            }
+        }
+
+        function retourMenuFinale() {
+            etatProgress[modActif.id] = true; 
+            localStorage.setItem('frikAmotsProgressV3_final', JSON.stringify(etatProgress));
+            jouerSon('clic'); initMenu(); changerEcran('ecran-menu');
+        }
+
+        function retourMenu() { if(tapisInterval) clearInterval(tapisInterval); jouerSon('clic'); initMenu(); changerEcran('ecran-menu'); }
+
+        function lancerConfettis() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4CAF50', '#FFEB3B', '#FF9800'];
+            const container = document.getElementById('confetti-container'); container.innerHTML = '';
+            for(let i=0; i<120; i++) {
+                let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's'; conf.style.animationDelay = (Math.random() * 2) + 's';
+                if(Math.random() > 0.5) conf.style.borderRadius = "50%";
+                container.appendChild(conf);
+            }
+            setTimeout(() => container.innerHTML = '', 6000);
+        }
+    </script>
+</body>
+</html>
