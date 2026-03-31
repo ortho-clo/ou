@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La fabrique Brik-à-mots</title>
+    <style>
+        /* --- VARIABLES ET RESET --- */
+        :root {
+            --rouge-fond: #db3236;
+            --jaune-brique: #ffc107;
+            --jaune-bordure: #ff9800;
+            --bleu-texte: #1a237e;
+            --gris-robot: #90a4ae;
+            --gris-fonce: #37474f;
+            --gris-clair: #9e9e9e;
+            --blanc: #ffffff;
+            --vert-succes: #4caf50;
+            
+            /* Couleurs des badges de modules */
+            --c-mod1: #e57373; --c-mod2: #f06292; --c-mod3: #ba68c8; --c-mod4: #7986cb;
+            --c-mod5: #64b5f6; --c-mod6: #4dd0e1; --c-mod7: #4db6ac; --c-mod8: #81c784;
+        }
+
+        * { box-sizing: border-box; font-family: 'Century Gothic', Arial, sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--rouge-fond); color: var(--bleu-texte); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app { width: 100%; max-width: 1000px; height: 100vh; display: flex; flex-direction: column; align-items: center; position: relative; }
+
+        /* --- MANETTES DE DÉCORATION --- */
+        .manette { position: absolute; top: 50%; transform: translateY(-50%); width: 120px; height: 50px; background-color: #212121; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 5px 0 #000; z-index: 0; }
+        .manette.gauche { left: 10px; } .manette.droite { right: 10px; flex-direction: row-reverse; }
+        .croix-direction { width: 30px; height: 30px; background: #616161; clip-path: polygon(33% 0, 66% 0, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0 66%, 0 33%, 33% 33%); }
+        .boutons-action { display: flex; gap: 5px; }
+        .btn-rouge, .btn-bleu { width: 15px; height: 15px; border-radius: 50%; }
+        .btn-rouge { background-color: #f44336; margin-top: 10px;} .btn-bleu { background-color: #2196f3; margin-bottom: 10px;}
+
+        /* --- BOUTON RETOUR MENU --- */
+        #btn-maison { position: absolute; top: 20px; right: 20px; background: var(--blanc); border: 4px solid var(--gris-fonce); border-radius: 15px; padding: 10px 20px; font-size: 1.5rem; font-weight: bold; cursor: pointer; display: none; z-index: 100; box-shadow: 0 4px 0 var(--gris-fonce); transition: 0.2s; }
+        #btn-maison:active { transform: translateY(4px); box-shadow: 0 0 0 var(--gris-fonce); }
+
+        /* --- MENU & TAPIS DÉCORATIF --- */
+        .tapis-menu { width: 100%; height: 100px; background: #424242; border-bottom: 5px solid #212121; position: relative; overflow: hidden; display: flex; align-items: center; margin-bottom: 15px;}
+        .rail-tapis { position: absolute; bottom: 0; width: 100%; height: 15px; background: repeating-linear-gradient(90deg, #212121, #212121 20px, #424242 20px, #424242 40px); }
+        .mot-tapis { position: absolute; display: flex; align-items: flex-end; animation: defilementMenu 20s linear infinite; white-space: nowrap; bottom: 30px; }
+        
+        /* NOUVEAU DESIGN DES BRIQUES DU MENU */
+        .mot-tapis-conteneur { display: flex; border: 4px solid var(--gris-fonce); border-radius: 12px; overflow: hidden; background-color: var(--jaune-brique); }
+        .brique-tapis { padding: 8px 25px; font-weight: bold; font-size: 1.5rem; color: var(--bleu-texte); }
+        .brique-tapis:first-child { border-right: 4px dashed var(--gris-clair); }
+
+        @keyframes defilementMenu { from { left: 100%; } to { left: -40%; } }
+
+        .en-tete { background-color: var(--blanc); border: 5px solid var(--jaune-brique); border-radius: 20px; padding: 10px 40px; font-size: 2.5rem; font-weight: bold; z-index: 10; margin-bottom: 10px;}
+
+        /* --- ÉCRANS --- */
+        .ecran { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; flex-grow: 1; animation: fadeIn 0.3s forwards; padding: 10px; z-index: 5; }
+        .ecran.actif { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MENU MODULES --- */
+        .grille-modules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 20px; width: 90%; max-width: 800px; }
+        .carte-module { background: white; border: 3px solid var(--gris-fonce); border-radius: 15px; padding: 15px; cursor: pointer; transition: transform 0.2s; text-align: center; position: relative; }
+        .carte-module:hover { transform: scale(1.05); }
+        .badge-numero { position: absolute; top: -10px; left: -10px; color: white; width: 30px; height: 30px; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .badge-etoile { position: absolute; top: -10px; right: -10px; background: white; border: 3px solid #ddd; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; color: #ddd; opacity: 0.5; transition: 0.3s;}
+        .badge-etoile.obtenu { background-color: var(--jaune-brique); border-color: var(--jaune-bordure); color: white; opacity: 1; box-shadow: 0 0 12px var(--jaune-brique); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .nom-module { margin-top: 10px; font-weight: bold; font-size: 1.2rem; }
+
+        /* --- ROBOT DESIGN --- */
+        .robot-visuel { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-bottom: 10px; width: 200px; }
+        .tete-robot { background: var(--gris-robot); border: 3px solid var(--gris-fonce); border-radius: 15px 15px 5px 5px; padding: 10px; display: flex; justify-content: center; align-items: center; margin: 0 auto; min-width: 80px; }
+        .oeil-cyclope { width: 25px; height: 25px; background: white; border-radius: 50%; border: 3px solid #333; display: flex; justify-content: center; align-items: center; }
+        .trois-yeux { display: flex; gap: 5px; } .petit-oeil { width: 15px; height: 15px; background: white; border-radius: 50%; border: 2px solid #333; }
+        .pupille { width: 10px; height: 10px; background: #333; border-radius: 50%; } .pupille-petite { width: 6px; height: 6px; background: #333; border-radius: 50%; margin: 2px auto;}
+        .cou-robot { width: 20px; height: 15px; background: #78909c; border-left: 3px solid #333; border-right: 3px solid #333; margin: 0 auto; }
+        .corps-robot { background: var(--jaune-brique); border: 3px solid var(--gris-fonce); border-radius: 10px; width: 90px; height: 50px; display: flex; justify-content: center; align-items: center; margin: 0 auto; }
+        .plaque-structure { background: white; border-radius: 20px; padding: 5px 10px; display: flex; gap: 5px; border: 2px solid #ddd; }
+        .lettre-structure { background: var(--jaune-bordure); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; font-weight: bold; }
+        .lettre-coeur { background: white; color: red; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; border: 1px solid #ccc;}
+
+        /* --- CONSIGNES & BULLES --- */
+        .consigne { background: #e8eaf6; color: var(--bleu-texte); padding: 10px 20px; border-radius: 20px; border: 2px dashed #9fa8da; font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; text-align: center; }
+        .bulle-robot { position: absolute; left: 140px; top: -10px; background: white; border: 4px solid var(--jaune-brique); border-radius: 20px; padding: 10px 20px; font-size: 2.2rem; font-weight: bold; display: none; animation: pop 0.3s forwards; z-index: 10; }
+        .bulle-robot::before { content: ''; position: absolute; left: -15px; top: 15px; border-width: 10px 15px 10px 0; border-style: solid; border-color: transparent var(--jaune-brique) transparent transparent; }
+
+        /* --- PHASE 1a & 1b --- */
+        .zone-ronds-gris { display: flex; gap: 10px; background: var(--jaune-brique); padding: 15px; border-radius: 15px; border: 3px solid var(--jaune-bordure); margin-bottom: 10px; }
+        .rond-gris { width: 50px; height: 50px; border-radius: 50%; background: #eceff1; border: 4px dashed #b0bec5; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: #b0bec5; transition: 0.1s; }
+        .rond-gris.decouvert { background: var(--jaune-brique); border: 4px solid white; color: white; border-style: solid; }
+        .rond-gris.decouvert.coeur { background: white; color: red; border: 4px solid red; }
+        .brique-nom-final { margin-top: 10px; background: var(--jaune-brique); border: 5px solid var(--jaune-bordure); padding: 20px 50px; border-radius: 20px; font-size: 3rem; font-weight: bold; color: var(--bleu-texte); display: none; animation: pop 0.3s forwards; }
+
+        .grille-briques { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .brique-jaune { background: var(--jaune-brique); border: 4px solid var(--jaune-bordure); color: var(--gris-fonce); font-size: 2rem; font-weight: bold; padding: 10px 25px; border-radius: 15px; cursor: pointer; box-shadow: 0 6px 0 var(--jaune-bordure); transition: all 0.1s; }
+        .brique-jaune:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* --- PHASE 2 (Tapis rapide) --- */
+        .zone-tapis-jeu { width: 100%; max-width: 800px; height: 140px; background: #424242; border: 5px solid #212121; border-radius: 10px; position: relative; overflow: hidden; margin-top: 20px; }
+        .item-tapis { position: absolute; top: 35px; background: var(--jaune-brique); border: 3px solid var(--jaune-bordure); padding: 15px 25px; border-radius: 10px; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
+        .objectifs-p2 { display: flex; gap: 10px; margin-top: 15px; }
+        .objectif-rond { width: 40px; height: 40px; border-radius: 50%; background: white; border: 3px dashed var(--jaune-brique); display: flex; justify-content: center; align-items: center; font-weight: bold; color: var(--bleu-texte); transition: 0.3s; }
+        .objectif-rond.trouve { background: var(--vert-succes); border-color: var(--vert-succes); color: white; border-style: solid; }
+
+        /* --- PHASE 3 --- */
+        .zone-ecriture { background: white; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 2.5rem; font-weight: bold; text-align: center;}
+        .mot-a-completer { display: flex; align-items: center; gap: 10px; }
+        .input-syllabe { min-width: 80px; max-width: 120px; height: 60px; font-size: 2.5rem; text-align: center; border: 4px dashed var(--jaune-brique); border-radius: 10px; outline: none; color: var(--bleu-texte); font-weight: bold; text-transform: lowercase; }
+        .emoji-mot { font-size: 4rem; margin-bottom: 5px; cursor: pointer; transition: 0.2s; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+        .emoji-mot:hover { transform: scale(1.1); }
+        .btn-audio { background: #2196f3; color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 1.5rem; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 #1976d2;}
+
+        /* --- PHASE 4 & ANIMATIONS --- */
+        .zone-phrase { background: white; padding: 40px; border-radius: 20px; font-size: 1.8rem; text-align: center; line-height: 1.5; border: 5px solid var(--jaune-brique); width: 80%; }
+        .btn-suivant { margin-top: 10px; padding: 10px 25px; background: var(--vert-succes); color: white; border: none; border-radius: 15px; font-size: 1.5rem; cursor: pointer; box-shadow: 0 5px 0 #388e3c; }
+
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .erreur { animation: shake 0.4s; background-color: #ff5252 !important; color: white !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* --- CONFETTIS --- */
+        #confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .confetti { position: absolute; top: -20px; width: 15px; height: 15px; opacity: 0.9; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="manette gauche"><div class="croix-direction"></div><div class="boutons-action"><div class="btn-rouge"></div><div class="btn-bleu"></div></div></div>
+        <div class="manette droite"><div class="croix-direction"></div><div class="boutons-action"><div class="btn-rouge"></div><div class="btn-bleu"></div></div></div>
+
+        <button id="btn-maison" onclick="retourMenu()">🏠 Menu</button>
+        <div id="confetti-container"></div>
+
+        <div id="ecran-menu" class="ecran actif">
+            <div class="tapis-menu" id="tapis-decoratif">
+                <div class="rail-tapis"></div>
+            </div>
+            <div class="en-tete">La fabrique Brik-à-mots</div>
+            <div class="grille-modules" id="grille-modules-container"></div>
+        </div>
+
+        <div id="ecran-phase1a" class="ecran">
+            <div class="consigne" id="consigne-1a"></div>
+            <div class="robot-visuel" id="robot-1a"></div>
+            <div class="zone-ronds-gris" id="ronds-gris-container"></div>
+            <div class="brique-nom-final" id="brique-nom-final">Nom</div>
+        </div>
+
+        <div id="ecran-phase1b" class="ecran">
+            <div class="consigne">Lis la bulle du robot et trouve la bonne brique !</div>
+            <div class="robot-visuel" onclick="montrerBullePhase1b()">
+                 <div id="robot-1b" style="display:flex; flex-direction:column; align-items:center;"></div>
+                 <div class="bulle-robot" id="bulle-1b">?</div>
+            </div>
+            <div class="grille-briques" id="briques-1b-container"></div>
+        </div>
+
+        <div id="ecran-phase2" class="ecran">
+            <div class="consigne">Attrape les 5 briques du module sur le tapis !</div>
+            <div class="zone-tapis-jeu" id="tapis-jeu-container">
+                <div class="rail-tapis"></div>
+            </div>
+            <div class="objectifs-p2" id="objectifs-p2-container"></div>
+        </div>
+
+        <div id="ecran-phase3" class="ecran">
+            <div class="consigne">Écoute le mot et écris la syllabe manquante !</div>
+            <div class="zone-ecriture">
+                <div class="emoji-mot" id="emoji-p3" onclick="lireMotTTS()">❓</div>
+                <button class="btn-audio" onclick="lireMotTTS()">🔊</button>
+                <div class="mot-a-completer" id="zone-mot-p3"></div>
+            </div>
+            <button class="btn-suivant" onclick="validerEcriture()">Vérifier</button>
+        </div>
+
+        <div id="ecran-phase4" class="ecran">
+            <div class="consigne">Mission finale ! Lis les phrases à voix haute.</div>
+            <div class="zone-phrase" id="phrase-finale"></div>
+            <button class="btn-suivant" onclick="retourMenu()">Bravo détective ! Retour aux modules</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- BASE DE DONNÉES MISE À JOUR ---
+        const baseDonnees = [
+            {
+                id: 1, nom: "La", structure: ["c", "v"], yeux: 1, typeYeux: "cyclope",
+                syllabes: ["ma", "fa", "sa", "na", "pa"], bulleP1: "ma",
+                mots: [
+                    { texte: "magie", syllabe: "ma", type: "debut", reste: "gie", emoji: "🪄" },
+                    { texte: "farine", syllabe: "fa", type: "debut", reste: "rine", emoji: "🌾" },
+                    { texte: "sapin", syllabe: "sa", type: "debut", reste: "pin", emoji: "🌲" },
+                    { texte: "natation", syllabe: "na", type: "debut", reste: "tation", emoji: "🏊" },
+                    { texte: "papa", syllabe: "pa", type: "debut", reste: "pa", emoji: "👨" }
+                ],
+                phrases: ["Le garçon regarde la <b>ma</b>gie.", "<b>Pa</b>pa prépare le repas."]
+            },
+            {
+                id: 2, nom: "Zo", structure: ["c", "v"], yeux: 3, typeYeux: "trois",
+                syllabes: ["to", "ro", "vo", "no", "co"], bulleP1: "to",
+                mots: [
+                    { texte: "tomate", syllabe: "to", type: "debut", reste: "mate", emoji: "🍅" },
+                    { texte: "robot", syllabe: "ro", type: "debut", reste: "bot", emoji: "🤖" },
+                    { texte: "vélo", syllabe: "lo", type: "fin", debut: "vé", emoji: "🚲" },
+                    { texte: "domino", syllabe: "no", type: "fin", debut: "domi", emoji: "🁣" },
+                    { texte: "gecko", syllabe: "co", accepte: ["co", "ko"], type: "fin", debut: "geck", emoji: "🦎" } 
+                ],
+                phrases: ["Le <b>ro</b>bot répare le vé<b>lo</b>.", "Le geck<b>o</b> mange la <b>to</b>mate."]
+            },
+            {
+                id: 3, nom: "Ji", structure: ["c", "v"], yeux: 2, typeYeux: "normaux",
+                syllabes: ["pi", "bi", "di", "gi", "ri"], bulleP1: "pi",
+                mots: [
+                    { texte: "pirate", syllabe: "pi", type: "debut", reste: "rate", emoji: "🏴‍☠️" },
+                    { texte: "biberon", syllabe: "bi", type: "debut", reste: "beron", emoji: "🍼" },
+                    { texte: "dinosaure", syllabe: "di", type: "debut", reste: "nosaure", emoji: "🦖" },
+                    { texte: "girafe", syllabe: "gi", type: "debut", reste: "rafe", emoji: "🦒" },
+                    { texte: "rideau", syllabe: "ri", type: "debut", reste: "deau", emoji: "🪟" }
+                ],
+                phrases: ["Le <b>pi</b>rate trouve un trésor.", "La <b>gi</b>rafe mange une feuille."]
+            },
+            {
+                id: 4, nom: "Vé", structure: ["c", "v"], yeux: 1, typeYeux: "cyclope",
+                syllabes: ["mu", "ny", "ci", "pé", "go"], bulleP1: "go",
+                mots: [
+                    { texte: "mur", syllabe: "mur", accepte: ["mur", "mu"], type: "debut", reste: "", emoji: "🧱" },
+                    { texte: "pyjama", syllabe: "py", accepte: ["py", "pi", "ny"], type: "debut", reste: "jama", emoji: "👚" },
+                    { texte: "citron", syllabe: "ci", accepte: ["ci", "si"], type: "debut", reste: "tron", emoji: "🍋" },
+                    { texte: "pédale", syllabe: "pé", type: "debut", reste: "dale", emoji: "🦶" },
+                    { texte: "gobelet", syllabe: "go", type: "debut", reste: "belet", emoji: "🥤" }
+                ],
+                phrases: ["L'élève boit dans le <b>go</b>belet.", "Le garçon appuie sur la <b>pé</b>dale."]
+            },
+            {
+                id: 5, nom: "Ur", structure: ["v", "c"], yeux: 3, typeYeux: "trois",
+                syllabes: ["ar", "al", "as", "is", "us"], bulleP1: "ar",
+                mots: [
+                    { texte: "arbre", syllabe: "ar", type: "debut", reste: "bre", emoji: "🌳" },
+                    { texte: "album", syllabe: "al", type: "debut", reste: "bum", emoji: "📓" },
+                    { texte: "astronaute", syllabe: "as", type: "debut", reste: "tronaute", emoji: "👨‍🚀" },
+                    { texte: "histoire", syllabe: "is", type: "debut", reste: "toire", emoji: "📖" },
+                    { texte: "usine", syllabe: "u", type: "debut", reste: "sine", emoji: "🏭" }
+                ],
+                phrases: ["L'oiseau fait un nid dans l'<b>ar</b>bre.", "La fille lit une h<b>is</b>toire."]
+            },
+            {
+                id: 6, nom: "Of", structure: ["v", "c"], yeux: 2, typeYeux: "normaux",
+                syllabes: ["ac", "ab", "ad", "oc", "ob"], bulleP1: "oc",
+                mots: [
+                    { texte: "accordéon", syllabe: "ac", type: "debut", reste: "cordéon", emoji: "🪗" },
+                    { texte: "abeille", syllabe: "a", type: "debut", reste: "beille", emoji: "🐝" },
+                    { texte: "addition", syllabe: "ad", type: "debut", reste: "dition", emoji: "➕" },
+                    { texte: "octobre", syllabe: "oc", type: "debut", reste: "tobre", emoji: "🍂" },
+                    { texte: "objet", syllabe: "ob", type: "debut", reste: "jet", emoji: "📦" }
+                ],
+                phrases: ["L'élève calcule une <b>ad</b>dition.", "Le musicien joue de l'<b>ac</b>cordéon."]
+            },
+            {
+                id: 7, nom: "Rou", structure: ["c", "coeur"], yeux: 1, typeYeux: "cyclope",
+                syllabes: ["mou", "lou", "fou", "sou", "nou"], bulleP1: "lou",
+                mots: [
+                    { texte: "mouton", syllabe: "mou", type: "debut", reste: "ton", emoji: "🐑" },
+                    { texte: "loup", syllabe: "lou", type: "debut", reste: "p", emoji: "🐺" },
+                    { texte: "fourmi", syllabe: "fou", type: "debut", reste: "rmi", emoji: "🐜" },
+                    { texte: "souris", syllabe: "sou", type: "debut", reste: "ris", emoji: "🐁" },
+                    { texte: "nouille", syllabe: "nou", type: "debut", reste: "ille", emoji: "🍜" }
+                ],
+                phrases: ["La <b>sou</b>ris mange le fromage.", "Le <b>lou</b>p regarde le <b>mou</b>ton."]
+            },
+            {
+                id: 8, nom: "Yon", structure: ["c", "coeur"], yeux: 3, typeYeux: "trois",
+                syllabes: ["ton", "ron", "von", "non", "zon"], bulleP1: "ron",
+                mots: [
+                    { texte: "tonton", syllabe: "ton", type: "debut", reste: "ton", emoji: "👨" },
+                    { texte: "rondelle", syllabe: "ron", type: "debut", reste: "delle", emoji: "🏒" },
+                    { texte: "savon", syllabe: "von", type: "fin", debut: "sa", emoji: "🧼" },
+                    { texte: "non", syllabe: "non", type: "debut", reste: "", emoji: "❌" },
+                    { texte: "gazon", syllabe: "zon", type: "fin", debut: "ga", emoji: "🌱" }
+                ],
+                phrases: ["Le garçon coupe le ga<b>zon</b>.", "La fille utilise le sa<b>von</b>."]
+            }
+        ];
+
+        let modActif = null;
+        let tapisInterval = null;
+        let syllabesTrouveesP2 = [];
+        let indexMotP3 = 0;
+        
+        const etatProgress = JSON.parse(localStorage.getItem('frikAmotsProgress')) || {};
+
+        // --- AUDIO ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function jouerSon(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type === 'clic') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.type = 'sine'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+            if(type === 'succes') { osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.type = 'triangle'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'erreur') { osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.type = 'sawtooth'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'celebration') { 
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime); 
+                setTimeout(()=>jouerSon('clic'), 100); setTimeout(()=>jouerSon('clic'), 200); setTimeout(()=>jouerSon('succes'), 300);
+                osc.type = 'square'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4); osc.start(); osc.stop(audioCtx.currentTime + 0.4); 
+            }
+        }
+
+        function parler(texte) {
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; utterance.rate = 0.9; 
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function lireMotTTS() {
+            if(!modActif || !modActif.mots[indexMotP3]) return;
+            parler(modActif.mots[indexMotP3].texte);
+        }
+
+        function lancerConfettis() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4CAF50', '#FFEB3B', '#FF9800'];
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            for(let i=0; i<120; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                conf.style.animationDelay = (Math.random() * 2) + 's';
+                if(Math.random() > 0.5) conf.style.borderRadius = "50%";
+                container.appendChild(conf);
+            }
+            setTimeout(() => container.innerHTML = '', 6000);
+        }
+
+        // --- OUTILS VISUELS ---
+        function genererTeteRobot(yeux, type) {
+            let htmlYeux = '';
+            if(type === "cyclope") htmlYeux = `<div class="oeil-cyclope"><div class="pupille"></div></div>`;
+            else if(type === "trois") htmlYeux = `<div class="trois-yeux"><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div></div>`;
+            else htmlYeux = `<div class="trois-yeux"><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div></div>`;
+            return `<div style="display:flex; flex-direction:column; align-items:center; width:100%;"><div class="tete-robot">${htmlYeux}</div><div class="cou-robot"></div></div>`;
+        }
+
+        function genererPlaque(structure) {
+            return `<div class="plaque-structure">` + structure.map(s => s==='coeur' ? `<div class="lettre-coeur">❤️</div>` : `<div class="lettre-structure">${s}</div>`).join('') + `</div>`;
+        }
+
+        function changerEcran(id) {
+            document.querySelectorAll('.ecran').forEach(e => e.classList.remove('actif'));
+            document.getElementById(id).classList.add('actif');
+            const btnMaison = document.getElementById('btn-maison');
+            if(id === 'ecran-menu') btnMaison.style.display = 'none';
+            else btnMaison.style.display = 'block';
+        }
+
+        // --- INITIALISATION MENU ---
+        function initMenu() {
+            if(tapisInterval) clearInterval(tapisInterval);
+            
+            const tapisMenu = document.getElementById('tapis-decoratif');
+            tapisMenu.innerHTML = '<div class="rail-tapis"></div>';
+            
+            // LA CORRECTION EST ICI : Plus de structure, juste les briques propres
+            const motsTapis = [ ["mo", "to"], ["ma", "tou"], ["la", "pin"] ];
+
+            motsTapis.forEach((mot, indexMot) => {
+                const divMot = document.createElement('div'); divMot.className = 'mot-tapis';
+                divMot.style.animationDelay = `-${indexMot * 7}s`;
+                
+                divMot.innerHTML = `
+                    <div class="mot-tapis-conteneur">
+                        <div class="brique-tapis">${mot[0]}</div>
+                        <div class="brique-tapis">${mot[1]}</div>
+                    </div>
+                `;
+                tapisMenu.appendChild(divMot);
+            });
+
+            const conteneur = document.getElementById('grille-modules-container');
+            conteneur.innerHTML = '';
+            baseDonnees.forEach(mod => {
+                const btn = document.createElement('div'); btn.className = 'carte-module';
+                const clsEtoile = etatProgress[mod.id] ? "obtenu" : "";
+                
+                btn.innerHTML = `
+                    <div class="badge-numero" style="background-color: var(--c-mod${mod.id});">${mod.id}</div>
+                    <div class="badge-etoile ${clsEtoile}">⭐</div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        ${genererTeteRobot(mod.yeux, mod.typeYeux)}
+                        <div class="corps-robot">${genererPlaque(mod.structure)}</div>
+                    </div>
+                    <div class="nom-module">${mod.nom}</div>
+                `;
+                btn.onclick = () => lancerPhase1a(mod);
+                conteneur.appendChild(btn);
+            });
+        }
+        
+        // --- LOGIQUE DU JEU ---
+        function lancerPhase1a(mod) {
+            jouerSon('clic'); modActif = mod;
+            document.getElementById('brique-nom-final').style.display = 'none';
+            document.getElementById('consigne-1a').innerHTML = `Salut, je suis <b>${mod.nom}</b> ! Écris mon nom.`;
+            
+            const conteneurRobot = document.getElementById('robot-1a');
+            conteneurRobot.innerHTML = genererTeteRobot(mod.yeux, mod.typeYeux) + `<div class="corps-robot">${genererPlaque(mod.structure)}</div>`;
+            
+            const conteneurRonds = document.getElementById('ronds-gris-container');
+            conteneurRonds.innerHTML = '';
+            
+            mod.structure.forEach((lettre, index) => {
+                const rond = document.createElement('div'); rond.className = 'rond-gris';
+                rond.style.borderColor = "white"; 
+                rond.innerText = lettre === 'coeur' ? '❤️' : lettre;
+                rond.onclick = () => decouvrirRond(rond, index);
+                conteneurRonds.appendChild(rond);
+            });
+            changerEcran('ecran-phase1a');
+        }
+
+        function decouvrirRond(rond, index) {
+            if(rond.classList.contains('decouvert')) return;
+            jouerSon('clic');
+            const lettresNom = modActif.nom.toLowerCase().split('');
+            const structureType = modActif.structure[index];
+            
+            if(structureType === 'coeur') { rond.innerText = "❤️"; rond.classList.add('decouvert', 'coeur'); } 
+            else { rond.innerText = lettresNom[index]; rond.classList.add('decouvert'); }
+            
+            if(document.querySelectorAll('.rond-gris.decouvert').length === modActif.structure.length) {
+                jouerSon('succes');
+                const blocNom = document.getElementById('brique-nom-final');
+                blocNom.innerText = modActif.nom; blocNom.style.display = 'block';
+                setTimeout(lancerPhase1b, 1000);
+            }
+        }
+
+        function lancerPhase1b() {
+            const robot = document.getElementById('robot-1b');
+            robot.innerHTML = genererTeteRobot(modActif.yeux, modActif.typeYeux) + `<div class="corps-robot">${genererPlaque(modActif.structure)}</div>`;
+            const bulle = document.getElementById('bulle-1b'); bulle.innerText = '?'; bulle.style.display = 'none'; bulle.dataset.decouvert = "false";
+            
+            const briques = document.getElementById('briques-1b-container'); briques.innerHTML = '';
+            
+            let choix = [modActif.bulleP1];
+            let autresSyllabes = modActif.syllabes.filter(s => s !== modActif.bulleP1);
+            choix.push(autresSyllabes[0], autresSyllabes[1], autresSyllabes[2]);
+            choix = choix.sort(() => Math.random() - 0.5);
+            
+            choix.forEach(s => {
+                const btn = document.createElement('div'); btn.className = 'brique-jaune'; btn.innerText = s;
+                btn.onclick = () => verifierPhase1b(btn, s);
+                briques.appendChild(btn);
+            });
+            changerEcran('ecran-phase1b');
+        }
+
+        function montrerBullePhase1b() { jouerSon('clic'); const bulle = document.getElementById('bulle-1b'); bulle.innerText = modActif.bulleP1; bulle.style.display = 'block'; bulle.dataset.decouvert = "true"; }
+        
+        function verifierPhase1b(btn, s) {
+            const bulle = document.getElementById('bulle-1b');
+            if(bulle.dataset.decouvert !== "true") return;
+            if (s === modActif.bulleP1) { jouerSon('succes'); btn.style.backgroundColor = "var(--vert-succes)"; btn.style.color = "white"; setTimeout(lancerPhase2, 800); }
+            else { jouerSon('erreur'); btn.classList.add('erreur'); setTimeout(() => btn.classList.remove('erreur'), 400); }
+        }
+
+        function lancerPhase2() {
+            syllabesTrouveesP2 = [];
+            const objContainer = document.getElementById('objectifs-p2-container'); objContainer.innerHTML = '';
+            modActif.syllabes.forEach(s => {
+                const o = document.createElement('div'); o.className = 'objectif-rond'; o.id = 'obj-' + s; o.innerText = s;
+                objContainer.appendChild(o);
+            });
+
+            changerEcran('ecran-phase2');
+            const tapis = document.getElementById('tapis-jeu-container');
+            document.querySelectorAll('.item-tapis').forEach(e => e.remove());
+
+            tapisInterval = setInterval(() => {
+                const s = modActif.syllabes[Math.floor(Math.random() * modActif.syllabes.length)];
+                const item = document.createElement('div'); item.className = 'item-tapis'; item.innerText = s;
+                item.style.left = '100%'; item.style.transition = `left 15s linear`;
+                tapis.appendChild(item);
+                
+                setTimeout(() => item.style.left = '-150px', 50);
+
+                item.onclick = function() {
+                    const txt = this.innerText;
+                    if(!syllabesTrouveesP2.includes(txt)) {
+                        jouerSon('succes');
+                        syllabesTrouveesP2.push(txt);
+                        document.getElementById('obj-' + txt).classList.add('trouve');
+                        this.style.backgroundColor = "var(--vert-succes)"; this.style.color = "white";
+                        setTimeout(() => this.remove(), 200);
+                        if(syllabesTrouveesP2.length === 5) { clearInterval(tapisInterval); setTimeout(lancerPhase3, 1500); }
+                    } else { jouerSon('erreur'); this.classList.add('erreur'); setTimeout(() => this.classList.remove('erreur'), 400); }
+                };
+                setTimeout(() => { if(item.parentNode) item.remove(); }, 15000);
+            }, 1200);
+        }
+
+        function lancerPhase3() {
+            if(tapisInterval) clearInterval(tapisInterval);
+            indexMotP3 = 0;
+            changerEcran('ecran-phase3');
+            afficherMotP3();
+        }
+
+        function afficherMotP3() {
+            const motObj = modActif.mots[indexMotP3];
+            document.getElementById('emoji-p3').innerText = motObj.emoji;
+            const zone = document.getElementById('zone-mot-p3'); zone.innerHTML = '';
+            
+            const input = document.createElement('input'); input.type = 'text'; input.className = 'input-syllabe'; input.id = 'input-p3'; 
+            input.maxLength = motObj.syllabe.length + 1;
+
+            if (motObj.type === "debut") { zone.appendChild(input); zone.innerHTML += `<span>${motObj.reste}</span>`; }
+            else { zone.innerHTML += `<span>${motObj.debut}</span>`; zone.appendChild(input); }
+            
+            setTimeout(() => { document.getElementById('input-p3').focus(); lireMotTTS(); }, 500);
+        }
+
+        function validerEcriture() {
+            const input = document.getElementById('input-p3'); const motObj = modActif.mots[indexMotP3];
+            let reponse = input.value.toLowerCase().trim();
+            let valides = motObj.accepte ? motObj.accepte : [motObj.syllabe];
+
+            if (valides.includes(reponse)) {
+                jouerSon('succes'); input.style.borderColor = "var(--vert-succes)"; input.style.color = "var(--vert-succes)";
+                setTimeout(() => {
+                    indexMotP3++;
+                    if(indexMotP3 < modActif.mots.length) afficherMotP3(); 
+                    else lancerPhase4();
+                }, 1000);
+            } else { jouerSon('erreur'); input.classList.add('erreur'); setTimeout(() => input.classList.remove('erreur'), 400); }
+        }
+
+        function lancerPhase4() {
+            changerEcran('ecran-phase4');
+            document.getElementById('phrase-finale').innerHTML = modActif.phrases.join('<br><br>');
+            setTimeout(() => { jouerSon('celebration'); parler("Hip hip hourra !"); lancerConfettis(); }, 300);
+            etatProgress[modActif.id] = true; localStorage.setItem('frikAmotsProgress', JSON.stringify(etatProgress));
+        }
+
+        function retourMenu() { jouerSon('clic'); initMenu(); changerEcran('ecran-menu'); }
+
+        initMenu();
+    </script>
+</body>
+</html>
