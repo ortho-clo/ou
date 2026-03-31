@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La fabrique brik-à-mots - Niveau 2 (Complet)</title>
+    <style>
+        /* --- VARIABLES ET RESET --- */
+        :root {
+            --bleu-fond: #0277bd;
+            --bleu-ciel: #e1f5fe;
+            --jaune-brique: #ffc107;
+            --jaune-bordure: #ff9800;
+            --orange-brique: #ff9800;
+            --orange-bordure: #f57c00;
+            --bleu-texte: #01579b;
+            --gris-robot: #cfd8dc;
+            --gris-fonce: #37474f;
+            --blanc: #ffffff;
+            --vert-succes: #4caf50;
+            
+            --c-mod1: #ef5350; --c-mod2: #ab47bc; --c-mod3: #5c6bc0; --c-mod4: #29b6f6;
+            --c-mod5: #26a69a; --c-mod6: #9ccc65; --c-mod7: #ffa726; --c-mod8: #8d6e63;
+        }
+
+        * { box-sizing: border-box; font-family: 'Century Gothic', Arial, sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bleu-fond); color: var(--bleu-texte); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app { width: 100%; max-width: 1000px; height: 100vh; display: flex; flex-direction: column; align-items: center; position: relative; }
+
+        /* --- UI GÉNÉRALE --- */
+        #btn-maison { position: absolute; top: 20px; right: 20px; background: var(--blanc); border: 4px solid var(--gris-fonce); border-radius: 15px; padding: 10px 20px; font-size: 1.5rem; font-weight: bold; cursor: pointer; display: none; z-index: 100; box-shadow: 0 4px 0 var(--gris-fonce); transition: 0.2s; }
+        #btn-maison:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+
+        .ecran { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; flex-grow: 1; animation: fadeIn 0.3s forwards; padding: 10px; z-index: 5; }
+        .ecran.actif { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-suivant { margin-top: 20px; padding: 15px 30px; background: var(--vert-succes); color: white; border: 3px solid white; border-radius: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #2e7d32; transition: 0.1s; }
+        .btn-suivant:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+        
+        .consigne { background: var(--bleu-ciel); color: var(--bleu-texte); padding: 10px 20px; border-radius: 20px; border: 2px solid #81d4fa; font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; text-align: center; box-shadow: 0 4px 0 #81d4fa;}
+
+        /* --- ACCUEIL & MENU --- */
+        .ecran-accueil-centre { justify-content: center; align-items: center; height: 100%; }
+        .btn-demarrer { padding: 20px 40px; font-size: 2.5rem; background: var(--jaune-brique); border: 5px solid white; border-radius: 20px; color: var(--bleu-texte); font-weight: bold; cursor: pointer; box-shadow: 0 8px 0 var(--jaune-bordure); transition: 0.2s; }
+        .btn-demarrer:active { transform: translateY(8px); box-shadow: 0 0 0 transparent; }
+        .en-tete { background-color: var(--blanc); border: 5px solid var(--orange-brique); border-radius: 20px; padding: 10px 40px; font-size: 2.5rem; font-weight: bold; z-index: 10; margin-bottom: 10px; color: var(--bleu-texte); box-shadow: 0 6px 0 var(--orange-bordure); text-align: center;}
+        
+        .grille-modules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 20px; width: 90%; max-width: 800px; max-height: 60vh; overflow-y: auto;}
+        .carte-module { background: white; border: 3px solid var(--gris-fonce); border-radius: 15px; padding: 15px; cursor: pointer; transition: transform 0.2s; text-align: center; position: relative; }
+        .carte-module:hover { transform: scale(1.05); border-color: var(--orange-brique); }
+        .badge-numero { position: absolute; top: -10px; left: -10px; color: white; width: 30px; height: 30px; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .badge-etoile { position: absolute; top: -15px; right: -15px; background: white; border: 3px solid #ddd; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; color: #ddd; opacity: 0.5; transition: 0.3s;}
+        .badge-etoile.obtenu { background-color: var(--jaune-brique); border-color: white; color: white; opacity: 1; box-shadow: 0 0 15px var(--jaune-brique); transform: scale(1.1); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+
+        /* --- ROBOTS --- */
+        .robot-visuel { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; margin-bottom: 10px; width: 200px; }
+        .tete-robot { background: var(--gris-robot); border: 3px solid var(--gris-fonce); border-radius: 15px 15px 5px 5px; padding: 10px; display: flex; justify-content: center; align-items: center; margin: 0 auto; min-width: 80px; }
+        .oeil-cyclope { width: 25px; height: 25px; background: white; border-radius: 50%; border: 3px solid #333; display: flex; justify-content: center; align-items: center; }
+        .trois-yeux { display: flex; gap: 5px; } .petit-oeil { width: 15px; height: 15px; background: white; border-radius: 50%; border: 2px solid #333; }
+        .pupille { width: 10px; height: 10px; background: #333; border-radius: 50%; } .pupille-petite { width: 6px; height: 6px; background: #333; border-radius: 50%; margin: 2px auto;}
+        .cou-robot { width: 20px; height: 15px; background: #90a4ae; border-left: 3px solid #333; border-right: 3px solid #333; margin: 0 auto; }
+        .corps-robot { background: var(--orange-brique); border: 3px solid var(--gris-fonce); border-radius: 10px; width: 110px; height: 50px; display: flex; justify-content: center; align-items: center; margin: 0 auto; }
+        .plaque-structure { background: white; border-radius: 20px; padding: 5px 10px; display: flex; gap: 5px; border: 2px solid rgba(0,0,0,0.1); }
+        .lettre-structure { background: var(--bleu-fond); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 0.8rem; font-weight: bold; }
+        .lettre-coeur { background: white; color: red; border-radius: 50%; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; border: 1px solid #ccc; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);}
+        .bulle-robot { position: absolute; left: 140px; top: -10px; background: white; border: 4px solid var(--orange-brique); border-radius: 20px; padding: 10px 20px; font-size: 2.2rem; font-weight: bold; display: none; animation: pop 0.3s forwards; z-index: 10; color: var(--bleu-texte); }
+        .bulle-robot::before { content: ''; position: absolute; left: -15px; top: 15px; border-width: 10px 15px 10px 0; border-style: solid; border-color: transparent var(--orange-brique) transparent transparent; }
+
+        /* --- PHASE 1 --- */
+        .zone-ronds-gris { display: flex; gap: 10px; background: var(--orange-brique); padding: 15px; border-radius: 15px; border: 3px solid var(--orange-bordure); margin-bottom: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);}
+        .rond-gris { width: 50px; height: 50px; border-radius: 50%; background: #eceff1; border: 4px dashed #b0bec5; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: #b0bec5; transition: 0.1s; }
+        .rond-gris.decouvert { background: var(--jaune-brique); border: 4px solid white; color: var(--bleu-texte); border-style: solid; box-shadow: 0 4px 0 rgba(0,0,0,0.2);}
+        .rond-gris.decouvert.coeur { background: white; color: red; border: 4px solid red; }
+        .brique-nom-final { margin-top: 10px; background: var(--orange-brique); border: 5px solid var(--blanc); padding: 20px 50px; border-radius: 20px; font-size: 3rem; font-weight: bold; color: var(--blanc); display: none; animation: pop 0.3s forwards; text-shadow: 2px 2px 0 var(--orange-bordure);}
+        .grille-briques { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .brique-jaune { background: var(--jaune-brique); border: 4px solid var(--jaune-bordure); color: var(--bleu-texte); font-size: 2rem; font-weight: bold; padding: 10px 25px; border-radius: 15px; cursor: pointer; box-shadow: 0 6px 0 var(--jaune-bordure); transition: all 0.1s; text-transform: lowercase; }
+
+        /* --- PHASE 2 CHANTIER --- */
+        .zone-chantier { width: 100%; max-width: 800px; height: 400px; background: linear-gradient(to bottom, #81d4fa 60%, #aed581 60%); border: 8px solid var(--gris-fonce); border-radius: 20px; position: relative; overflow: hidden; margin-top: 10px; box-shadow: inset 0 5px 20px rgba(0,0,0,0.4);}
+        .maison-squelette { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); width: 280px; height: 120px; border: 5px dashed rgba(255,255,255,0.6); display: flex; flex-wrap: wrap-reverse; justify-content: center; gap: 5px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .brique-posee { background: var(--jaune-brique); border: 4px solid var(--jaune-bordure); border-radius: 5px; padding: 8px 15px; font-weight: bold; color: var(--bleu-texte); font-size: 1.3rem; text-transform: lowercase; animation: pop 0.3s ease-out;}
+        .brique-air { position: absolute; top: -60px; background: var(--orange-brique); border: 4px solid var(--orange-bordure); padding: 12px 25px; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 1.6rem; box-shadow: 0 5px 0 var(--orange-bordure); z-index: 10; text-transform: lowercase; transition: transform 0.1s;}
+        .brique-air:active { transform: scale(0.9); }
+
+        /* --- PHASE 3 --- */
+        .zone-ecriture { background: white; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; font-size: 2.5rem; font-weight: bold; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.2);}
+        .mot-a-completer { display: flex; align-items: center; gap: 10px; background: var(--bleu-ciel); padding: 10px 20px; border-radius: 15px; transition: 0.3s;}
+        .input-syllabe { min-width: 80px; max-width: 140px; height: 60px; font-size: 2.5rem; text-align: center; border: 4px dashed var(--orange-brique); border-radius: 10px; outline: none; color: var(--bleu-texte); font-weight: bold; text-transform: lowercase; background: white; transition: 0.3s;}
+        .emoji-mot { font-size: 4rem; margin-bottom: 5px; cursor: pointer; transition: 0.2s; }
+        .emoji-mot:hover { transform: scale(1.1); }
+        .btn-audio { background: #29b6f6; color: white; border: 3px solid white; border-radius: 50%; width: 55px; height: 55px; cursor: pointer; font-size: 1.8rem; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 #0288d1; transition: 0.1s;}
+
+        /* --- PHASE 4 --- */
+        .zone-phrase { background: white; padding: 30px; border-radius: 20px; font-size: 1.8rem; text-align: center; line-height: 1.6; border: 5px solid var(--orange-brique); width: 85%; max-width: 800px; color: var(--bleu-texte); box-shadow: 0 8px 0 rgba(0,0,0,0.2);}
+        
+        /* --- PHASE 5 (SYNTAXE SVC) --- */
+        .rail-syntaxe { display: flex; gap: 15px; margin: 20px 0; justify-content: center; width: 100%;}
+        .bloc-svc { width: 180px; height: 90px; border: 5px dashed var(--gris-robot); border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 1.2rem; text-align: center; background: white; color: var(--gris-fonce); font-weight: bold; text-transform: lowercase;}
+        .bloc-svc.rempli { border-style: solid; color: white; font-size: 1.4rem;}
+        .bloc-s.rempli { background: #42a5f5; border-color: #1e88e5; }
+        .bloc-v.rempli { background: #ef5350; border-color: #e53935; }
+        .bloc-c.rempli { background: #66bb6a; border-color: #43a047; }
+        
+        .options-svc { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 800px; margin-bottom: 20px; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 20px;}
+        .etiquette-mot { background: var(--bleu-ciel); border: 3px solid #81d4fa; padding: 10px 20px; border-radius: 20px; font-size: 1.2rem; cursor: pointer; color: var(--bleu-texte); font-weight: bold; transition: 0.2s; text-transform: lowercase;}
+        .etiquette-mot.sujet { border-color: #42a5f5; }
+        .etiquette-mot.verbe { border-color: #ef5350; }
+        .etiquette-mot.comp { border-color: #66bb6a; }
+        .etiquette-mot:hover { transform: scale(1.1); background: var(--jaune-brique); border-color: var(--jaune-bordure); }
+
+        @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .erreur { animation: shake 0.4s; background-color: #ef5350 !important; border-color: white !important; color: white !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* --- CONFETTIS --- */
+        #confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .confetti { position: absolute; top: -20px; width: 15px; height: 15px; opacity: 0.9; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <button id="btn-maison" onclick="retourMenu()">🏠 Menu</button>
+        <div id="confetti-container"></div>
+
+        <div id="ecran-accueil" class="ecran actif ecran-accueil-centre">
+            <div class="en-tete" style="margin-bottom: 40px; font-size: 3rem;">La fabrique brik-à-mots<br><span style="font-size: 2rem; color: var(--orange-brique);">Niveau 2</span></div>
+            <button class="btn-demarrer" onclick="demarrerJeu()">▶️ Démarrer le jeu</button>
+        </div>
+
+        <div id="ecran-menu" class="ecran">
+            <div class="en-tete" style="margin-top:20px;">Choisis ton module</div>
+            <div class="grille-modules" id="grille-modules-container"></div>
+        </div>
+
+        <div id="ecran-phase1a" class="ecran">
+            <div class="consigne" id="consigne-1a"></div>
+            <div class="robot-visuel" id="robot-1a"></div>
+            <div class="zone-ronds-gris" id="ronds-gris-container"></div>
+            <div class="brique-nom-final" id="brique-nom-final">Nom</div>
+        </div>
+
+        <div id="ecran-phase1b" class="ecran">
+            <div class="consigne">Lis la bulle du robot et trouve la bonne brique !</div>
+            <div class="robot-visuel" onclick="montrerBullePhase1b()">
+                 <div id="robot-1b" style="display:flex; flex-direction:column; align-items:center;"></div>
+                 <div class="bulle-robot" id="bulle-1b">?</div>
+            </div>
+            <div class="grille-briques" id="briques-1b-container"></div>
+        </div>
+
+        <div id="ecran-phase2" class="ecran">
+            <div class="consigne">Attrape les briques qui tombent pour bâtir la maison du module !</div>
+            <div class="zone-chantier" id="chantier-container">
+                <div class="maison-squelette" id="maison-phase2"></div>
+            </div>
+        </div>
+
+        <div id="ecran-phase3" class="ecran">
+            <div class="consigne">Écoute le mot et écris la syllabe manquante !</div>
+            <div class="zone-ecriture">
+                <div class="emoji-mot" id="emoji-p3" onclick="clicAudioPhrase3()">❓</div>
+                <button class="btn-audio" onclick="clicAudioPhrase3()">🔊</button>
+                <div class="mot-a-completer" id="zone-mot-p3"></div>
+            </div>
+            <button class="btn-suivant" onclick="validerEcriture()">Vérifier</button>
+        </div>
+
+        <div id="ecran-phase4" class="ecran">
+            <div class="consigne">Mission lecture ! Lis les 3 phrases à voix haute.</div>
+            <div class="zone-phrase" id="phrase-finale"></div>
+            <button class="btn-suivant" onclick="lancerPhase5()">Bâtir une phrase</button>
+        </div>
+
+        <div id="ecran-phase5" class="ecran">
+            <div class="consigne">L'architecte des phrases ! Construis une phrase qui a du sens.</div>
+            <div class="rail-syntaxe">
+                <div class="bloc-svc bloc-s" id="slot-s">Sujet<br><span style="font-size:0.8rem">(Qui ?)</span></div>
+                <div class="bloc-svc bloc-v" id="slot-v">Verbe<br><span style="font-size:0.8rem">(Fait quoi ?)</span></div>
+                <div class="bloc-svc bloc-c" id="slot-c">Complément<br><span style="font-size:0.8rem">(Où / Quoi ?)</span></div>
+            </div>
+            <div class="options-svc" id="options-mots-svc"></div>
+            <button class="btn-suivant" id="btn-valider-svc" onclick="validerPhraseSvc()" style="display:none;">Vérifier ma phrase</button>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DONNÉES COMPLÈTE (5 Syllabes corrigées + Tolérance Phonétique + 3 Phrases + SVC) ---
+        const baseDonnees = [
+            { id: 1, nom: "Kin", structure: ["c", "coeur"], affichage: ["k", "❤️"], yeux: 1, typeYeux: "cyclope", syllabes: ["pin", "bin", "din", "vin", "rin"], bulleP1: "pin", 
+              mots: [ 
+                  { texte: "pinceau", syllabe: "pin", type: "debut", reste: "ceau", emoji: "🖌️", phonetiques: ["pan", "pein", "pun"] }, 
+                  { texte: "dindon", syllabe: "din", type: "debut", reste: "don", emoji: "🦃", phonetiques: ["dan", "dain"] }, 
+                  { texte: "rincer", syllabe: "rin", type: "debut", reste: "cer", emoji: "🚰", phonetiques: ["ran", "rain"] }, 
+                  { texte: "Robin", syllabe: "bin", type: "fin", debut: "Ro", emoji: "🦸‍♂️", phonetiques: ["bain", "ben"] }, 
+                  { texte: "câlin", syllabe: "lin", type: "fin", debut: "câ", emoji: "🫂", phonetiques: ["lain", "len"] } 
+              ], 
+              phrases: ["Robin fait un câ<b>lin</b> au din<b>don</b>.", "Le peintre va <b>rin</b>cer son <b>pin</b>ceau.", "Le din<b>don</b> regarde le <b>pin</b>ceau."],
+              svc: { s: ["Le dindon", "Robin", "Le peintre"], v: ["regarde", "prend", "cherche"], c: ["le pinceau", "le dindon", "un câlin"] }
+            },
+            { id: 2, nom: "Nau", structure: ["c", "coeur"], affichage: ["n", "❤️"], yeux: 2, typeYeux: "normaux", syllabes: ["mau", "leau", "fau", "veau", "rau"], bulleP1: "fau", 
+              mots: [ 
+                  { texte: "sauter", syllabe: "sau", type: "debut", reste: "ter", emoji: "🦘", phonetiques: ["so"] }, 
+                  { texte: "jauni", syllabe: "jau", type: "debut", reste: "ni", emoji: "🍂", phonetiques: ["jo"] }, 
+                  { texte: "dauphin", syllabe: "dau", type: "debut", reste: "phin", emoji: "🐬", phonetiques: ["do"] }, 
+                  { texte: "saumon", syllabe: "sau", type: "debut", reste: "mon", emoji: "🍣", phonetiques: ["so"] }, 
+                  { texte: "oiseau", syllabe: "seau", type: "fin", debut: "oi", emoji: "🐦", phonetiques: ["so", "ceau"] } 
+              ], 
+              phrases: ["L'oi<b>seau</b> a <b>jau</b>ni sous le soleil.", "Le <b>dau</b>phin aime <b>sau</b>ter dans l'eau.", "Le <b>sau</b>mon regarde l'oi<b>seau</b>."],
+              svc: { s: ["L'oiseau", "Le dauphin", "Le saumon"], v: ["aime", "regarde", "mange"], c: ["le saumon", "l'oiseau", "le dauphin"] }
+            },
+            { id: 3, nom: "Poi", structure: ["c", "coeur"], affichage: ["p", "❤️"], yeux: 3, typeYeux: "trois", syllabes: ["toi", "roi", "voi", "noi", "soi"], bulleP1: "toi", 
+              mots: [ 
+                  { texte: "noisette", syllabe: "noi", type: "debut", reste: "sette", emoji: "🌰", phonetiques: ["nwa", "noua"] }, 
+                  { texte: "toiture", syllabe: "toi", type: "debut", reste: "ture", emoji: "🏠", phonetiques: ["twa", "toua"] }, 
+                  { texte: "soirée", syllabe: "soi", type: "debut", reste: "rée", emoji: "🌃", phonetiques: ["swa", "soua"] }, 
+                  { texte: "moitié", syllabe: "moi", type: "debut", reste: "tié", emoji: "🌗", phonetiques: ["mwa", "moua"] }, 
+                  { texte: "roi", syllabe: "roi", type: "debut", reste: "", emoji: "👑", phonetiques: ["rwa", "roua"] } 
+              ], 
+              phrases: ["Le <b>roi</b> mange la <b>moi</b>tié de la <b>noi</b>sette.", "La <b>toi</b>ture brille dans la <b>soi</b>rée.", "Le <b>roi</b> regarde la <b>toi</b>ture."],
+              svc: { s: ["Le roi", "La reine", "Le chien"], v: ["mange", "regarde", "cherche"], c: ["la noisette", "la moitié", "la toiture"] }
+            },
+            { id: 4, nom: "Deu", structure: ["c", "coeur"], affichage: ["d", "❤️"], yeux: 1, typeYeux: "cyclope", syllabes: ["peu", "cui", "jeu", "tui", "nui"], bulleP1: "jeu", 
+              mots: [ 
+                  { texte: "jeudi", syllabe: "jeu", type: "debut", reste: "di", emoji: "📅", phonetiques: ["je"] }, 
+                  { texte: "peureux", syllabe: "peu", type: "debut", reste: "reux", emoji: "😨", phonetiques: ["pe"] }, 
+                  { texte: "cuisine", syllabe: "cui", type: "debut", reste: "sine", emoji: "🍳", phonetiques: ["kwi", "qui"] }, 
+                  { texte: "minuit", syllabe: "nuit", type: "fin", debut: "mi", emoji: "🕛", phonetiques: ["nui", "nuie"] }, 
+                  { texte: "étui", syllabe: "tui", type: "fin", debut: "é", emoji: "👓", phonetiques: ["twi"] } 
+              ], 
+              phrases: ["<b>Jeu</b>di à mi<b>nuit</b>, il range son é<b>tui</b>.", "Le garçon <b>peu</b>reux est dans la <b>cui</b>sine.", "L'é<b>tui</b> est dans la <b>cui</b>sine."],
+              svc: { s: ["Le garçon", "Le chat", "Le détective"], v: ["range", "cherche", "regarde"], c: ["son étui", "la cuisine", "le jeudi"] }
+            },
+            { id: 5, nom: "Lai", structure: ["c", "coeur"], affichage: ["l", "❤️"], yeux: 2, typeYeux: "normaux", syllabes: ["rai", "sai", "lai", "bei", "nei"], bulleP1: "lai", 
+              mots: [ 
+                  { texte: "beignet", syllabe: "bei", type: "debut", reste: "gnet", emoji: "🍩", phonetiques: ["bè", "bai", "bais"] }, 
+                  { texte: "laitue", syllabe: "lai", type: "debut", reste: "tue", emoji: "🥬", phonetiques: ["lè", "lei"] }, 
+                  { texte: "raisin", syllabe: "rai", type: "debut", reste: "sin", emoji: "🍇", phonetiques: ["rè", "rei"] }, 
+                  { texte: "maison", syllabe: "mai", type: "debut", reste: "son", emoji: "🏡", phonetiques: ["mè", "mei"] }, 
+                  { texte: "saison", syllabe: "sai", type: "debut", reste: "son", emoji: "🍂", phonetiques: ["sè", "sei"] } 
+              ], 
+              phrases: ["À la <b>mai</b>son, je mange du <b>rai</b>sin.", "C'est la bonne <b>sai</b>son pour la <b>lai</b>tue.", "Je mange un <b>bei</b>gnet à la <b>mai</b>son."],
+              svc: { s: ["Le garçon", "La fille", "Le détective"], v: ["mange", "coupe", "cherche"], c: ["la laitue", "le raisin", "le beignet"] }
+            },
+            { id: 6, nom: "Rein", structure: ["c", "coeur"], affichage: ["r", "❤️"], yeux: 3, typeYeux: "trois", syllabes: ["main", "cein", "tein", "vain", "pain"], bulleP1: "cein", 
+              mots: [ 
+                  { texte: "ceinture", syllabe: "cein", type: "debut", reste: "ture", emoji: "🥋", phonetiques: ["sin", "sen", "sain", "cin"] }, 
+                  { texte: "maintenant", syllabe: "main", type: "debut", reste: "tenant", emoji: "⏱️", phonetiques: ["min", "men", "mein"] }, 
+                  { texte: "copain", syllabe: "pain", type: "fin", debut: "co", emoji: "👦", phonetiques: ["pin", "pen", "pein"] }, 
+                  { texte: "teinture", syllabe: "tein", type: "debut", reste: "ture", emoji: "🧪", phonetiques: ["tin", "ten", "tain"] }, 
+                  { texte: "écrivain", syllabe: "vain", type: "fin", debut: "écri", emoji: "✍️", phonetiques: ["vin", "ven", "vein"] } 
+              ], 
+              phrases: ["Mon co<b>pain</b> attache sa <b>cein</b>ture.", "L'écri<b>vain</b> met de la <b>tein</b>ture <b>main</b>tenant.", "Mon co<b>pain</b> parle à l'écri<b>vain</b>."],
+              svc: { s: ["Le copain", "L'écrivain", "Le détective"], v: ["attache", "cherche", "prend"], c: ["sa ceinture", "la teinture", "le livre"] }
+            },
+            { id: 7, nom: "Gra", structure: ["c", "c", "v"], affichage: ["g", "r", "a"], yeux: 2, typeYeux: "normaux", syllabes: ["pla", "cla", "fla", "bla", "gla"], bulleP1: "gla", 
+              mots: [ 
+                  { texte: "claquette", syllabe: "cla", type: "debut", reste: "quette", emoji: "🎬", phonetiques: ["kla"] }, 
+                  { texte: "flacon", syllabe: "fla", type: "debut", reste: "con", emoji: "🧴", phonetiques: ["phla"] }, 
+                  { texte: "glaçon", syllabe: "gla", type: "debut", reste: "çon", emoji: "🧊", phonetiques: [] }, 
+                  { texte: "placard", syllabe: "pla", type: "debut", reste: "card", emoji: "🚪", phonetiques: [] }, 
+                  { texte: "blaguer", syllabe: "bla", type: "debut", reste: "guer", emoji: "😂", phonetiques: [] } 
+              ], 
+              phrases: ["Le <b>gla</b>çon est dans le <b>fla</b>con.", "Il aime <b>bla</b>guer près du <b>pla</b>card.", "Je mets ma <b>cla</b>quette dans le <b>pla</b>card."],
+              svc: { s: ["Le garçon", "La fille", "Le détective"], v: ["cache", "cherche", "range"], c: ["le glaçon", "le flacon", "la claquette"] }
+            },
+            { id: 8, nom: "Bli", structure: ["c", "c", "v"], affichage: ["b", "l", "i"], yeux: 1, typeYeux: "cyclope", syllabes: ["tri", "cro", "glo", "cli", "cru"], bulleP1: "cro", 
+              mots: [ 
+                  { texte: "crocodile", syllabe: "cro", type: "debut", reste: "codile", emoji: "🐊", phonetiques: ["kro"] }, 
+                  { texte: "trio", syllabe: "tri", type: "debut", reste: "o", emoji: "🧑‍🤝‍🧑", phonetiques: [] }, 
+                  { texte: "client", syllabe: "cli", type: "debut", reste: "ent", emoji: "🛍️", phonetiques: ["kli"] }, 
+                  { texte: "sanglot", syllabe: "glo", type: "fin", debut: "san", emoji: "😭", phonetiques: [] }, 
+                  { texte: "crudité", syllabe: "cru", type: "debut", reste: "dité", emoji: "🥕", phonetiques: ["kru"] } 
+              ], 
+              phrases: ["Le <b>cro</b>codile fait peur au <b>cli</b>ent.", "Le <b>tri</b>o mange une <b>cru</b>dité.", "Le <b>cli</b>ent a un san<b>glo</b>t."],
+              svc: { s: ["Le crocodile", "Le client", "Le trio"], v: ["mange", "regarde", "cherche"], c: ["une crudité", "le client", "le crocodile"] }
+            }
+        ];
+
+        let modActif = null;
+        let chantierInterval = null;
+        let syllabesTrouveesP2 = [];
+        let indexMotP3 = 0;
+        let erreursMot = 0; 
+        let phraseActuelleSvc = { s: null, v: null, c: null };
+        let etatProgress = JSON.parse(localStorage.getItem('frikAmotsProgressV2_5')) || {};
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function demarrerJeu() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            window.speechSynthesis.getVoices(); 
+            jouerSon('clic');
+            initMenu();
+            changerEcran('ecran-menu');
+        }
+
+        function jouerSon(type) {
+            if(audioCtx.state === 'suspended') return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type === 'clic') { osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.type = 'sine'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+            if(type === 'succes') { osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.type = 'triangle'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'erreur') { osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.type = 'sawtooth'; gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'celebration') { 
+                [523, 659, 783, 1046].forEach((freq, i) => {
+                    setTimeout(() => {
+                        const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination);
+                        o.frequency.value = freq; o.type = 'square';
+                        g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                        o.start(); o.stop(audioCtx.currentTime + 0.2);
+                    }, i * 150);
+                });
+            }
+        }
+
+        function parler(texte) {
+            const utterance = new SpeechSynthesisUtterance(texte);
+            const voices = window.speechSynthesis.getVoices();
+            utterance.voice = voices.find(v => v.lang === 'fr-CA') || voices.find(v => v.lang.startsWith('fr'));
+            utterance.lang = 'fr-CA'; utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function clicAudioPhrase3() {
+            jouerSon('clic');
+            if(!modActif || !modActif.mots[indexMotP3]) return;
+            parler(modActif.mots[indexMotP3].texte);
+            document.getElementById('input-p3').focus();
+        }
+
+        function genererTeteRobot(yeux, type) {
+            let htmlYeux = '';
+            if(type === "cyclope") htmlYeux = `<div class="oeil-cyclope"><div class="pupille"></div></div>`;
+            else if(type === "trois") htmlYeux = `<div class="trois-yeux"><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div><div class="petit-oeil"><div class="pupille-petite"></div></div></div>`;
+            else htmlYeux = `<div class="trois-yeux"><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div><div class="oeil-cyclope" style="width:20px; height:20px;"><div class="pupille"></div></div></div>`;
+            return `<div style="display:flex; flex-direction:column; align-items:center; width:100%;"><div class="tete-robot">${htmlYeux}</div><div class="cou-robot"></div></div>`;
+        }
+        function genererPlaque(structure) { return `<div class="plaque-structure">` + structure.map(s => s==='coeur' ? `<div class="lettre-coeur">❤️</div>` : `<div class="lettre-structure">${s}</div>`).join('') + `</div>`; }
+
+        function changerEcran(id) {
+            document.querySelectorAll('.ecran').forEach(e => e.classList.remove('actif'));
+            document.getElementById(id).classList.add('actif');
+            const btnMaison = document.getElementById('btn-maison');
+            if(id === 'ecran-accueil' || id === 'ecran-menu') btnMaison.style.display = 'none';
+            else btnMaison.style.display = 'block';
+        }
+
+        function initMenu() {
+            if(chantierInterval) clearInterval(chantierInterval);
+            const conteneur = document.getElementById('grille-modules-container'); conteneur.innerHTML = '';
+            baseDonnees.forEach(mod => {
+                const btn = document.createElement('div'); btn.className = 'carte-module';
+                const clsEtoile = etatProgress[mod.id] ? "obtenu" : "";
+                const iconeEtoile = etatProgress[mod.id] ? "🌟" : "⭐";
+                btn.innerHTML = `
+                    <div class="badge-numero" style="background-color: var(--c-mod${(mod.id%8)+1});">${mod.id}</div>
+                    <div class="badge-etoile ${clsEtoile}">${iconeEtoile}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">${genererTeteRobot(mod.yeux, mod.typeYeux)}<div class="corps-robot">${genererPlaque(mod.structure)}</div></div>
+                    <div class="nom-module">${mod.nom}</div>`;
+                btn.onclick = () => lancerPhase1a(mod);
+                conteneur.appendChild(btn);
+            });
+        }
+        
+        function lancerPhase1a(mod) {
+            jouerSon('clic'); modActif = mod;
+            document.getElementById('brique-nom-final').style.display = 'none';
+            document.getElementById('consigne-1a').innerHTML = `Salut, je suis <b>${mod.nom}</b> ! Écris mon nom.`;
+            document.getElementById('robot-1a').innerHTML = genererTeteRobot(mod.yeux, mod.typeYeux) + `<div class="corps-robot">${genererPlaque(mod.structure)}</div>`;
+            const conteneurRonds = document.getElementById('ronds-gris-container'); conteneurRonds.innerHTML = '';
+            
+            mod.structure.forEach((lettre, index) => {
+                const rond = document.createElement('div'); rond.className = 'rond-gris'; rond.style.borderColor = "white"; 
+                rond.innerText = lettre === 'coeur' ? '❤️' : lettre;
+                rond.onclick = () => decouvrirRond(rond, index);
+                conteneurRonds.appendChild(rond);
+            });
+            changerEcran('ecran-phase1a');
+        }
+
+        function decouvrirRond(rond, index) {
+            if(rond.classList.contains('decouvert')) return;
+            jouerSon('clic'); 
+            const structureType = modActif.structure[index];
+            rond.innerText = modActif.affichage ? modActif.affichage[index] : modActif.nom.toLowerCase().split('')[index];
+            if(structureType === 'coeur' || structureType === 'vc') rond.classList.add('decouvert', 'coeur'); else rond.classList.add('decouvert'); 
+            
+            if(document.querySelectorAll('.rond-gris.decouvert').length === modActif.structure.length) {
+                jouerSon('succes'); 
+                const blocNom = document.getElementById('brique-nom-final');
+                blocNom.innerText = modActif.nom; blocNom.style.display = 'block';
+                setTimeout(lancerPhase1b, 1000);
+            }
+        }
+
+        function lancerPhase1b() {
+            document.getElementById('robot-1b').innerHTML = genererTeteRobot(modActif.yeux, modActif.typeYeux) + `<div class="corps-robot">${genererPlaque(modActif.structure)}</div>`;
+            const bulle = document.getElementById('bulle-1b'); bulle.innerText = modActif.bulleP1; bulle.style.display = 'block';
+            
+            const conteneurBriques = document.getElementById('briques-1b-container'); conteneurBriques.innerHTML = '';
+            // Le .slice(0, 4) garanti exactement 5 briques (4 leurres + 1 bonne réponse)
+            let options = [modActif.bulleP1, ...modActif.syllabes.filter(s => s !== modActif.bulleP1).slice(0, 4)].sort(() => Math.random() - 0.5);
+            
+            options.forEach(opt => {
+                const b = document.createElement('div'); b.className = 'brique-jaune'; b.innerText = opt;
+                b.onclick = () => {
+                    if(opt === modActif.bulleP1) { jouerSon('succes'); b.style.background = 'var(--vert-succes)'; setTimeout(lancerPhase2, 800); }
+                    else { jouerSon('erreur'); b.classList.add('erreur'); setTimeout(() => b.classList.remove('erreur'), 400); }
+                };
+                conteneurBriques.appendChild(b);
+            });
+            changerEcran('ecran-phase1b');
+        }
+
+        function montrerBullePhase1b() { parler(modActif.bulleP1); }
+
+        function lancerPhase2() {
+            syllabesTrouveesP2 = [];
+            document.getElementById('maison-phase2').innerHTML = '';
+            document.querySelectorAll('.brique-air').forEach(e => e.remove());
+            
+            if(chantierInterval) clearInterval(chantierInterval);
+            chantierInterval = setInterval(creerBriqueTombante, 1200);
+            changerEcran('ecran-phase2');
+        }
+
+        function creerBriqueTombante() {
+            if(syllabesTrouveesP2.length >= 5) return;
+            const chantier = document.getElementById('chantier-container');
+            const syl = modActif.syllabes[Math.floor(Math.random() * modActif.syllabes.length)];
+            
+            const brique = document.createElement('div');
+            brique.className = 'brique-air'; brique.innerText = syl;
+            brique.style.left = (Math.random() * 70 + 10) + "%";
+            chantier.appendChild(brique);
+
+            let pos = -60; let vitesse = 1.2 + Math.random();
+            let anim = setInterval(() => {
+                pos += vitesse; brique.style.top = pos + 'px';
+                if(pos > 400) { clearInterval(anim); brique.remove(); }
+            }, 20);
+
+            brique.onclick = () => {
+                clearInterval(anim); brique.remove();
+                if(!syllabesTrouveesP2.includes(syl)) {
+                    jouerSon('succes'); syllabesTrouveesP2.push(syl);
+                    const bPosee = document.createElement('div'); bPosee.className = 'brique-posee'; bPosee.innerText = syl;
+                    document.getElementById('maison-phase2').appendChild(bPosee);
+                    if(syllabesTrouveesP2.length === 5) {
+                        clearInterval(chantierInterval);
+                        document.querySelectorAll('.brique-air').forEach(e => e.remove());
+                        setTimeout(lancerPhase3, 1500);
+                    }
+                } else { jouerSon('clic'); }
+            };
+        }
+
+        // --- PHASE 3 ---
+        function lancerPhase3() {
+            indexMotP3 = 0; preparerMotP3(); changerEcran('ecran-phase3');
+        }
+
+        function preparerMotP3() {
+            erreursMot = 0; 
+            const mot = modActif.mots[indexMotP3];
+            document.getElementById('emoji-p3').innerText = mot.emoji;
+            const zone = document.getElementById('zone-mot-p3'); zone.innerHTML = '';
+            
+            if(mot.type === "debut") {
+                zone.innerHTML = `<input type="text" id="input-p3" class="input-syllabe" maxlength="${mot.syllabe.length + 1}"> <span>${mot.reste}</span>`;
+            } else {
+                zone.innerHTML = `<span>${mot.debut}</span> <input type="text" id="input-p3" class="input-syllabe" maxlength="${mot.syllabe.length + 1}">`;
+            }
+            
+            document.getElementById('input-p3').addEventListener('keypress', (e) => { if(e.key === 'Enter') validerEcriture(); });
+            setTimeout(() => document.getElementById('input-p3').focus(), 500);
+        }
+
+        function validerEcriture() {
+            const mot = modActif.mots[indexMotP3];
+            const inp = document.getElementById('input-p3');
+            const val = inp.value.toLowerCase().trim();
+            const attendu = mot.syllabe.toLowerCase();
+            const phonetiques = mot.phonetiques || [];
+
+            if(val === attendu) {
+                jouerSon('succes'); 
+                passerAuMotSuivantP3();
+            } 
+            else if (phonetiques.includes(val)) {
+                jouerSon('clic'); 
+                inp.value = attendu; 
+                inp.style.backgroundColor = "var(--jaune-brique)";
+                inp.style.color = "var(--bleu-texte)";
+                
+                setTimeout(() => {
+                    jouerSon('succes');
+                    inp.style.backgroundColor = "white";
+                    passerAuMotSuivantP3();
+                }, 1500);
+            } 
+            else {
+                erreursMot++;
+                if (erreursMot >= 3) {
+                    inp.value = attendu;
+                    inp.style.backgroundColor = "var(--jaune-brique)";
+                    setTimeout(() => {
+                        jouerSon('succes');
+                        inp.style.backgroundColor = "white";
+                        passerAuMotSuivantP3();
+                    }, 1500);
+                } else {
+                    jouerSon('erreur'); 
+                    inp.classList.add('erreur'); 
+                    setTimeout(() => inp.classList.remove('erreur'), 400);
+                }
+            }
+        }
+
+        function passerAuMotSuivantP3() {
+            indexMotP3++;
+            if(indexMotP3 < modActif.mots.length) preparerMotP3(); 
+            else lancerPhase4();
+        }
+
+        // --- PHASE 4 ---
+        function lancerPhase4() {
+            changerEcran('ecran-phase4');
+            document.getElementById('phrase-finale').innerHTML = modActif.phrases.join('<br><br>');
+        }
+
+        // --- PHASE 5 ---
+        function lancerPhase5() {
+            phraseActuelleSvc = { s: null, v: null, c: null };
+            document.getElementById('slot-s').innerHTML = 'Sujet<br><span style="font-size:0.8rem">(Qui ?)</span>';
+            document.getElementById('slot-v').innerHTML = 'Verbe<br><span style="font-size:0.8rem">(Fait quoi ?)</span>';
+            document.getElementById('slot-c').innerHTML = 'Complément<br><span style="font-size:0.8rem">(Où / Quoi ?)</span>';
+            document.querySelectorAll('.bloc-svc').forEach(el => el.classList.remove('rempli'));
+            document.getElementById('btn-valider-svc').style.display = 'none';
+
+            const conteneur = document.getElementById('options-mots-svc');
+            conteneur.innerHTML = '';
+            
+            const tousMots = [
+                ...modActif.svc.s.map(m => ({t: m, cat: 's', class: 'sujet'})),
+                ...modActif.svc.v.map(m => ({t: m, cat: 'v', class: 'verbe'})),
+                ...modActif.svc.c.map(m => ({t: m, cat: 'c', class: 'comp'}))
+            ].sort(() => Math.random() - 0.5);
+
+            tousMots.forEach(obj => {
+                const btn = document.createElement('div');
+                btn.className = `etiquette-mot ${obj.class}`;
+                btn.innerText = obj.t;
+                btn.onclick = () => {
+                    jouerSon('clic');
+                    if(obj.cat === 's') { phraseActuelleSvc.s = obj.t; document.getElementById('slot-s').innerText = obj.t; document.getElementById('slot-s').classList.add('rempli'); }
+                    if(obj.cat === 'v') { phraseActuelleSvc.v = obj.t; document.getElementById('slot-v').innerText = obj.t; document.getElementById('slot-v').classList.add('rempli'); }
+                    if(obj.cat === 'c') { phraseActuelleSvc.c = obj.t; document.getElementById('slot-c').innerText = obj.t; document.getElementById('slot-c').classList.add('rempli'); }
+                    
+                    if(phraseActuelleSvc.s && phraseActuelleSvc.v && phraseActuelleSvc.c) {
+                        document.getElementById('btn-valider-svc').style.display = 'block';
+                    }
+                };
+                conteneur.appendChild(btn);
+            });
+            changerEcran('ecran-phase5');
+        }
+
+        function validerPhraseSvc() {
+            jouerSon('celebration');
+            lancerConfettis();
+            
+            setTimeout(() => {
+                alert("Magnifique détective ! Ta phrase : " + phraseActuelleSvc.s + " " + phraseActuelleSvc.v + " " + phraseActuelleSvc.c + ".");
+                etatProgress[modActif.id] = true; 
+                localStorage.setItem('frikAmotsProgressV2_5', JSON.stringify(etatProgress));
+                initMenu(); 
+                changerEcran('ecran-menu');
+            }, 1000);
+        }
+
+        function retourMenu() { 
+            if(chantierInterval) clearInterval(chantierInterval);
+            jouerSon('clic'); initMenu(); changerEcran('ecran-menu'); 
+        }
+
+        function lancerConfettis() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4CAF50', '#FFEB3B', '#FF9800'];
+            const container = document.getElementById('confetti-container'); container.innerHTML = '';
+            for(let i=0; i<120; i++) {
+                let conf = document.createElement('div'); conf.className = 'confetti'; conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                conf.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(conf);
+            }
+        }
+    </script>
+</body>
+</html>
