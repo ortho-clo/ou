@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'évasion de Léo - Version Expert Plus (Évidence)</title>
+    <style>
+        /* Règle stricte Century Gothic partout, pas de majuscules automatiques */
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; user-select: none; text-transform: none; }
+        body { margin: 0; padding: 0; background-color: #1a237e; color: #ffffff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        #game-container {
+            width: 100%; max-width: 950px; height: 100%; max-height: 850px;
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 20px; display: none; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; overflow-y: auto;
+        }
+
+        .active { display: flex; animation: slideIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* Animation Feu d'artifice */
+        @keyframes firework {
+            0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -150px) scale(0.1); opacity: 0; }
+        }
+        .particle { position: absolute; font-size: 2rem; animation: firework 1s ease-out forwards; pointer-events: none; z-index: 100; }
+
+        /* Style pour l'évidence sur les sons vedettes */
+        .highlight {
+            color: #ff5252; /* Rouge vif pour l'évidence */
+            font-weight: bold;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 15px; color: #fff3e0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        p { font-size: 1.25rem; line-height: 1.4; margin-bottom: 15px; }
+
+        .story-box {
+            background: rgba(255, 255, 255, 0.95); color: #1a237e; padding: 25px;
+            border-radius: 15px; font-size: 1.35rem; text-align: left;
+            margin-bottom: 20px; width: 95%; max-height: 350px; overflow-y: auto;
+            border-left: 8px solid #ffb300; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            background-color: #ffb300; color: #3e2723; border: none; padding: 12px 28px;
+            font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 5px 0 #ff8f00; transition: all 0.1s; margin: 8px;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #ff8f00; }
+        .btn-option { background-color: #ffffff; color: #0288d1; width: 85%; max-width: 550px; }
+
+        input[type="text"] {
+            padding: 15px; font-size: 1.5rem; border-radius: 10px; border: 4px solid #ffb300;
+            text-align: center; width: 80%; margin-bottom: 15px; color: #1a237e; font-weight: bold;
+        }
+
+        /* Grille des missions colorée et agrandie */
+        .grid-menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 95%; max-width: 800px;}
+        .cours-btn { 
+            color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
+            font-size: 1.2rem; padding: 25px; border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 160px; /* Plus grand */
+        }
+        /* Couleurs spécifiques par mission */
+        .cours-1 { background-color: #81c784; box-shadow: 0 6px 0 #388e3c; } /* p/b Vert */
+        .cours-2 { background-color: #e57373; box-shadow: 0 6px 0 #d32f2f; } /* f/v Rouge */
+        .cours-3 { background-color: #ffb74d; box-shadow: 0 6px 0 #f57c00; } /* t/d Orange */
+        .cours-4 { background-color: #ba68c8; box-shadow: 0 6px 0 #7b1fa2; } /* ch/j Violet */
+        .cours-5 { background-color: #4fc3f7; box-shadow: 0 6px 0 #0288d1; } /* s/z Bleu */
+        .cours-6 { background-color: #d4e157; box-shadow: 0 6px 0 #afb42b; color: #333; } /* c/g Jaune-Vert */
+
+        .cours-btn:active { transform: translateY(6px); box-shadow: none; }
+        
+        #hud { width: 100%; display: flex; justify-content: space-between; padding: 12px 25px; background: rgba(0,0,0,0.3); font-weight: bold; font-size: 1.1rem;}
+        .progress-container { width: 90%; height: 14px; background: rgba(255,255,255,0.3); border-radius: 10px; margin: 15px auto; overflow: hidden; flex-shrink: 0;}
+        .progress-bar { height: 100%; width: 0%; background: #ffeb3b; transition: width 0.3s; }
+        
+        .tts-btn { background: #e1bee7; border-radius: 50%; width: 70px; height: 70px; font-size: 2.5rem; line-height: 70px; cursor: pointer; box-shadow: 0 4px 0 #ab47bc; margin-bottom: 10px; display: inline-block;}
+        .tts-btn:active { transform: translateY(4px); box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="screen-intro" class="screen active">
+        <div style="font-size:10rem; margin-bottom: 20px;">🕵️‍♂️</div>
+        <h1>Mission Évasion</h1>
+        <p>Léo le détective a besoin de tes oreilles et de tes yeux.<br>Choisis une mission pour déverrouiller la sortie !</p>
+        <button class="btn" onclick="switchScreen('screen-map')">Ouvrir la carte</button>
+    </div>
+
+    <div id="screen-map" class="screen">
+        <h1>Carte des énigmes</h1>
+        <p style="font-size: 1.1rem; margin-bottom: 20px;">Toutes les portes sont ouvertes, choisis ton défi !</p>
+        <div class="grid-menu" id="cours-grid"></div>
+    </div>
+
+    <div id="screen-game" class="screen" style="padding:0; justify-content: flex-start;">
+        <div id="hud">
+            <span id="score-display">Étoiles : 0 ⭐️</span>
+            <span id="cours-title">Mission</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+        
+        <div id="game-content" style="width:100%; display:flex; flex-direction:column; align-items:center; padding: 15px; flex-grow: 1;">
+            <div id="q-header" style="font-size: 3.5rem; margin-bottom: 5px;">🧩</div>
+            
+            <div id="write-image-container" style="display:none; font-size: 5rem; margin-bottom: 10px;"></div>
+
+            <div id="story-zone" style="display:none; width:100%; flex-direction:column; align-items:center;">
+                <div class="story-box" id="story-display"></div>
+            </div>
+
+            <p id="question-text" style="font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; color: #fff; max-width: 90%;"></p>
+            
+            <div id="tts-zone" style="display:none;">
+                <div class="tts-btn" onclick="playTTS()">🔊</div>
+            </div>
+
+            <div id="options-zone" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+
+            <div id="write-zone" style="display:none; width:100%; flex-direction:column; align-items:center;">
+                <input type="text" id="write-input" placeholder="Écris ici..." autocomplete="off" spellcheck="false">
+                <button class="btn" onclick="checkWritten()">Valider</button>
+            </div>
+
+            <button class="btn" id="story-next-btn" style="display:none;" onclick="nextStep()">J'ai tout lu !</button>
+        </div>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <div style="font-size:6rem; margin-bottom: 20px;">🏆</div>
+        <h1 id="end-title">Mission réussie !</h1>
+        <p>Tu es un véritable détective des sons.</p>
+        <button class="btn" onclick="switchScreen('screen-map')">Revenir à la carte</button>
+    </div>
+</div>
+
+<script>
+    // --- AUDIO ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(f1, f2, dur, type='sine') {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = type; osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(f1, audioCtx.currentTime);osc.frequency.exponentialRampToValueAtTime(f2, audioCtx.currentTime + dur);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+    function speak(txt) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt); u.lang = 'fr-CA'; u.rate = 0.8; speechSynthesis.speak(u); }
+
+    // --- EFFET FEU D'ARTIFICE ---
+    function triggerFireworks() {
+        const container = document.getElementById('game-container');
+        const emojis = ['✨', '🌟', '💥', '🎉', '⭐'];
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('span');
+            p.className = 'particle';
+            p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            p.style.left = `calc(50% + ${Math.random() * 200 - 100}px)`;
+            p.style.top = `calc(50% + ${Math.random() * 100 - 50}px)`;
+            p.style.animationDelay = `${Math.random() * 0.5}s`;
+            p.style.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 1500);
+        }
+        playSound(400, 1000, 0.5, 'triangle');
+    }
+
+    // --- LOGIQUE D'ÉVIDENCE SUR LES SONS VEDETTES ---
+    // Définit les motifs Regex pour chaque mission
+    const evidenceMap = {
+        1: /([pbPB])/g,
+        2: /([fvFV])/g,
+        3: /([tdTD])/g,
+        4: /(ch|Ch|[jJ])/g, // ch ou j
+        5: /([szSZ])/g,
+        6: /(gu|Gu|[ckgCKG])/g // gu, g, c ou k (gu traité en premier pour regex)
+    };
+
+    function highlightText(text) {
+        if (!text) return "";
+        const regex = evidenceMap[currentId];
+        if (!regex) return text;
+        // Remplace le motif trouvé par <span class="highlight">motif</span>
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // --- DATA (GB+ 22+ & Majuscules corrigées) ---
+    // Types: ph (phono), tx (phrase), vi (virelangue), wr (écriture + image), st (histoire seule), cq (question histoire avec texte visible)
+    // wr format: Cours|wr|Emoji|MotCible|MotCible (TTS)
+    const rawData = [
+        // COURS 1 : P / B
+        "1|ph|Quel son entends-tu ?|poule|p|b", "1|ph|Quel son entends-tu ?|bateau|b|p", "1|ph|Quel son entends-tu ?|tapis|p|b", "1|ph|Quel son entends-tu ?|bonbon|b|p",
+        "1|tx|Le petit garçon joue à la ___.||balle|palle", "1|tx|Papa répare le ___ brisé.||banc|panc", "1|tx|Maman a mis un beau ___.||pull|bull", "1|tx|Le pirate a une jambe de ___.||bois|pois",
+        "1|vi|Virelangue 1 : un bon gros bidon de bonbons de Paul.||C'est lu !|Je recommence", 
+        "1|vi|Virelangue 2 : petit bébé bleu boit son biberon blanc dans le bois.||C'est lu !|Je recommence", 
+        "1|vi|Virelangue 3 : Paul le poulpe possède une petite pelle pour pelleter le sable de la plage.||C'est lu !|Je recommence",
+        "1|wr|☂️|parapluie|parapluie", "1|wr|🎈|ballon|ballon", "1|wr|🗑️|poubelle|poubelle", "1|wr|🛖|cabane|cabane", "1|wr|👕|pyjama|pyjama",
+        "1|st|Léo le pirate navigue sur son beau bateau de bois. Il cherche un trésor caché derrière la cabane de Paul. Soudain, une baleine bleue saute près du pont ! Léo a très peur et il court vite se cacher.|||",
+        "1|cq|Qui possède une cabane dans l'histoire ?||Paul|Léo",
+        "1|st|Le bébé de la voisine pleure dans son berceau blanc. Il a perdu son biberon sous le tapis de la cuisine. Maman lui donne un bon biscuit pour le calmer. Le biscuit est rempli de pépites de chocolat délicieuses.|||",
+        "1|cq|Où se trouvait le biberon du bébé ?||Sous le tapis|Dans la cabane",
+        "1|st|Paul porte un petit pull bleu pour aller au parc. Il veut lancer son ballon dans le panier de basket. Son ami Bob préfère jouer avec une pelle dans le sable. Il construit un grand château avec un beau drapeau bleu.|||",
+        "1|cq|Que veut faire Bob au parc ?||Jouer avec une pelle|Manger un biscuit",
+
+        // COURS 2 : F / V
+        "2|ph|Quel son entends-tu ?|vache|v|f", "2|ph|Quel son entends-tu ?|fusée|f|v", "2|ph|Quel son entends-tu ?|avion|v|f", "2|ph|Quel son entends-tu ?|girafe|f|v",
+        "2|tx|Le train roule très ___.||vite|fite", "2|tx|La ___ est dans le pré.||vache|fache", "2|tx|Il fait froid, mets ta ___.||veste|feste", "2|tx|Léo mange une ___ rouge.||fraise|vraise",
+        "2|vi|Virelangue 1 : la vive veuve vend de la vive viande.||C'est lu !|Je recommence", 
+        "2|vi|Virelangue 2 : Frédéric fait fumer des frites fines face à la fenêtre de la fabrique.||C'est lu !|Je recommence", 
+        "2|vi|Virelangue 3 : le vent vif fait voler les voiles du vieux vélo de Valérie dans la vallée.||C'est lu !|Je recommence",
+        "2|wr|🦁|fauve|fauve", "2|wr|↪️|virage|virage", "2|wr|🍴|fourchette|fourchette", "2|wr|🧳|valise|valise", "2|wr|🪟|fenêtre|fenêtre",
+        "2|st|La fée Valérie vole vers le volcan féroce. Elle porte une veste verte et des fleurs fines. Le vent souffle fort sur sa figure, mais elle est très vive. Elle espère trouver une fleur fantastique au sommet.|||",
+        "2|cq|Quelle est la couleur de la veste de la fée ?||Verte|Fine",
+        "2|st|Le vieux fermier vend des fruits frais à la foire. Il a une grande forêt de sapins derrière sa villa. Il aime voir les vaches manger de la luzerne le vendredi. Il préfère le jus de fruits frais à la soupe de légumes.|||",
+        "2|cq|Qu'est-ce que le fermier vend à la foire ?||Des fruits frais|Des vaches",
+        "2|st|Victor fait du vélo sur le chemin de fer abandonné. Il voit une fumée blanche sortir de la vieille locomotive. Il s'arrête pour prendre une photo de la vallée verdoyante. Le voyage de Victor à travers la forêt est merveilleux.|||",
+        "2|cq|Que voit Victor sur le chemin de fer ?||De la fumée|Un volcan",
+
+        // COURS 3 : T / D
+        "3|ph|Quel son entends-tu ?|tortue|t|d", "3|ph|Quel son entends-tu ?|dent|d|t", "3|ph|Quel son entends-tu ?|marteau|t|d", "3|ph|Quel son entends-tu ?|dauphin|d|t",
+        "3|tx|Le ___ est un animal géant.||dinosaure|tinosaure", "3|tx|Maman a fait une ___ aux pommes.||tarte|darte", "3|tx|Il a perdu sa première ___.||dent|tent", "3|tx|La ___ est sur la table.||tasse|dasse",
+        "3|vi|Virelangue 1 : ton thé t'a-t-il ôté ta toux ?||C'est lu !|Je recommence", 
+        "3|vi|Virelangue 2 : douze dindons dodus dorment dans le doux dodo du dresseur.||C'est lu !|Je recommence", 
+        "3|vi|Virelangue 3 : Tata Titi triche tout le temps et Tonton Thierry déteste totalement ses tics tristes.||C'est lu !|Je recommence",
+        "3|wr|🩺|docteur|docteur", "3|wr|🍞|tartine|tartine", "3|wr|🗓️|dimanche|dimanche", "3|wr|🍅|tomate|tomate", "3|wr|🦖|dinosaure|dinosaure",
+        "3|st|Le docteur Thomas donne des dattes douces à la tortue. Elle est triste car elle a mal à une dent du fond. Thomas utilise un petit marteau doré pour l'aider doucement. Thomas a beaucoup de talent et la tortue a moins mal.|||",
+        "3|cq|Que donne le docteur à la tortue ?||Des dattes|Des dindons",
+        "3|st|Didier dessine un grand dauphin d'eau douce sur le tableau. Il utilise de la craie tendre et du papier dur. Sa maman lui dit que son dessin détient une touche artistique. Le dauphin dansera dans les vagues toute la journée.|||",
+        "3|cq|Quel animal Didier dessine-t-il ?||Un dauphin|Une tortue",
+        "3|st|Mardi, Théo est tombé dans le trou du jardin. Il a sali sa tenue toute neuve et déchiré son tricot. Son papa a dû nettoyer ses bottes pleines de terre avec de l'eau tiède. Théo est tout triste de sa bêtise et pleure discrètement.|||",
+        "3|cq|Quand Théo est-il tombé dans le trou ?||Mardi|Dimanche",
+
+        // COURS 4 : CH / J
+        "4|ph|Quel son entends-tu ?|chat|ch|j", "4|ph|Quel son entends-tu ?|jupe|j|ch", "4|ph|Quel son entends-tu ?|cheval|ch|j", "4|ph|Quel son entends-tu ?|pyjama|j|ch",
+        "4|tx|Le ___ de blé est immense.||champ|jamp", "4|tx|Je bois un bon ___ d'orange.||jus|chus", "4|tx|La ___ est au chocolat.||cloche|cloje", "4|tx|Léo joue avec ses ___.||jouets|chouets",
+        "4|vi|Virelangue 1 : un chasseur sachant chasser sans son chien.||C'est lu !|Je recommence", 
+        "4|vi|Virelangue 2 : je joue joyeusement avec le chat jaune de Julie.||C'est lu !|Je recommence", 
+        "4|vi|Virelangue 3 : chaque jour, Jean choisit une chemise jaune chez Jacques le jovial.||C'est lu !|Je recommence",
+        "4|wr|📰|journal|journal", "4|wr|🏰|château|château", "4|wr|👕|pyjama|pyjama", "4|wr|🐷|cochon|cochon", "4|wr|🏡|jardin|jardin",
+        "4|st|Le chat de Julie chasse une mouche jaune dans le jardin. Soudain, il saute sur une branche de chêne fragile. Julie rigole en chemin en mettant son pyjama chaud. Demain, Julie cherchera de bons champignons dans le bois.|||",
+        "4|cq|Quelle est la couleur de la mouche ?||Jaune|Chaude",
+        "4|st|Jean-jacques mange un chou à la crème chez lui dans sa chambre. Il regarde un journal sur les chevaux de trait noirs. Jean-jacques rêve de posséder un grand champ plein de jolies juments. Il trouve que c'est un joli métier.|||",
+        "4|cq|Que mange Jean-jacques dans sa chambre ?||Un chou|Un jouet",
+        "4|st|La chèvre de Joachim a mangé une jonquille jaune. Joachim n'est pas joyeux car c'était un cadeau pour sa maman chérie. Il va chercher une autre fleur sauvage dans le champ voisin. Il marche avec joie sur le chemin pour rentrer chez lui.|||",
+        "4|cq|Quel animal a mangé la fleur ?||La chèvre|Le chat",
+
+        // COURS 5 : S / Z
+        "5|ph|Quel son entends-tu ?|serpent|s|z", "5|ph|Quel son entends-tu ?|zèbre|z|s", "5|ph|Quel son entends-tu ?|poisson|s|z", "5|ph|Quel son entends-tu ?|poison|z|s",
+        "5|tx|Le ___ brille fort.||soleil|zoleil", "5|tx|J'ai vu un ___ au zoo.||zèbre|sèbre", "5|tx|Il mange une ___ à la fraise.||glace|glaze", "5|tx|Maman a une belle ___ rose.||robe|rope",
+        "5|vi|Virelangue 1 : six saucisses sèches sur seize chaises.||C'est lu !|Je recommence", 
+        "5|vi|Virelangue 2 : le zèbre zélé zigzague dans la savane sous le soleil.||C'est lu !|Je recommence", 
+        "5|vi|Virelangue 3 : Suzanne s'amuse sous le soleil et saisit sans se presser sept sacs de sel secs.||C'est lu !|Je recommence",
+        "5|wr|🧳|valise|valise", "5|wr|🐟|poisson|poisson", "5|wr|🍒|cerise|cerise", "5|wr|🌀|bizarre|bizarre", "5|wr|🖍️|dessin|dessin",
+        "5|st|Le zèbre s'amuse sur le sable chaud sous le soleil d'été. Il voit une souris grise qui ramasse des cerises roses pour son dessert. C'est très bizarre de voir une souris grise au zoo ! Léo s'assoit sur le sol pour dessiner cette scène si surprenante.|||",
+        "5|cq|Que ramasse la souris dans l'histoire ?||Des cerises|Des sacs de sel",
+        "5|st|Simon a une valise pleine de poissons en plastique. Il veut les poser sur la pelouse pour faire une farce amusante à sa sœur Sophie. Sa sœur Sophie arrive et rigole très fort en voyant la surprise. Simon a aussi caché des fraises zébrées sous sa chaise rose.|||",
+        "5|cq|Qu'y a-t-il dans la valise de Simon ?||Des poissons|Des chaises",
+        "5|st|Le serpent siffle doucement sous la chaise de Suzanne. Elle a très peur et renverse son jus de fraise sur son blouson rose. Elle décide de s'asseoir plus loin dans le salon pour se reposer. Suzanne a vraiment peur et ses mains tremblent de saisissement.|||",
+        "5|cq|Où se trouve le serpent ?||Sous la chaise|Sur la pelouse",
+
+        // COURS 6 : C, K / G, GU
+        "6|ph|Quel son entends-tu ?|kangourou|k|g", "6|ph|Quel son entends-tu ?|gâteau|g|k", "6|ph|Quel son entends-tu ?|sac|c|g", "6|ph|Quel son entends-tu ?|bague|gu|c",
+        "6|tx|Le petit ___ nage.||canard|ganard", "6|tx|Léo joue de la ___.||guitare|cuitare", "6|tx|Le ___ mange une banane.||gorille|corille", "6|tx|Il a mis son ___ d'école.||sac|sag",
+        "6|vi|Virelangue 1 : grand gras grain de grêle griffe la glace.||C'est lu !|Je recommence", 
+        "6|vi|Virelangue 2 : quatre gros gorilles gris grimpent au mur de la cage carrée.||C'est lu !|Je recommence", 
+        "6|vi|Virelangue 3 : le kangourou court courageusement au coin de la cage de Caroline pour gagner.||C'est lu !|Je recommence",
+        "6|wr|🐉|dragon|dragon", "6|wr|🛖|cabane|cabane", "6|wr|🧊|glaçon|glaçon", "6|wr|🦘|kangourou|kangourou", "6|wr|🐆|guépard|guépard",
+        "6|st|Le gros gorille garde un gâteau au chocolat caché dans une grotte sombre près de la cabane. Un petit canard curieux veut lui voler une miette en cachette. Le gorille se fâche et grogne contre ce canard courageux.|||",
+        "6|cq|Que garde le gros gorille ?||Un gâteau|Un sac",
+        "6|st|Caroline joue de la guitare acoustique dans sa grande cuisine grise. Elle porte une bague dorée qui brille comme un glaçon au soleil. Son chat gris écoute la musique country en ronronnant. Caroline regarde le grand ciel gris et continue de gratter sa guitare.|||",
+        "6|cq|De quel instrument joue Caroline ?||De la guitare|Du clavier",
+        "6|st|Le kangourou court avec un sac rempli de carottes croquantes. Il veut les donner au guépard gourmand qui a très faim au zoo. C'est un cadeau très gentil pour son grand ami de la cage voisine. Le guépard court plus vite que le vent grâce à ce grand cadeau.|||",
+        "6|cq|Que contient le sac du kangourou ?||Des carottes|Un gâteau"
+    ];
+
+    let db = {};
+    rawData.forEach(r => { 
+        const p = r.split('|'); 
+        if(!db[p[0]]) db[p[0]] = []; 
+        db[p[0]].push({type:p[1], img:p[2], q:p[2], w:p[3], a:p[4], b:p[5]}); 
+    });
+
+    const config = [
+        {id:1, t:"p / b", e:"⛵", c:"cours-1"}, {id:2, t:"f / v", e:"🚐", c:"cours-2"}, {id:3, t:"t / d", e:"🦖", c:"cours-3"},
+        {id:4, t:"ch / j", e:"🐈", c:"cours-4"}, {id:5, t:"s / z", e:"🦓", c:"cours-5"}, {id:6, t:"c,k / g,gu", e:"🎸", c:"cours-6"}
+    ];
+
+    // Progression libre : unlocked = 6
+    let currentId = 1, qIdx = 0, stars = 0, unlocked = 6, curWord = "", curAns = "";
+
+    function switchScreen(id) {
+        playSound(300, 600, 0.2);
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'screen-map') buildMap();
+    }
+
+    function buildMap() {
+        const g = document.getElementById('cours-grid'); g.innerHTML = '';
+        config.forEach(c => {
+            const b = document.createElement('button');
+            b.className = `btn cours-btn ${c.c}`; // Toujours ouvert, classe couleur appliquée
+            b.innerHTML = `<span style="font-size:2.5rem; margin-bottom:5px;">${c.e}</span>Mission ${c.id}<br>${c.t}`;
+            b.onclick = () => start(c.id);
+            g.appendChild(b);
+        });
+    }
+
+    function start(id) {
+        currentId = id; qIdx = 0;
+        document.getElementById('cours-title').innerText = `Mission ${id}`;
+        switchScreen('screen-game');
+        load();
+    }
+
+    function load() {
+        speechSynthesis.cancel(); // Arrête TTS si en cours
+        const questions = db[currentId];
+        if(qIdx >= questions.length) { end(); return; }
+        
+        const q = questions[qIdx];
+        document.getElementById('progress').style.width = `${(qIdx/questions.length)*100}%`;
+        
+        // Cache tout par défaut
+        const zones = ['tts-zone', 'options-zone', 'write-zone', 'story-zone', 'write-image-container', 'story-next-btn'];
+        zones.forEach(z => document.getElementById(z).style.display = 'none');
+        document.getElementById('question-text').innerHTML = ""; // Clear
+        
+        // Configuration selon le type
+        if(q.type === 'ph' || q.type === 'wr') {
+            document.getElementById('tts-zone').style.display = 'block';
+            curWord = q.w;
+            // Auto-play seulement phono (ph). Pour l'écriture (wr), on parle à l'ouverture.
+            if(q.type === 'ph') speak(q.w); 
+        }
+
+        if(q.type === 'ph' || q.type === 'tx' || q.type === 'vi') {
+            document.getElementById('options-zone').style.display = 'flex';
+            // évidence sur q.q si type tx ou vi
+            document.getElementById('question-text').innerHTML = (q.type === 'ph' ? q.q : highlightText(q.q));
+            renderOptions(q);
+        } else if(q.type === 'wr') {
+            document.getElementById('write-image-container').style.display = 'block';
+            document.getElementById('write-image-container').innerText = q.img; // Affiche emoji
+            document.getElementById('write-zone').style.display = 'flex';
+            document.getElementById('write-input').value = "";
+            document.getElementById('question-text').innerHTML = "Écris le mot cible :";
+            curAns = q.a;
+            speak(q.w); // Parle à l'ouverture de la dictée
+        } else if(q.type === 'st') {
+            document.getElementById('story-zone').style.display = 'flex';
+            // évidence sur l'histoire (q.q)
+            document.getElementById('story-display').innerHTML = highlightText(q.q); 
+            document.getElementById('question-text').innerHTML = "Lecture attentive...";
+            document.getElementById('story-next-btn').style.display = 'inline-block';
+        } else if(q.type === 'cq') {
+            // Reste visible pendant la question !
+            document.getElementById('story-zone').style.display = 'flex'; 
+            // évidence sur la question (q.q)
+            document.getElementById('question-text').innerHTML = highlightText(q.q); 
+            document.getElementById('options-zone').style.display = 'flex';
+            renderOptions(q);
+        }
+        
+        const icons = {ph:"👂", tx:"📝", vi:"🌪️", wr:"✍️", st:"📖", cq:"🧐"};
+        document.getElementById('q-header').innerText = icons[q.type] || "🧩";
+    }
+
+    function renderOptions(q) {
+        const z = document.getElementById('options-zone'); z.innerHTML = '';
+        let opts = [q.a, q.b];
+        // Mélange sauf virelangue
+        if(q.type !== 'vi') opts.sort(() => Math.random() - 0.5);
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'btn btn-option'; 
+            // évidence sur les choix textuels (tx, cq), pas sur phono (p,b) ou vi (boutons standard)
+            if(q.type === 'tx' || q.type === 'cq') {
+                b.innerHTML = highlightText(o); 
+            } else {
+                b.innerText = o;
+            }
+            b.onclick = () => check(o, q.a, b);
+            z.appendChild(b);
+        });
+    }
+
+    function check(sel, cor, b) {
+        if(sel === cor) {
+            playSound(600, 900, 0.3, 'triangle'); stars++; updateScore();
+            b.style.background = "#81c784";b.style.color = "white";
+            setTimeout(nextStep, 600);
+        } else {
+            playSound(200, 100, 0.3, 'sawtooth');
+            b.style.background = "#e57373";b.style.color = "white";
+            document.getElementById('game-content').style.animation = 'shake 0.4s';
+            setTimeout(() => { b.style.background = "#fff"; b.style.color="#0288d1"; document.getElementById('game-content').style.animation = ''; }, 400);
+        }
+    }
+
+    function checkWritten() {
+        const input = document.getElementById('write-input');
+        const val = input.value.trim().toLowerCase();
+        if(val === curAns.toLowerCase()) {
+            playSound(600, 900, 0.3, 'triangle'); stars++; updateScore();
+            input.style.background = "#81c784"; input.style.color = "white";
+            setTimeout(() => { input.style.background = "#fff"; input.style.color="#1a237e"; nextStep(); }, 600);
+        } else {
+            playSound(200, 100, 0.3, 'sawtooth');
+            input.style.background = "#e57373"; input.style.color = "white";
+            document.getElementById('game-content').style.animation = 'shake 0.4s';
+            setTimeout(() => { input.style.background = "#fff"; input.style.color="#1a237e"; document.getElementById('game-content').style.animation = ''; }, 400);
+        }
+    }
+
+    function nextStep() { qIdx++; load(); }
+    function playTTS() { playSound(400,400,0.1); speak(curWord); }
+    function updateScore() { document.getElementById('score-display').innerText = `Étoiles : ${stars} ⭐️`; }
+    
+    function end() {
+        document.getElementById('end-title').innerText = `Mission ${currentId} réussie !`;
+        triggerFireworks(); // Feu d'artifice visuel et sonore explosion
+        switchScreen('screen-end');
+    }
+
+    // Initialisation
+    buildMap();
+</script>
+</body>
+</html>
