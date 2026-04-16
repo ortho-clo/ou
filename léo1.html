@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le grand chantier de Léo</title>
+    <style>
+        /* Police stricte et reset */
+        * {
+            box-sizing: border-box;
+            font-family: 'Century Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            background-color: #87ceeb;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #app-container {
+            background-color: #fcfcfc;
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            padding: 10px;
+            animation: fadeIn 0.4s ease-in-out;
+            text-align: center;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes dropIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+
+        /* Typographie */
+        .titre-colore {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #1e90ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            line-height: 1.3;
+        }
+
+        .titre {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .texte-normal {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        /* ----- LÉO AVEC SON CASQUE ----- */
+        .castor-container {
+            position: relative;
+            display: inline-block;
+            font-size: 4rem;
+            animation: pop 3s infinite;
+            margin-bottom: 25px; /* Grand espace avec la rue */
+            z-index: 10;
+        }
+
+        .chapeau-construction {
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 18px;
+            background-color: #f1c40f;
+            border-radius: 20px 20px 0 0;
+            border: 2px solid #d35400;
+            border-bottom: none;
+            z-index: 11;
+        }
+
+        .chapeau-construction::after {
+            content: ''; position: absolute; bottom: 0; left: -4px; width: 36px; height: 4px;
+            background-color: #f1c40f; border-radius: 2px; border: 2px solid #d35400;
+        }
+
+        .castor-emoji {
+            display: inline-block;
+            transform: scaleX(-1); /* Regarde vers la droite */
+        }
+
+        /* ----- LA RUE ET ESPACEMENT STRICT ----- */
+        .quartier {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .rue-objets {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 35px; /* ESPACEMENT STRICT */
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .asphalte {
+            width: 100%;
+            height: 35px;
+            background-color: #576574;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ligne-jaune {
+            position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f;
+        }
+
+        /* Groupes collés */
+        .bloc-colle {
+            display: flex;
+            align-items: flex-end;
+            gap: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Le Lampadaire Ultra Collé */
+        .lampadaire { 
+            display: flex; flex-direction: column; align-items: center; z-index: 2; 
+            margin-right: -2px; 
+        }
+        .lumiere { font-size: 2.5rem; text-shadow: 0 0 15px #f1c40f; margin-bottom: -5px; z-index: 3; position: relative; }
+        .poteau-lampe { width: 6px; height: 50px; background-color: #34495e; border-radius: 3px; z-index: 2; }
+
+        /* Le panneau STOP en profondeur */
+        .stop-panneau { 
+            position: relative; width: 30px; height: 40px; margin-left: 2px; z-index: 5;
+        }
+        .stop-icone { 
+            font-size: 1.3rem; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); z-index: 6; line-height: 1;
+        }
+        .stop-poteau { 
+            position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 50px; background-color: #34495e; border-radius: 2px; z-index: 4; 
+        }
+
+        /* Les Maisons */
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; position: relative; z-index: 2; }
+        .maison-bloc:active { transform: scale(0.95); }
+
+        .toit { width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 25px solid #7f8c8d; margin-bottom: -1px; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 40px; }
+        .brique { width: 45px; height: 100%; border-right: 2px solid rgba(0,0,0,0.15); }
+        .brique:last-child { border-right: none; }
+
+        .toit.large-2 { border-left-width: 48px; border-right-width: 48px; }
+        .toit.large-3 { border-left-width: 70px; border-right-width: 70px; }
+
+        /* La voiture (grossie) */
+        .voiture-absolute {
+            position: absolute; right: -35px; width: 35px; bottom: -5px; font-size: 2.5rem; display: flex; justify-content: center; align-items: flex-end; z-index: 10; pointer-events: none;
+        }
+
+        .point-flottant {
+            position: absolute; top: -20px; font-size: 1.5rem; color: #4169e1; font-weight: bold; animation: floatUp 1s ease-out forwards; pointer-events: none;
+        }
+
+        /* ----- INTERFACE DU JEU ----- */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 15px; display: flex; justify-content: space-between; background: #f1f2f6; border-bottom: 3px solid #dfe4ea; font-size: 1.2rem; font-weight: bold; }
+        .progress-container { width: 40%; height: 20px; background-color: #ddd; border-radius: 10px; overflow: hidden; margin-top: 2px; }
+        .progress-bar { height: 100%; width: 0%; background-color: #4169e1; transition: width 0.3s; }
+        .emoji-display { font-size: 5rem; margin: 10px 0; z-index: 10; }
+        .dragging { position: fixed !important; z-index: 9999; pointer-events: none; }
+
+        /* BOUTONS BLEU ROYAL */
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+        
+        .btn-action { 
+            background-color: #4169e1; /* BLEU ROYAL */
+            color: white; 
+            padding: 15px 30px; 
+            font-size: 1.2rem; 
+            box-shadow: 0 5px 0 #27408b; /* Ombre bleu royal foncé */
+            margin: 10px; 
+        }
+        
+        .btn-audio { background-color: #4169e1; box-shadow: 0 5px 0 #27408b; color: white; font-size: 3rem; width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 10px auto; animation: pop 2s infinite; }
+        
+        .btn-menu { padding: 15px; width: 80%; max-width: 400px; display: flex; align-items: center; gap: 15px; font-size: 1.2rem; color: #2d3436; margin: 8px; border-radius: 15px; }
+        .btn-niv-1 { background-color: #ffeaa7; border: 3px solid #fdcb6e; box-shadow: 0 5px 0 #fdcb6e; }
+        .btn-niv-2 { background-color: #55efc4; border: 3px solid #00b894; box-shadow: 0 5px 0 #00b894; }
+        .btn-niv-3 { background-color: #74b9ff; border: 3px solid #0984e3; box-shadow: 0 5px 0 #0984e3; }
+        
+        /* Bouton rouge conservé uniquement pour effacer, c'est plus intuitif pour les enfants */
+        .btn-effacer { background-color: #e74c3c; box-shadow: 0 4px 0 #c0392b; }
+
+        .choix-container { display: flex; gap: 20px; margin-top: 20px; width: 100%; justify-content: center; align-items: flex-end; height: 100px; }
+        #zone-construction { display: flex; flex-direction: row; background-color: #ecf0f1; border: 3px dashed #bdc3c7; height: 50px; min-width: 50px; margin: 20px auto; padding: 0 5px; align-items: center; justify-content: center; border-radius: 8px; }
+        .brique-animee { width: 45px; height: 40px; background-color: #f1c40f; border: 2px solid #7f8c8d; animation: dropIn 0.3s ease-out; margin: 0 1px; }
+
+        .badge-img { font-size: 8rem; margin: 10px; z-index: 2;}
+        #feux-artifice { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div id="ecran-intro" class="screen active">
+            <p class="titre-colore">Compte le nombre de syllabes avec Léo.</p>
+            
+            <div class="castor-container">
+                <div class="chapeau-construction"></div>
+                <span class="castor-emoji">🦫</span>
+            </div>
+            
+            <div class="quartier">
+                <div class="rue-objets">
+                    <div class="bloc-colle">
+                        <div class="lampadaire">
+                            <div class="lumiere">💡</div>
+                            <div class="poteau-lampe"></div>
+                        </div>
+                        <div class="maison-bloc">
+                            <div class="toit"></div>
+                            <div class="mur"><div class="brique"></div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="maison-bloc">
+                        <div class="toit"></div>
+                        <div class="mur"><div class="brique"></div></div>
+                        <div class="voiture-absolute">🚘</div>
+                    </div>
+                    
+                    <div class="maison-bloc">
+                        <div class="toit large-2"></div>
+                        <div class="mur"><div class="brique"></div><div class="brique"></div></div>
+                    </div>
+
+                    <div class="maison-bloc">
+                        <div class="toit"></div>
+                        <div class="mur"><div class="brique"></div></div>
+                    </div>
+                    
+                    <div class="bloc-colle">
+                        <div class="maison-bloc">
+                            <div class="toit large-3"></div>
+                            <div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"></div></div>
+                        </div>
+                        <div class="stop-panneau">
+                            <div class="stop-poteau"></div>
+                            <div class="stop-icone">🛑</div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="asphalte"><div class="ligne-jaune"></div></div>
+            </div>
+            
+            <p class="texte-normal">Léo a besoin de toi pour bâtir les mots.</p>
+            <button class="btn-action" onclick="jouerClic(); changerEcran('ecran-menu')">jouer</button>
+        </div>
+
+        <div id="ecran-menu" class="screen">
+            <p class="titre">Choisis ta mission.</p>
+            
+            <button class="btn-menu btn-niv-1" onclick="jouerClic(); demarrerJeu(1)"><span>👆</span> 1. clique sur la maison</button>
+            <button class="btn-menu btn-niv-2" onclick="jouerClic(); demarrerJeu(2)"><span>🖐️</span> 2. glisse l'image</button>
+            <button class="btn-menu btn-niv-3" onclick="jouerClic(); demarrerJeu(3)"><span>🧱</span> 3. bâtis la maison</button>
+            
+            <button class="btn-action" onclick="jouerClic(); changerEcran('ecran-intro')">retour</button>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar">
+                <span>🌟 <span id="score-affichage">0</span></span>
+                <div class="progress-container"><div class="progress-bar" id="barre-progression"></div></div>
+                <span id="titre-mission">mission</span>
+            </div>
+            
+            <p class="titre" id="consigne-jeu" style="margin-top: 40px;">Écoute le mot.</p>
+            
+            <button class="btn-audio" onclick="lireMotActuel()">🔊</button>
+            <div class="emoji-display" id="mot-visuel">❓</div>
+            
+            <div class="choix-container" id="conteneur-maisons">
+                <div class="maison-bloc cible-depot" data-syl="1" onclick="clicMaison(1)">
+                    <div class="toit"></div><div class="mur"><div class="brique"></div></div>
+                </div>
+                <div class="maison-bloc cible-depot" data-syl="2" onclick="clicMaison(2)">
+                    <div class="toit large-2"></div><div class="mur"><div class="brique"></div><div class="brique"></div></div>
+                </div>
+                <div class="maison-bloc cible-depot" data-syl="3" onclick="clicMaison(3)">
+                    <div class="toit large-3"></div><div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"></div></div>
+                </div>
+            </div>
+
+            <div id="conteneur-construction" style="display:none; width: 100%;">
+                <div id="zone-construction"></div>
+                <div>
+                    <button class="btn-action" style="padding: 10px 20px;" onclick="ajouterBrique()">+ ajouter</button>
+                    <button class="btn-action" style="padding: 10px 20px;" onclick="validerConstruction()">vérifier</button>
+                    <button class="btn-action btn-effacer" style="padding: 10px 20px; color: white;" onclick="reinitialiserBriques()">effacer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen">
+            <div id="feux-artifice"></div>
+            <p class="titre-colore" style="font-size: 2.5rem; z-index: 2;">Mission accomplie !</p>
+            <div class="badge-img">📏</div>
+            <p class="texte-normal" style="z-index: 2;">Tu as réussi ta mission et gagné ton galon à mesurer jaune !</p>
+            <button class="btn-action" style="z-index: 2;" onclick="jouerClic(); changerEcran('ecran-menu')">retour aux missions</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Audio
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function jouerSon(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            if (type === 'succes') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'erreur') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'brique') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(350, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        function jouerClic() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(450, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function jouerVictoire() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+                }, i * 150);
+            });
+        }
+
+        function parler(texte) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance);
+        }
+
+        function lancerFeuxDartifice() {
+            const conteneur = document.getElementById('feux-artifice'); conteneur.innerHTML = '';
+            const particules = ['✨', '🌟', '🎉', '📏'];
+            for(let i=0; i<40; i++) {
+                let div = document.createElement('div'); div.innerText = particules[Math.floor(Math.random() * particules.length)]; div.style.position = 'absolute'; div.style.left = '50%'; div.style.top = '50%'; div.style.fontSize = (Math.random() * 2 + 1) + 'rem'; div.style.transition = 'all 1.5s cubic-bezier(0.1, 0.8, 0.3, 1)'; conteneur.appendChild(div);
+                setTimeout(() => { let angle = Math.random() * Math.PI * 2; let distance = Math.random() * 250 + 50; div.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) scale(0)`; div.style.opacity = '0'; }, 50);
+            }
+        }
+
+        // Mots
+        const motsJeu1 = [
+            { mot: 'chat', syllabes: 1, icone: '🐱' }, { mot: 'moto', syllabes: 2, icone: '🏍️' },
+            { mot: 'domino', syllabes: 3, icone: '🁣' }, { mot: 'lit', syllabes: 1, icone: '🛏️' },
+            { mot: 'vélo', syllabes: 2, icone: '🚲' }, { mot: 'caméra', syllabes: 3, icone: '🎥' },
+            { mot: 'loup', syllabes: 1, icone: '🐺' }, { mot: 'bateau', syllabes: 2, icone: '⛵' }
+        ];
+
+        const motsJeu2 = [
+            { mot: 'rat', syllabes: 1, icone: '🐀' }, { mot: 'poisson', syllabes: 2, icone: '🐟' },
+            { mot: 'pyjama', syllabes: 3, icone: '👚' }, { mot: 'sac', syllabes: 1, icone: '🎒' },
+            { mot: 'mouton', syllabes: 2, icone: '🐑' }, { mot: 'ananas', syllabes: 3, icone: '🍍' },
+            { mot: 'jus', syllabes: 1, icone: '🧃' }, { mot: 'robot', syllabes: 2, icone: '🤖' }
+        ];
+
+        const motsJeu3 = [
+            { mot: 'nez', syllabes: 1, icone: '👃' }, { mot: 'ballon', syllabes: 2, icone: '🎈' },
+            { mot: 'chocolat', syllabes: 3, icone: '🍫' }, { mot: 'feu', syllabes: 1, icone: '🔥' },
+            { mot: 'crayon', syllabes: 2, icone: '✏️' }, { mot: 'cinéma', syllabes: 3, icone: '🍿' },
+            { mot: 'main', syllabes: 1, icone: '🖐️' }, { mot: 'cadeau', syllabes: 2, icone: '🎁' }
+        ];
+
+        let listeActive = []; let modeJeuActuel = 1; let indexMot = 0; let score = 0; let briquesConstruites = 0;
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'ecran-victoire') { 
+                jouerVictoire(); 
+                lancerFeuxDartifice(); 
+                parler("Mission accomplie ! tu as gagné ton galon à mesurer !");
+            }
+        }
+
+        function demarrerJeu(mode) {
+            modeJeuActuel = mode; indexMot = 0; score = 0;
+            if (mode === 1) listeActive = motsJeu1;
+            if (mode === 2) listeActive = motsJeu2;
+            if (mode === 3) listeActive = motsJeu3;
+            
+            document.getElementById('titre-mission').innerText = `mission ${mode}`;
+            
+            if (mode === 1) {
+                document.getElementById('consigne-jeu').innerText = "Écoute et clique sur la maison.";
+                document.getElementById('conteneur-maisons').style.display = 'flex';
+                document.getElementById('conteneur-construction').style.display = 'none';
+            } else if (mode === 2) {
+                document.getElementById('consigne-jeu').innerText = "Glisse l'image dans la maison.";
+                document.getElementById('conteneur-maisons').style.display = 'flex';
+                document.getElementById('conteneur-construction').style.display = 'none';
+            } else if (mode === 3) {
+                document.getElementById('consigne-jeu').innerText = "Bâtis la maison avec les briques.";
+                document.getElementById('conteneur-maisons').style.display = 'none';
+                document.getElementById('conteneur-construction').style.display = 'block';
+                reinitialiserBriques();
+            }
+            mettreAJourInterface(); changerEcran('ecran-jeu'); setTimeout(lireMotActuel, 600);
+        }
+
+        function mettreAJourInterface() {
+            document.getElementById('score-affichage').innerText = score;
+            document.getElementById('barre-progression').style.width = ((indexMot / listeActive.length) * 100) + '%';
+            if (indexMot < listeActive.length) {
+                document.getElementById('mot-visuel').innerText = listeActive[indexMot].icone;
+                if(modeJeuActuel === 3) reinitialiserBriques();
+            } else { changerEcran('ecran-victoire'); }
+        }
+
+        function lireMotActuel() {
+            jouerClic(); if(indexMot < listeActive.length) parler(listeActive[indexMot].mot);
+        }
+
+        function afficherPointFlottant(element) {
+            let pts = document.createElement('div'); pts.className = 'point-flottant'; pts.innerText = '+10';
+            element.appendChild(pts); setTimeout(() => pts.remove(), 1000);
+        }
+
+        function verifierReponse(valeurSyllabes, elementCible = null) {
+            if(indexMot >= listeActive.length) return;
+            if (valeurSyllabes === listeActive[indexMot].syllabes) {
+                jouerSon('succes'); score += 10;
+                if(elementCible) afficherPointFlottant(elementCible);
+                indexMot++; setTimeout(mettreAJourInterface, 600);
+                if(indexMot < listeActive.length) setTimeout(lireMotActuel, 1200);
+            } else {
+                jouerSon('erreur');
+                let el = elementCible || document.getElementById('mot-visuel');
+                el.style.animation = 'shake 0.4s'; setTimeout(() => el.style.animation = '', 400);
+            }
+        }
+
+        // Activité 1
+        function clicMaison(syllabes) { if (modeJeuActuel === 1) verifierReponse(syllabes, event.currentTarget); }
+
+        // Activité 2 - Glisser fluide
+        const dragEl = document.getElementById('mot-visuel');
+        dragEl.addEventListener('pointerdown', function(e) {
+            if (modeJeuActuel !== 2 || indexMot >= listeActive.length) return;
+            dragEl.setPointerCapture(e.pointerId); dragEl.classList.add('dragging'); jouerSon('brique');
+            positionnerElement(e); dragEl.addEventListener('pointermove', onMove); dragEl.addEventListener('pointerup', onUp);
+        });
+
+        function positionnerElement(e) { dragEl.style.left = e.clientX + 'px'; dragEl.style.top = e.clientY + 'px'; dragEl.style.transform = 'translate(-50%, -50%)'; }
+        function onMove(e) { positionnerElement(e); }
+        function onUp(e) {
+            dragEl.removeEventListener('pointermove', onMove); dragEl.removeEventListener('pointerup', onUp);
+            dragEl.releasePointerCapture(e.pointerId); dragEl.classList.remove('dragging');
+            dragEl.style.display = 'none'; let elemDessous = document.elementFromPoint(e.clientX, e.clientY); dragEl.style.display = 'block';
+            dragEl.style.left = 'auto'; dragEl.style.top = 'auto'; dragEl.style.transform = 'none';
+            let zoneDepot = elemDessous ? elemDessous.closest('.cible-depot') : null;
+            if (zoneDepot) { verifierReponse(parseInt(zoneDepot.dataset.syl), zoneDepot); } else { jouerSon('erreur'); }
+        }
+
+        // Activité 3
+        function ajouterBrique() {
+            if(briquesConstruites >= 3) return; jouerSon('brique'); briquesConstruites++;
+            let brique = document.createElement('div'); brique.className = 'brique-animee';
+            document.getElementById('zone-construction').appendChild(brique);
+        }
+        function reinitialiserBriques() { briquesConstruites = 0; document.getElementById('zone-construction').innerHTML = ''; }
+        function validerConstruction() { if(briquesConstruites === 0) return; verifierReponse(briquesConstruites, document.getElementById('zone-construction')); }
+    </script>
+</body>
+</html>
