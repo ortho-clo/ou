@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 7 : Le son caché</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #eafaf1; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; transition: background-color 1s ease; }
+        #app-container { background-color: rgba(255, 255, 255, 0.95); width: 100%; max-width: 1000px; height: 100vh; max-height: 750px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 10px red; } }
+        
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding: 20px; animation: fadeIn 0.4s ease-out; text-align: center; overflow-y: auto;}
+        .screen.active { display: flex; }
+
+        /* --- TITRE MULTICOLORE ET INTRO --- */
+        .titre-multicolore { font-size: 2.8rem; font-weight: bold; margin-bottom: 10px; background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71, #3498db, #9b59b6); -webkit-background-clip: text; color: transparent; text-transform: uppercase; letter-spacing: 2px; flex-shrink: 0;}
+        .lecon-visuelle { background: #fff; border: 4px dashed #bdc3c7; border-radius: 15px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 95%; flex-shrink: 0;}
+        .phrase-intro { font-size: 1.5rem; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+
+        /* ----- LA RUE ----- */
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; margin-top: 5px; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 20px; width: 100%; padding: 0 10px; }
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; margin-top: -2px;}
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .bloc-colle { display: flex; align-items: flex-end; gap: 0; position: relative; z-index: 2; }
+        .lampadaire { display: flex; flex-direction: column; align-items: center; z-index: 2; margin-right: -2px; }
+        .lumiere { font-size: 2rem; text-shadow: 0 0 15px #f1c40f; margin-bottom: -5px; z-index: 3; position: relative; }
+        .poteau-lampe { width: 6px; height: 40px; background-color: #34495e; border-radius: 3px; z-index: 2; }
+
+        .stop-panneau { position: relative; width: 25px; height: 35px; margin-left: 2px; z-index: 5; }
+        .stop-icone { font-size: 1.1rem; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); z-index: 6; }
+        .stop-poteau { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); width: 4px; height: 45px; background-color: #34495e; border-radius: 2px; z-index: 4; }
+
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .toit { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 20px solid #7f8c8d; margin-bottom: -1px; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 35px; }
+        .brique { width: 40px; height: 100%; border-right: 2px solid rgba(0,0,0,0.15); display: flex; justify-content: space-evenly; align-items: center; padding: 0 2px; }
+        .brique:last-child { border-right: none; }
+        .toit.large-2 { border-left-width: 40px; border-right-width: 40px; }
+        .toit.large-3 { border-left-width: 60px; border-right-width: 60px; }
+        .mini-point { width: 8px; height: 8px; background-color: #333; border-radius: 50%; }
+        
+        .point-rouge { background-color: #e74c3c; color: white; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; animation: pulse 1.5s infinite; }
+
+        .voiture-absolute { position: absolute; right: -25px; width: 30px; bottom: -5px; font-size: 1.8rem; display: flex; justify-content: center; align-items: flex-end; z-index: 10; }
+
+        /* MENU DES NIVEAUX */
+        .menu-niveaux { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; justify-content: center;}
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; padding: 15px 25px; font-size: 1.2rem; }
+        button:active { transform: translateY(4px); box-shadow: none !important; }
+        .btn-niv1 { background-color: #27ae60; box-shadow: 0 5px 0 #1e8449; }
+        .btn-niv2 { background-color: #2980b9; box-shadow: 0 5px 0 #1f618d; }
+        .btn-niv3 { background-color: #d35400; box-shadow: 0 5px 0 #a04000; }
+
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 20px; display: flex; justify-content: space-between; background: #2c3e50; color: white; font-size: 1.2rem; font-weight: bold; z-index: 10; transition: background 1s ease; }
+
+        /* --- LAYOUT DU JEU --- */
+        .jeu-layout { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; margin-top: 40px; justify-content: center; padding-bottom: 20px;}
+        
+        .zone-consigne { background: white; border: 3px dashed #f39c12; border-radius: 15px; padding: 15px 30px; width: 90%; max-width: 600px; display: flex; align-items: center; justify-content: space-between; position: relative; transition: border-color 1s ease;}
+        .texte-feedback { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 1.2rem; display: none; z-index: 20; }
+        
+        .zone-serpent { cursor: pointer; display: flex; align-items: center; gap: 15px; background: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 15px; padding: 10px 20px; transition: 0.3s; }
+        .zone-serpent:hover { background: #e0e6ed; transform: scale(1.02); }
+        .icone-serpent { font-size: 3rem; }
+        .texte-serpent { font-size: 1.2rem; font-weight: bold; color: #555; text-align: left; line-height: 1.2; }
+        .lettre-revelee { font-size: 2.5rem; font-weight: bold; color: #e74c3c; display: none; margin-left: 10px; }
+
+        /* ÉLÉMENT À GLISSER */
+        .carte-mot { cursor: grab; background: #fff; border: 2px solid #3498db; border-bottom: 8px solid #3498db; border-radius: 15px; width: 220px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: transform 0.2s, border-color 1s ease; margin-top: 20px; margin-bottom: 20px;}
+        .carte-mot:active { cursor: grabbing; transform: scale(1.05); }
+        .image-mot { font-size: 6rem; line-height: 1; }
+        
+        /* Les syllabes et les lettres (Seulement des cercles) */
+        .conteneur-syllabes { display: flex; gap: 8px; align-items: center; justify-content: center; }
+        .boite-syllabe { background-color: #f1c40f; border: 2px solid #d35400; border-radius: 20px; padding: 8px 12px; display: flex; gap: 6px; justify-content: center; align-items: center; }
+        .cercle-c { width: 16px; height: 16px; background-color: #fff; border-radius: 50%; border: 2px solid #d35400; }
+
+        /* ZONES DE DÉPÔT */
+        .zones-depot-container { display: flex; width: 100%; max-width: 600px; justify-content: space-around; margin-top: 10px; }
+        .zone-depot { width: 45%; max-width: 240px; height: 160px; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; transition: all 0.3s; border: 5px dashed; background: rgba(255,255,255,0.7); }
+        .zone-depot.dragover { transform: scale(1.1); }
+        
+        .depot-oui { border-color: #2ecc71; color: #27ae60; }
+        .depot-oui.dragover { background: #d5f5e3; box-shadow: 0 0 20px #2ecc71; }
+        .depot-oui .icone-depot { font-size: 4rem; }
+
+        .depot-non { border-color: #e74c3c; color: #c0392b; }
+        .depot-non.dragover { background: #fadbd8; box-shadow: 0 0 20px #e74c3c; }
+        .depot-non .icone-depot { font-size: 4rem; }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="ecran-intro" class="screen active">
+            <h1 class="titre-multicolore">Mission 7 : Le Son Caché</h1>
+            
+            <div class="lecon-visuelle">
+                <p class="phrase-intro">Savais-tu qu'une phrase est faite de mots, de syllabes et de sons ?</p>
+                
+                <div class="quartier">
+                    <div class="rue-objets">
+                        <div class="bloc-colle">
+                            <div class="lampadaire">
+                                <div class="lumiere">💡</div>
+                                <div class="poteau-lampe"></div>
+                            </div>
+                            <div class="maison-bloc">
+                                <div class="toit large-2"></div>
+                                <div class="mur">
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div><div class="mini-point"></div></div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="bloc-colle">
+                            <div class="maison-bloc">
+                                <div class="toit"></div>
+                                <div class="mur">
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bloc-colle">
+                            <div class="maison-bloc">
+                                <div class="toit"></div>
+                                <div class="mur">
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div><div class="mini-point"></div></div>
+                                </div>
+                                <div class="voiture-absolute">🚘</div>
+                            </div>
+                        </div>
+        
+                        <div class="bloc-colle">
+                            <div class="maison-bloc">
+                                <div class="toit large-2"></div>
+                                <div class="mur">
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                                    <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                                </div>
+                            </div>
+                            <div class="stop-panneau">
+                                <div class="stop-icone">🛑</div>
+                                <div class="stop-poteau"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asphalte"><div class="ligne-jaune"></div></div>
+                </div>
+
+                <div style="margin-top: 15px; font-weight: bold; color: #e74c3c;">On cherche un son caché !</div>
+                <div class="brique" style="width: 100px; height: 45px; background: #f1c40f; border: 3px solid #7f8c8d; border-radius: 5px; margin-top: 5px;">
+                    <div class="mini-point"></div>
+                    <div class="point-rouge">?</div>
+                    <div class="mini-point"></div>
+                </div>
+
+            </div>
+
+            <p style="font-size: 1.2rem; font-weight: bold; color: #555; margin-top: 10px;">Choisis ton cours pour commencer :</p>
+            <div class="menu-niveaux">
+                <button class="btn-niv1" onclick="lancerNiveau(1)">Niveau 1 : La Ferme</button>
+                <button class="btn-niv2" onclick="lancerNiveau(2)">Niveau 2 : La Forêt</button>
+                <button class="btn-niv3" onclick="lancerNiveau(3)">Niveau 3 : Le Safari</button>
+            </div>
+        </div>
+
+        <div id="ecran-jeu" class="screen" style="padding: 0; justify-content: center;">
+            <div class="top-bar" id="top-bar">
+                <span>🌟 Étoiles : <span id="score">0</span></span>
+                <span id="titre-niveau-ui">Niveau X</span>
+                <span>Mot <span id="affichage-niveau">1</span>/10</span>
+            </div>
+
+            <div class="jeu-layout" id="conteneur-jeu-dynamique">
+                </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen" style="justify-content: center;">
+            <h1 class="titre-multicolore" style="font-size: 3rem;">Mission réussie !</h1>
+            <div style="font-size: 7rem; margin: 20px 0; animation: pulse 2s infinite;">🧺</div>
+            <p style="font-size: 1.8rem; font-weight: bold; color: #2c3e50;">Félicitations !</p>
+            <p style="font-size: 1.3rem; font-weight: bold; color: #555; margin-bottom: 30px;">Tu as trouvé tous les sons et gagné ton Tamis !</p>
+            <button class="btn-niv1" onclick="retourMenu()">Retour au menu</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DONNÉES DES MOTS (30 mots, 10 par Niveau thématique) ---
+        const tousLesMots = [
+            // NIVEAU 1 : Les Animaux de la Ferme et Nature (Index 0 à 9)
+            { image: '🐄', motOral: 'vache', sonEcrit: 'v', presence: true, icone: '📳', syllabes: [ ['c', 'c', 'c'] ] },
+            { image: '🐎', motOral: 'cheval', sonEcrit: 'v', presence: true, icone: '📳', syllabes: [ ['c', 'c'], ['c', 'c', 'c'] ] },
+            { image: '🦋', motOral: 'papillon', sonEcrit: 'b', presence: false, icone: '🚤', syllabes: [ ['c', 'c'], ['c', 'c'], ['c', 'c'] ] }, // 3 Syllabes
+            { image: '🌲', motOral: 'sapin', sonEcrit: 'ou', presence: false, icone: '👻', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🦉', motOral: 'hibou', sonEcrit: 'ou', presence: true, icone: '👻', syllabes: [ ['c'], ['c', 'c'] ] },
+            { image: '🍄', motOral: 'champignon', sonEcrit: 'ch', presence: true, icone: '🤫', syllabes: [ ['c', 'c'], ['c', 'c'], ['c', 'c'] ] }, // 3 Syllabes
+            { image: '☀️', motOral: 'soleil', sonEcrit: 's', presence: true, icone: '🐍', syllabes: [ ['c', 'c'], ['c', 'c', 'c'] ] },
+            { image: '🍎', motOral: 'pomme', sonEcrit: 'ch', presence: false, icone: '🤫', syllabes: [ ['c', 'c', 'c'] ] },
+            { image: '🎈', motOral: 'ballon', sonEcrit: 'b', presence: true, icone: '🚤', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🐱', motOral: 'chat', sonEcrit: 'ou', presence: false, icone: '👻', syllabes: [ ['c', 'c'] ] },
+            
+            // NIVEAU 2 : La Forêt Sauvage (Index 10 à 19)
+            { image: '🐑', motOral: 'mouton', sonEcrit: 'ou', presence: true, icone: '👻', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🐭', motOral: 'souris', sonEcrit: 's', presence: true, icone: '🐍', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🦔', motOral: 'hérisson', sonEcrit: 's', presence: true, icone: '🐍', syllabes: [ ['c'], ['c', 'c'], ['c', 'c'] ] }, // 3 Syllabes
+            { image: '🦊', motOral: 'renard', sonEcrit: 's', presence: false, icone: '🐍', syllabes: [ ['c', 'c'], ['c', 'c', 'c'] ] },
+            { image: '🐺', motOral: 'loup', sonEcrit: 'ou', presence: true, icone: '👻', syllabes: [ ['c', 'c'] ] },
+            { image: '🐿️', motOral: 'écureuil', sonEcrit: 'm', presence: false, icone: '😋', syllabes: [ ['c'], ['c', 'c'], ['c', 'c', 'c'] ] }, // 3 Syllabes
+            { image: '🐜', motOral: 'fourmi', sonEcrit: 'f', presence: true, icone: '🌬️', syllabes: [ ['c', 'c', 'c'], ['c', 'c'] ] },
+            { image: '⛵', motOral: 'bateau', sonEcrit: 'f', presence: false, icone: '🌬️', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🦒', motOral: 'girafe', sonEcrit: 'f', presence: true, icone: '🌬️', syllabes: [ ['c', 'c'], ['c', 'c', 'c'] ] },
+            { image: '🐒', motOral: 'singe', sonEcrit: 'm', presence: false, icone: '😋', syllabes: [ ['c', 'c', 'c'] ] },
+
+            // NIVEAU 3 : Le grand Safari et les Machines (Index 20 à 29)
+            { image: '🏍️', motOral: 'moto', sonEcrit: 'm', presence: true, icone: '😋', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🦈', motOral: 'requin', sonEcrit: 'r', presence: true, icone: '🦁', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🐊', motOral: 'crocodile', sonEcrit: 'r', presence: true, icone: '🦁', syllabes: [ ['c', 'c', 'c'], ['c', 'c'], ['c', 'c', 'c'] ] }, // 3 Syllabes
+            { image: '🐰', motOral: 'lapin', sonEcrit: 'r', presence: false, icone: '🦁', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🤖', motOral: 'robot', sonEcrit: 'r', presence: true, icone: '🦁', syllabes: [ ['c', 'c'], ['c', 'c'] ] },
+            { image: '🦖', motOral: 'dinosaure', sonEcrit: 'z', presence: true, icone: '🐝', syllabes: [ ['c', 'c'], ['c', 'c'], ['c', 'c', 'c'] ] }, // 3 Syllabes
+            { image: '🦓', motOral: 'zèbre', sonEcrit: 'z', presence: true, icone: '🐝', syllabes: [ ['c', 'c', 'c', 'c'] ] },
+            { image: '🐢', motOral: 'tortue', sonEcrit: 'z', presence: false, icone: '🐝', syllabes: [ ['c', 'c', 'c'], ['c', 'c'] ] },
+            { image: '🐦', motOral: 'oiseau', sonEcrit: 'z', presence: true, icone: '🐝', syllabes: [ ['c'], ['c', 'c'] ] },
+            { image: '🐟', motOral: 'poisson', sonEcrit: 'z', presence: false, icone: '🐝', syllabes: [ ['c', 'c'], ['c', 'c'] ] }
+        ];
+
+        let audioCtx = null;
+        let niveauActuel = 1;
+        let indexDebut = 0;
+        let indexFin = 9;
+        let motCourantIndex = 0; 
+        let score = 0;
+        let motNumero = 1; 
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function retourMenu() {
+            document.body.style.backgroundColor = '#eafaf1'; 
+            changerEcran('ecran-intro');
+        }
+
+        function lancerNiveau(niv) {
+            try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch(e) {}
+            
+            niveauActuel = niv;
+            indexDebut = (niv - 1) * 10;
+            indexFin = indexDebut + 9;
+            motCourantIndex = indexDebut;
+            motNumero = 1;
+            score = 0;
+            
+            changerEcran('ecran-jeu');
+            chargerNiveau();
+        }
+
+        function jouerSon(type) {
+            if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type === 'ping') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'erreur') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+        }
+
+        function genererSyllabesHtml(tableauSyllabes) {
+            let html = '<div class="conteneur-syllabes">';
+            tableauSyllabes.forEach((syllabe) => {
+                html += `<div class="boite-syllabe">`;
+                syllabe.forEach(lettre => { html += `<div class="cercle-c"></div>`; });
+                html += `</div>`;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function ajusterCouleurNiveau() {
+            let body = document.body;
+            let topBar = document.getElementById('top-bar');
+            let titre = document.getElementById('titre-niveau-ui');
+            let carteMot = document.getElementById('mot-a-glisser');
+            let consigne = document.getElementById('zone-consigne');
+            
+            if (niveauActuel === 1) { 
+                body.style.backgroundColor = '#eafaf1'; 
+                topBar.style.backgroundColor = '#27ae60';
+                titre.innerText = "Niveau 1 : La Ferme";
+                if(carteMot) { carteMot.style.borderColor = '#27ae60'; carteMot.style.borderBottomColor = '#27ae60'; }
+                if(consigne) { consigne.style.borderColor = '#27ae60'; }
+            }
+            else if (niveauActuel === 2) { 
+                body.style.backgroundColor = '#eaf2f8'; 
+                topBar.style.backgroundColor = '#2980b9';
+                titre.innerText = "Niveau 2 : La Forêt";
+                if(carteMot) { carteMot.style.borderColor = '#2980b9'; carteMot.style.borderBottomColor = '#2980b9'; }
+                if(consigne) { consigne.style.borderColor = '#2980b9'; }
+            }
+            else if (niveauActuel === 3) { 
+                body.style.backgroundColor = '#fdf2e9'; 
+                topBar.style.backgroundColor = '#d35400';
+                titre.innerText = "Niveau 3 : Le Safari";
+                if(carteMot) { carteMot.style.borderColor = '#d35400'; carteMot.style.borderBottomColor = '#d35400'; }
+                if(consigne) { consigne.style.borderColor = '#d35400'; }
+            }
+        }
+
+        function chargerNiveau() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('affichage-niveau').innerText = motNumero;
+            
+            if (motCourantIndex > indexFin) { 
+                changerEcran('ecran-victoire'); 
+                return; 
+            }
+
+            const d = tousLesMots[motCourantIndex];
+            const conteneur = document.getElementById('conteneur-jeu-dynamique');
+            
+            conteneur.innerHTML = `
+                <div class="zone-consigne" id="zone-consigne">
+                    <div id="feedback-text" class="texte-feedback"></div>
+                    
+                    <div class="zone-serpent" onclick="actionMontrerLettre()">
+                        <div class="icone-serpent">${d.icone}</div>
+                        <div class="texte-serpent" id="texte-serpent">
+                            Fais le son !<br>(Clique pour voir la lettre)
+                        </div>
+                        <div id="lettres-cachees" class="lettre-revelee">[ ${d.sonEcrit} ]</div>
+                    </div>
+                </div>
+                
+                <div class="carte-mot" id="mot-a-glisser" draggable="true" ondragstart="dragStart(event)" onclick="lireMotALaMano()">
+                    <div class="image-mot">${d.image}</div>
+                    ${genererSyllabesHtml(d.syllabes)}
+                </div>
+
+                <div class="zones-depot-container">
+                    <div class="zone-depot depot-oui" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event, true)">
+                        <div class="icone-depot">🧺</div>
+                        <div>OUI</div>
+                    </div>
+                    <div class="zone-depot depot-non" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event, false)">
+                        <div class="icone-depot">🗑️</div>
+                        <div>NON</div>
+                    </div>
+                </div>
+            `;
+
+            ajusterCouleurNiveau();
+
+            setTimeout(() => {
+                if ('speechSynthesis' in window) {
+                    let u = new SpeechSynthesisUtterance(d.motOral);
+                    u.lang = 'fr-CA'; u.rate = 0.8;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(u);
+                }
+            }, 600);
+        }
+
+        function lireMotALaMano() {
+            if ('speechSynthesis' in window) {
+                let u = new SpeechSynthesisUtterance(tousLesMots[motCourantIndex].motOral);
+                u.lang = 'fr-CA'; u.rate = 0.8;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function actionMontrerLettre() {
+            document.getElementById('lettres-cachees').style.display = 'block';
+            document.getElementById('texte-serpent').innerHTML = "Lettre :";
+        }
+
+        // --- LOGIQUE DRAG AND DROP ---
+        function dragStart(ev) { ev.dataTransfer.setData("text", "mot-a-glisser"); }
+        function dragOver(ev) { ev.preventDefault(); ev.currentTarget.classList.add('dragover'); }
+        function dragLeave(ev) { ev.currentTarget.classList.remove('dragover'); }
+        function drop(ev, choixEstOui) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('dragover');
+            verifierReponse(choixEstOui);
+        }
+
+        function verifierReponse(choix) {
+            const d = tousLesMots[motCourantIndex];
+            const blocDraggable = document.getElementById('mot-a-glisser');
+            let feed = document.getElementById('feedback-text');
+
+            if (choix === d.presence) {
+                score += 1; jouerSon('ping');
+                blocDraggable.style.transform = 'scale(0)';
+                feed.innerText = "Excellent !"; feed.style.backgroundColor = '#2ecc71'; feed.style.display = 'block';
+                setTimeout(() => { 
+                    feed.style.display = 'none'; 
+                    motCourantIndex++; 
+                    motNumero++;
+                    chargerNiveau(); 
+                }, 1200);
+            } else {
+                blocDraggable.style.animation = 'shake 0.4s'; jouerSon('erreur');
+                feed.innerText = "Oups ! Essaie encore."; feed.style.backgroundColor = '#e74c3c'; feed.style.display = 'block';
+                setTimeout(() => { feed.style.display = 'none'; blocDraggable.style.animation = ''; }, 1200);
+            }
+        }
+    </script>
+</body>
+</html>
