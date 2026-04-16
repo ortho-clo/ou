@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 9 : Cherche le premier son</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #efebe9; color: #4e342e; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-container { background-color: rgba(255, 255, 255, 0.95); width: 100%; max-width: 1000px; height: 100vh; max-height: 800px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding: 20px; animation: fadeIn 0.4s ease-out; text-align: center; overflow-y: auto;}
+        .screen.active { display: flex; }
+
+        .titre-mission { font-size: 2.8rem; font-weight: bold; margin-bottom: 5px; color: #5d4037; text-transform: uppercase; flex-shrink: 0;}
+        .consigne-box { background: #fff3e0; border: 3px solid #ffb74d; border-radius: 10px; padding: 15px; margin-bottom: 15px; width: 95%; text-align: center; color: #e65100; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .lecon-visuelle { background: #fff; border: 4px dashed #bdc3c7; border-radius: 15px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 95%; }
+
+        /* --- LA RUE D'INTRODUCTION --- */
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 15px; width: 100%; padding: 0 10px; position: relative; z-index: 2;}
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; margin-top: -2px; border-radius: 0 0 7px 7px;}
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .bloc-colle { display: flex; align-items: flex-end; gap: 0; position: relative; }
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative;}
+        .image-mot { font-size: 3.5rem; margin-bottom: -5px; z-index: 5; line-height: 1; height: 50px; display: flex; align-items: flex-end;}
+        .toit { width: 0; height: 0; border-bottom: 25px solid #7f8c8d; margin-bottom: -1px; }
+        .toit.large-1 { border-left: 27px solid transparent; border-right: 27px solid transparent; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 40px; justify-content: center;}
+        .brique { height: 100%; border-right: 2px solid rgba(0,0,0,0.15); display: flex; justify-content: space-evenly; align-items: center; padding: 0 5px; gap: 4px; }
+        .brique:last-child { border-right: none; }
+        .mini-point { width: 14px; height: 14px; background-color: #fff; border: 2px solid #bdc3c7; border-radius: 50%; }
+        .point-cible { background-color: #2ecc71 !important; border-color: #27ae60 !important; }
+
+        .lampadaire { display: flex; flex-direction: column; align-items: center; margin-right: -5px; }
+        .poteau-lampe { width: 5px; height: 55px; background-color: #34495e; border-radius: 3px; position: relative; }
+        .poteau-lampe::before { content: '💡'; position: absolute; top: -15px; left: -10px; font-size: 1.2rem; }
+        
+        .stop-panneau { position: relative; width: 20px; height: 40px; margin-left: 5px; }
+        .stop-icone { font-size: 1.2rem; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
+        .stop-poteau { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 20px; background-color: #34495e; }
+
+        /* --- ZONE DE JEU --- */
+        .carte-mot { position: relative; cursor: pointer; background: #fff; border: 4px solid #795548; border-radius: 15px; width: auto; min-width: 250px; padding: 25px 15px 15px 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: 20px 0; transition: transform 0.2s; }
+        .carte-mot:hover { transform: scale(1.02); border-color: #5d4037; }
+        .bouton-audio { position: absolute; top: 5px; right: 10px; font-size: 1.5rem; color: #795548; transition: transform 0.2s; }
+        .bouton-audio:active { transform: scale(0.9); }
+
+        .zone-revelation { cursor: pointer; display: flex; align-items: center; gap: 15px; background: #fff; border: 3px solid #8d6e63; border-radius: 50px; padding: 10px 30px; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+        .icone-sifflet { font-size: 2.2rem; }
+
+        .choix-sons-container { display: none; gap: 30px; justify-content: center; width: 100%; animation: fadeIn 0.5s; margin-top: 10px;}
+        .zone-son { width: 120px; height: 120px; border-radius: 50%; background: white; border: 5px solid #a1887f; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; cursor: pointer; }
+        .zone-son:hover { transform: scale(1.1); border-color: #5d4037; background: #efebe9; }
+        .zone-son:active { transform: scale(0.95); }
+        .emoji-son { font-size: 4rem; }
+        
+        .bouton-audio-choix { position: absolute; top: -5px; right: -5px; font-size: 1.3rem; background: white; border-radius: 50%; border: 2px solid #a1887f; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .bouton-audio-choix:hover { transform: scale(1.2); border-color: #5d4037; }
+
+        /* --- CHEF D'ORCHESTRE --- */
+        #overlay-prof { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 100; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 0.3s; }
+        .btn-prof { background: #8d6e63; border: 4px solid #5d4037; border-radius: 50%; width: 120px; height: 120px; font-size: 4rem; cursor: pointer; animation: pulse 1.5s infinite; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 20px; display: flex; justify-content: space-between; background: #4e342e; color: white; font-weight: bold; z-index: 10; }
+        .menu-niveaux { display: flex; gap: 10px; margin-top: 10px; }
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; padding: 12px 20px; color: white; font-size: 1.1rem;}
+        .btn-niv1 { background: #795548; box-shadow: 0 4px 0 #4e342e; }
+        .btn-niv2 { background: #8d6e63; box-shadow: 0 4px 0 #5d4037; }
+        .btn-niv3 { background: #a1887f; box-shadow: 0 4px 0 #6d4c41; color: #333;}
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="ecran-intro" class="screen active">
+            <h1 class="titre-mission">Mission 9</h1>
+            
+            <div class="consigne-box">
+                <div style="font-size: 1.6rem; font-weight: bold; margin-bottom: 5px; color: #3e2723;">Ce singe saute.</div>
+                <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 15px;">Trouve le premier son de ces mots !</div>
+                <div style="font-size: 1rem; line-height: 1.4; text-align: left;">
+                    <strong>🗣️ Préparez-vous !</strong><br>
+                    Dès que le premier petit grain de son invisible touche le sol, vous devez donner le signal. Utilisez votre sifflet imaginaire avec votre bouche et identifiez le son à votre chef d'orchestre !
+                </div>
+            </div>
+            
+            <div class="lecon-visuelle">
+                <div class="quartier">
+                    <div class="rue-objets">
+                        <div class="bloc-colle">
+                            <div class="lampadaire"><div class="poteau-lampe"></div></div>
+                            <div class="maison-bloc">
+                                <div class="image-mot"></div>
+                                <div class="toit large-1"></div>
+                                <div class="mur"><div class="brique"><div class="mini-point point-cible"></div><div class="mini-point"></div></div></div>
+                            </div>
+                        </div>
+                        <div class="maison-bloc">
+                            <div class="image-mot">🐒</div>
+                            <div class="toit large-1"></div>
+                            <div class="mur"><div class="brique"><div class="mini-point point-cible"></div><div class="mini-point"></div><div class="mini-point"></div></div></div>
+                        </div>
+                        <div class="bloc-colle">
+                            <div class="maison-bloc">
+                                <div class="image-mot">🦘</div>
+                                <div class="toit large-1"></div>
+                                <div class="mur"><div class="brique"><div class="mini-point point-cible"></div><div style="width:5px"></div><div class="mini-point"></div><div style="width:5px"></div><div class="mini-point"></div></div></div>
+                            </div>
+                            <div class="stop-panneau"><div class="stop-icone">🛑</div><div class="stop-poteau"></div></div>
+                        </div>
+                    </div>
+                    <div class="asphalte"><div class="ligne-jaune"></div></div>
+                </div>
+            </div>
+
+            <div class="menu-niveaux">
+                <button class="btn-niv1" onclick="lancerNiveau(1)">Niveau 1</button>
+                <button class="btn-niv2" onclick="lancerNiveau(2)">Niveau 2</button>
+                <button class="btn-niv3" onclick="lancerNiveau(3)">Niveau 3</button>
+            </div>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar" id="top-bar">
+                <span>⭐ <span id="score">0</span></span>
+                <span id="titre-niveau-ui">Niveau</span>
+                <span><span id="affichage-num">1</span>/10</span>
+            </div>
+
+            <div id="jeu-dynamique" style="margin-top: 60px; display: flex; flex-direction: column; align-items: center; width: 100%;">
+                </div>
+            
+            <div id="overlay-prof">
+                <h2 style="color: #795548; margin-bottom: 20px; font-size: 2rem;">C'est réussi !</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 30px; font-weight: bold; color: #3e2723;">Donne ton coup de sifflet à ton chef d'orchestre :</p>
+                <button class="btn-prof" onclick="validationProf()">🪈</button>
+            </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen" style="justify-content: center;">
+            <h1 class="titre-mission">Parcours terminé !</h1>
+            <div style="font-size: 6rem;">🏆</div>
+            <button class="btn-niv1" onclick="location.reload()" style="margin-top: 20px;">Menu Principal</button>
+        </div>
+    </div>
+
+    <script>
+        const NIVEAUX = {
+            1: [
+                { img: '🍎', txt: 'pomme', syl: [['c','c','c']], choix: [{img:'🐼', correct:true, txt:'panda'}, {img:'🚗', correct:false, txt:'voiture'}, {img:'🦁', correct:false, txt:'lion'}] },
+                { img: '🐄', txt: 'vache', syl: [['c','c','c']], choix: [{img:'🚲', correct:true, txt:'vélo'}, {img:'🍎', correct:false, txt:'pomme'}, {img:'🐱', correct:false, txt:'chat'}] },
+                { img: '🛏️', txt: 'lit', syl: [['c','c']], choix: [{img:'🌙', correct:true, txt:'lune'}, {img:'🔥', correct:false, txt:'feu'}, {img:'🐀', correct:false, txt:'rat'}] },
+                { img: '🧃', txt: 'jus', syl: [['c','c']], choix: [{img:'👗', correct:true, txt:'jupe'}, {img:'🐄', correct:false, txt:'vache'}, {img:'🌊', correct:false, txt:'mer'}] },
+                { img: '👜', txt: 'sac', syl: [['c','c','c']], choix: [{img:'☀️', correct:true, txt:'soleil'}, {img:'🛏️', correct:false, txt:'lit'}, {img:'🔥', correct:false, txt:'feu'}] },
+                { img: '🐱', txt: 'chat', syl: [['c','c']], choix: [{img:'🐶', correct:true, txt:'chien'}, {img:'🍎', correct:false, txt:'pomme'}, {img:'👜', correct:false, txt:'sac'}] },
+                { img: '👃', txt: 'nez', syl: [['c','c']], choix: [{img:'🪹', correct:true, txt:'nid'}, {img:'🚗', correct:false, txt:'voiture'}, {img:'🐄', correct:false, txt:'vache'}] },
+                { img: '🌊', txt: 'mer', syl: [['c','c','c']], choix: [{img:'🐑', correct:true, txt:'mouton'}, {img:'🧃', correct:false, txt:'jus'}, {img:'🐱', correct:false, txt:'chat'}] },
+                { img: '🔥', txt: 'feu', syl: [['c','c']], choix: [{img:'🧚', correct:true, txt:'fée'}, {img:'👃', correct:false, txt:'nez'}, {img:'🌊', correct:false, txt:'mer'}] },
+                { img: '🐀', txt: 'rat', syl: [['c','c']], choix: [{img:'👗', correct:true, txt:'robe'}, {img:'👜', correct:false, txt:'sac'}, {img:'🛏️', correct:false, txt:'lit'}] }
+            ],
+            2: [
+                { img: '🥣', txt: 'bol', syl: [['c','c','c']], choix: [{img:'🐋', correct:true, txt:'baleine'}, {img:'🌙', correct:false, txt:'lune'}, {img:'🛣️', correct:false, txt:'rue'}] },
+                { img: '🛣️', txt: 'rue', syl: [['c','c']], choix: [{img:'🦊', correct:true, txt:'renard'}, {img:'🥣', correct:false, txt:'bol'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '🦋', txt: 'papillon', syl: [['c','c'], ['c','c'], ['c','c']], choix: [{img:'🐼', correct:true, txt:'panda'}, {img:'🐱', correct:false, txt:'chat'}, {img:'🐄', correct:false, txt:'vache'}] },
+                { img: '🧱', txt: 'mur', syl: [['c','c','c']], choix: [{img:'🪰', correct:true, txt:'mouche'}, {img:'🥬', correct:false, txt:'chou'}, {img:'🧂', correct:false, txt:'sel'}] },
+                { img: '🍫', txt: 'chocolat', syl: [['c','c'], ['c','c'], ['c','c']], choix: [{img:'🐱', correct:true, txt:'chat'}, {img:'🦁', correct:false, txt:'lion'}, {img:'🚗', correct:false, txt:'voiture'}] },
+                { img: '🥬', txt: 'chou', syl: [['c','c']], choix: [{img:'🐴', correct:true, txt:'cheval'}, {img:'🥣', correct:false, txt:'bol'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '🧂', txt: 'sel', syl: [['c','c','c']], choix: [{img:'🐒', correct:true, txt:'singe'}, {img:'🧱', correct:false, txt:'mur'}, {img:'🥣', correct:false, txt:'bol'}] },
+                { img: '🍅', txt: 'tomate', syl: [['c','c'], ['c','c','c']], choix: [{img:'🚜', correct:true, txt:'tracteur'}, {img:'🥬', correct:false, txt:'chou'}, {img:'🧂', correct:false, txt:'sel'}] },
+                { img: '🪹', txt: 'nid', syl: [['c','c']], choix: [{img:'☁️', correct:true, txt:'nuage'}, {img:'🔩', correct:false, txt:'vis'}, {img:'⛵', correct:false, txt:'bateau'}] },
+                { img: '🌙', txt: 'lune', syl: [['c','c','c']], choix: [{img:'🐰', correct:true, txt:'lapin'}, {img:'🦊', correct:false, txt:'renard'}, {img:'🪰', correct:false, txt:'mouche'}] }
+            ],
+            3: [
+                { img: '🍯', txt: 'pot', syl: [['c','c']], choix: [{img:'🐔', correct:true, txt:'poule'}, {img:'🍚', correct:false, txt:'riz'}, {img:'🏞️', correct:false, txt:'lac'}] },
+                { img: '📹', txt: 'caméra', syl: [['c','c'], ['c','c'], ['c','c']], choix: [{img:'🐨', correct:true, txt:'koala'}, {img:'🦊', correct:false, txt:'renard'}, {img:'🥣', correct:false, txt:'bol'}] },
+                { img: '🧵', txt: 'fil', syl: [['c','c','c']], choix: [{img:'👧', correct:true, txt:'fille'}, {img:'🪰', correct:false, txt:'mouche'}, {img:'👗', correct:false, txt:'jupe'}] },
+                { img: '🦖', txt: 'dinosaure', syl: [['c','c'], ['c','c'], ['c','c','c']], choix: [{img:'🐬', correct:true, txt:'dauphin'}, {img:'🌙', correct:false, txt:'lune'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '🪱', txt: 'ver', syl: [['c','c','c']], choix: [{img:'🧳', correct:true, txt:'valise'}, {img:'🍚', correct:false, txt:'riz'}, {img:'🎀', correct:false, txt:'nœud'}] },
+                { img: '☎️', txt: 'téléphone', syl: [['c','c'], ['c','c'], ['c','c','c']], choix: [{img:'🚜', correct:true, txt:'tracteur'}, {img:'🍯', correct:false, txt:'pot'}, {img:'⛵', correct:false, txt:'bateau'}] },
+                { img: '👗', txt: 'jupe', syl: [['c','c','c']], choix: [{img:'🦒', correct:true, txt:'girafe'}, {img:'🏞️', correct:false, txt:'lac'}, {img:'🐔', correct:false, txt:'poule'}] },
+                { img: '🦍', txt: 'gorille', syl: [['c','c'], ['c','c','c']], choix: [{img:'🐸', correct:true, txt:'grenouille'}, {img:'🪱', correct:false, txt:'ver'}, {img:'👑', correct:false, txt:'roi'}] },
+                { img: '🎀', txt: 'nœud', syl: [['c','c']], choix: [{img:'🚢', correct:true, txt:'navire'}, {img:'🪰', correct:false, txt:'mouche'}, {img:'👧', correct:false, txt:'fille'}] },
+                { img: '🛁', txt: 'bain', syl: [['c','c']], choix: [{img:'🎈', correct:true, txt:'ballon'}, {img:'👗', correct:false, txt:'jupe'}, {img:'🐍', correct:false, txt:'serpent'}] }
+            ]
+        };
+
+        let niveauActuel = 1;
+        let motsJoues = [];
+        let motIndex = 0;
+        let score = 0;
+        let motActuelTxt = '';
+
+        function jouerSonSucces() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.log("Audio non supporté");
+            }
+        }
+
+        function lancerNiveau(n) {
+            niveauActuel = n;
+            motsJoues = NIVEAUX[n];
+            document.getElementById('ecran-intro').classList.remove('active');
+            document.getElementById('ecran-jeu').classList.add('active');
+            motIndex = 0;
+            chargerMot();
+        }
+
+        function genererBriquesHtml(structureSyl) {
+            return structureSyl.map((syllabe, briqueIndex) => `
+                <div class="brique">
+                    ${syllabe.map((_, rondIndex) => `
+                        <div class="mini-point ${briqueIndex === 0 && rondIndex === 0 ? 'point-cible' : ''}"></div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function chargerMot() {
+            if (motIndex >= motsJoues.length) {
+                document.getElementById('ecran-jeu').classList.remove('active');
+                document.getElementById('ecran-victoire').classList.add('active');
+                return;
+            }
+
+            const d = motsJoues[motIndex];
+            motActuelTxt = d.txt;
+            const zone = document.getElementById('jeu-dynamique');
+            document.getElementById('affichage-num').innerText = motIndex + 1;
+            
+            let choixMelanges = [...d.choix].sort(() => 0.5 - Math.random());
+
+            zone.innerHTML = `
+                <div class="zone-revelation" onclick="revelerSons()">
+                    <div class="icone-sifflet">🪈</div>
+                </div>
+
+                <div class="choix-sons-container" id="container-sons">
+                    ${choixMelanges.map(c => `
+                        <div class="zone-son" onclick="verifier(${c.correct})">
+                            <div class="bouton-audio-choix" onclick="event.stopPropagation(); speak('${c.txt}')" title="Écouter ce mot">🔊</div>
+                            <div class="emoji-son">${c.img}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="carte-mot" id="carte-cible" title="Clique pour réentendre le mot" onclick="repeterMot()">
+                    <div class="bouton-audio">🔊</div>
+                    <div class="quartier">
+                        <div class="rue-objets">
+                            <div class="maison-bloc">
+                                <div class="image-mot">${d.img}</div>
+                                <div class="toit large-1"></div>
+                                <div class="mur">
+                                    ${genererBriquesHtml(d.syl)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="asphalte"><div class="ligne-jaune"></div></div>
+                    </div>
+                </div>
+            `;
+            
+            speak(d.txt);
+        }
+
+        function revelerSons() {
+            document.getElementById('container-sons').style.display = 'flex';
+        }
+
+        function repeterMot() {
+            speak(motActuelTxt);
+        }
+
+        function verifier(isCorrect) {
+            const card = document.getElementById('carte-cible');
+            if (isCorrect) {
+                jouerSonSucces();
+                score++;
+                document.getElementById('score').innerText = score;
+                card.style.transform = 'scale(1.05)';
+                card.style.borderColor = '#2ecc71';
+                setTimeout(() => {
+                    document.getElementById('overlay-prof').style.display = 'flex';
+                }, 400);
+            } else {
+                card.style.animation = 'shake 0.5s';
+                setTimeout(() => card.style.animation = '', 500);
+            }
+        }
+
+        function validationProf() {
+            document.getElementById('overlay-prof').style.display = 'none';
+            motIndex++;
+            chargerMot();
+        }
+
+        function speak(t) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(t);
+                u.lang = 'fr-CA';
+                window.speechSynthesis.speak(u);
+            }
+        }
+    </script>
+</body>
+</html>
