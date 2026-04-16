@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le grand chantier de Léo - Mission 5</title>
+    <style>
+        /* Police stricte et reset */
+        * {
+            box-sizing: border-box;
+            font-family: 'Century Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            background-color: #fd79a8; 
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #app-container {
+            background-color: #fcfcfc;
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            padding: 10px;
+            animation: fadeIn 0.4s ease-in-out;
+            text-align: center;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes pulseVictoire { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2) rotate(5deg); } }
+        @keyframes flashFusion { 0% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(2) drop-shadow(0 0 20px #e84393); transform: scale(1.5); } 100% { filter: brightness(1); transform: scale(1); } }
+
+        /* Titres multicolores partout */
+        .titre-colore {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #1e90ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            line-height: 1.3;
+        }
+
+        .texte-normal {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        /* ----- LÉO ----- */
+        .castor-container {
+            position: relative;
+            display: inline-block;
+            font-size: 3.5rem;
+            animation: pop 3s infinite;
+            margin-bottom: 15px;
+            z-index: 10;
+        }
+        .chapeau-construction {
+            position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 16px; background-color: #f1c40f; border-radius: 20px 20px 0 0; border: 2px solid #d35400; border-bottom: none; z-index: 11;
+        }
+        .chapeau-construction::after {
+            content: ''; position: absolute; bottom: 0; left: -4px; width: 32px; height: 4px; background-color: #f1c40f; border-radius: 2px; border: 2px solid #d35400;
+        }
+        .castor-emoji { display: inline-block; transform: scaleX(-1); }
+
+        /* ----- LA RUE ET LES EXEMPLES ----- */
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; margin-bottom: 20px; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 30px; width: 100%; padding: 0 10px; }
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; }
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .bloc-colle { display: flex; align-items: flex-end; gap: 0; position: relative; z-index: 2; }
+        .lampadaire { display: flex; flex-direction: column; align-items: center; z-index: 2; margin-right: -2px; }
+        .lumiere { font-size: 2rem; text-shadow: 0 0 15px #f1c40f; margin-bottom: -5px; z-index: 3; position: relative; }
+        .poteau-lampe { width: 6px; height: 40px; background-color: #34495e; border-radius: 3px; z-index: 2; }
+
+        .stop-panneau { position: relative; width: 25px; height: 35px; margin-left: 2px; z-index: 5; }
+        .stop-icone { font-size: 1.1rem; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); z-index: 6; }
+        .stop-poteau { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); width: 4px; height: 45px; background-color: #34495e; border-radius: 2px; z-index: 4; }
+
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .toit { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 20px solid #7f8c8d; margin-bottom: -1px; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 35px; }
+        .brique { width: 40px; height: 100%; border-right: 2px solid rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center;}
+        .brique:last-child { border-right: none; }
+        .toit.large-2 { border-left-width: 40px; border-right-width: 40px; }
+        .toit.large-3 { border-left-width: 60px; border-right-width: 60px; }
+
+        .voiture-absolute { position: absolute; right: -30px; width: 30px; bottom: -5px; font-size: 2rem; display: flex; justify-content: center; align-items: flex-end; z-index: 10; }
+
+        /* Bloc des exemples de fusion */
+        .exemples-intro { display: flex; align-items: center; justify-content: center; margin-top: 15px; font-size: 1.5rem; font-weight: bold; color: #e84393; }
+
+        /* ----- INTERFACE DU JEU ----- */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 15px; display: flex; justify-content: space-between; background: #f1f2f6; border-bottom: 3px solid #dfe4ea; font-size: 1.2rem; font-weight: bold; }
+        .progress-container { width: 40%; height: 20px; background-color: #ddd; border-radius: 10px; overflow: hidden; margin-top: 2px; }
+        .progress-bar { height: 100%; width: 0%; background-color: #e84393; transition: width 0.3s; }
+        .point-flottant { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: #e84393; font-weight: bold; animation: floatUp 1s ease-out forwards; pointer-events: none; z-index: 100;}
+
+        /* BOUTONS TOUS EN ROSE */
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+        
+        .btn-action-rose { 
+            background-color: #e84393; 
+            color: white; 
+            padding: 15px 30px; 
+            font-size: 1.2rem; 
+            box-shadow: 0 5px 0 #b71540; 
+            margin: 10px; 
+        }
+
+        .btn-audio { background-color: #e84393; box-shadow: 0 5px 0 #b71540; color: white; font-size: 3rem; width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 10px auto; animation: pop 2s infinite; }
+        
+        .btn-menu { padding: 15px; width: 80%; max-width: 400px; display: flex; align-items: center; gap: 15px; font-size: 1.2rem; color: #2d3436; margin: 8px; border-radius: 15px; }
+        .btn-niv-1 { background-color: #ffeaa7; border: 3px solid #fdcb6e; box-shadow: 0 5px 0 #fdcb6e; }
+        .btn-niv-2 { background-color: #55efc4; border: 3px solid #00b894; box-shadow: 0 5px 0 #00b894; }
+        .btn-niv-3 { background-color: #74b9ff; border: 3px solid #0984e3; box-shadow: 0 5px 0 #0984e3; }
+
+        /* Zones de jeux */
+        .choix-container { display: flex; gap: 20px; margin-top: 15px; width: 100%; justify-content: center; align-items: center; position: relative; }
+        
+        /* LA MACHINE À FUSION (Jeu 1) */
+        .machine-fusion { position: relative; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; margin: 0 auto 20px auto; height: 150px; }
+        #groupe-briques { display: flex; gap: 40px; justify-content: center; width: 100%; transition: gap 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); margin-bottom: 20px; }
+        .brique-part { font-size: 3.5rem; z-index: 10; text-align: center; }
+        
+        .btn-fusionner { background-color: #f1c40f; color: #d35400; padding: 10px 20px; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 4px 0 #d35400; z-index: 5; margin-top: 10px; }
+        
+        .btn-choix { background-color: white; border: 4px solid #bdc3c7; font-size: 3.5rem; padding: 10px 20px; border-radius: 15px; box-shadow: 0 5px 0 #bdc3c7; }
+        .btn-choix:hover { border-color: #e84393; }
+
+        /* Construction (Jeu 3) */
+        #zone-construction { display: flex; flex-direction: row; background-color: #ecf0f1; border: 3px dashed #bdc3c7; height: 100px; min-width: 150px; margin: 10px auto; padding: 0 10px; align-items: center; justify-content: center; border-radius: 8px; }
+        .brique-collée { width: 60px; height: 80px; background-color: #f1c40f; border: 3px solid #7f8c8d; animation: dropIn 0.3s ease-out; margin: 0; }
+        .brique-droite-slot { border-left: none; } 
+
+        .badge-img { font-size: 8rem; margin: 10px; z-index: 2;}
+        .badge-victoire-anime { animation: pulseVictoire 1.5s infinite; }
+        #feux-artifice { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div id="ecran-intro" class="screen active">
+            <p class="titre-colore">Fusionner des syllabes</p>
+            
+            <div class="castor-container">
+                <div class="chapeau-construction"></div>
+                <span class="castor-emoji">🦫</span>
+            </div>
+            
+            <div class="quartier">
+                <div class="rue-objets">
+                    <div class="bloc-colle">
+                        <div class="lampadaire"><div class="lumiere">💡</div><div class="poteau-lampe"></div></div>
+                        <div class="maison-bloc"><div class="toit"></div><div class="mur"><div class="brique"></div></div></div>
+                    </div>
+                    <div class="maison-bloc">
+                        <div class="toit"></div><div class="mur"><div class="brique"></div></div>
+                        <div class="voiture-absolute">🚘</div>
+                    </div>
+                    <div class="maison-bloc">
+                        <div class="toit large-2"></div><div class="mur"><div class="brique"></div><div class="brique"></div></div>
+                    </div>
+                    <div class="bloc-colle">
+                        <div class="maison-bloc"><div class="toit large-3"></div><div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"></div></div></div>
+                        <div class="stop-panneau"><div class="stop-poteau"></div><div class="stop-icone">🛑</div></div>
+                    </div>
+                </div>
+                <div class="asphalte"><div class="ligne-jaune"></div></div>
+                
+                <div class="exemples-intro">
+                    <div class="mur"><div class="brique">🧦</div></div>
+                    <span style="margin: 0 10px;">+</span>
+                    <div class="mur"><div class="brique">⏰</div></div>
+                    <span style="margin: 0 10px;">=</span>
+                    <div class="mur"><div class="brique">⛵</div><div class="brique">⛵</div></div>
+                </div>
+            </div>
+            
+            <p class="texte-normal">Léo te donne des syllabes. À toi de les fusionner pour faire un mot ! Écoute bien.</p>
+            <button class="btn-action-rose" onclick="jouerClic(); changerEcran('ecran-menu')">jouer</button>
+        </div>
+
+        <div id="ecran-menu" class="screen">
+            <p class="titre-colore" style="font-size: 1.8rem;">Choisis ta mission.</p>
+            
+            <button class="btn-menu btn-niv-1" onclick="jouerClic(); demarrerJeu(1)"><span>⚡</span> 1. la machine à fusion</button>
+            <button class="btn-menu btn-niv-2" onclick="jouerClic(); demarrerJeu(2)"><span>👆</span> 2. clique sur le mot</button>
+            <button class="btn-menu btn-niv-3" onclick="jouerClic(); demarrerJeu(3)"><span>🧱</span> 3. bâtis la maison</button>
+            
+            <button class="btn-action-rose" onclick="jouerClic(); changerEcran('ecran-intro')">retour</button>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar">
+                <span>🌟 <span id="score-affichage">0</span></span>
+                <div class="progress-container"><div class="progress-bar" id="barre-progression"></div></div>
+                <span id="titre-mission">mission</span>
+            </div>
+            
+            <p class="titre-colore" id="consigne-jeu" style="margin-top: 40px; font-size: 1.6rem;">Écoute bien !</p>
+            <button class="btn-audio" onclick="lireMotActuel()">🔊</button>
+            
+            <div id="conteneur-machine" style="display:none; flex-direction: column; width: 100%; align-items: center;">
+                <div class="machine-fusion" id="zone-fusion">
+                    <div id="groupe-briques"></div>
+                    <button class="btn-fusionner" id="btn-fusion" onclick="declencherFusion()">fusionner</button>
+                </div>
+                <div class="choix-container" id="choix-machine" style="visibility: hidden;">
+                    <button class="btn-choix" id="btn-m1" onclick="verifierChoix(this)"></button>
+                    <button class="btn-choix" id="btn-m2" onclick="verifierChoix(this)"></button>
+                    <button class="btn-choix" id="btn-m3" onclick="verifierChoix(this)"></button>
+                </div>
+            </div>
+
+            <div id="conteneur-cliquer" style="display:none; flex-direction: column; align-items: center;">
+                <div style="font-size: 3.5rem; margin-bottom: 20px;" id="visuel-separe">❓ + ❓</div>
+                
+                <div class="choix-container">
+                    <button class="btn-choix" id="btn-c1" onclick="verifierChoix(this)"></button>
+                    <button class="btn-choix" id="btn-c2" onclick="verifierChoix(this)"></button>
+                    <button class="btn-choix" id="btn-c3" onclick="verifierChoix(this)"></button>
+                </div>
+            </div>
+
+            <div id="conteneur-construction" style="display:none; flex-direction: column; align-items: center; width: 100%;">
+                <div style="font-size: 3.5rem; margin-bottom: 10px;" id="visuel-separe-batir">❓ + ❓</div>
+                <p style="font-weight: bold; color: #e84393;" id="consigne-batir">Colle les briques pour bâtir le mot !</p>
+                <div id="zone-construction"></div>
+                <div>
+                    <button class="btn-action-rose" style="background-color: #f1c40f; box-shadow: 0 4px 0 #d35400; padding: 10px 20px; color:#d35400;" onclick="ajouterBrique()">+ ajouter</button>
+                    <button class="btn-action-rose" style="padding: 10px 20px;" onclick="validerConstruction()">vérifier</button>
+                    <button class="btn-action-rose" style="background-color: #c0392b; box-shadow: 0 4px 0 #900; padding: 10px 20px;" onclick="reinitialiserBriques()">effacer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen">
+            <div id="feux-artifice"></div>
+            <p class="titre-colore" style="font-size: 2.5rem; z-index: 2;">Mission accomplie !</p>
+            <div class="badge-img badge-victoire-anime">🏗️</div>
+            <p class="texte-normal" style="z-index: 2; font-weight: bold;">Bravo ! Tu as gagné la grue de chantier !</p>
+            <button class="btn-action-rose" style="z-index: 2;" onclick="jouerClic(); changerEcran('ecran-menu')">retour aux missions</button>
+        </div>
+
+    </div>
+
+    <script>
+        // === INITIALISATION AUDIO SÉCURISÉE ===
+        // On attend que l'utilisateur clique pour créer le son, sinon Safari/iPad bloque tout !
+        let audioCtx = null;
+
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) {
+                console.log("Audio non supporté ou bloqué");
+            }
+        }
+
+        function jouerSon(type) {
+            try {
+                initAudio();
+                if(!audioCtx) return;
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                if (type === 'succes') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+                else if (type === 'erreur') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+                else if (type === 'brique') { osc.type = 'triangle'; osc.frequency.setValueAtTime(350, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+                else if (type === 'fusion') { osc.type = 'square'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.5); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+            } catch(e) {}
+        }
+
+        function jouerClic() {
+            try {
+                initAudio();
+                if(!audioCtx) return;
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(450, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function jouerRoulementTambour(callback) {
+            try {
+                initAudio();
+                if(audioCtx) {
+                    let t = audioCtx.currentTime;
+                    for(let i=0; i<15; i++) {
+                        let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+                        osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
+                        osc.frequency.setValueAtTime(150, t + i*0.08); gain.gain.setValueAtTime(0.1, t + i*0.08); gain.gain.exponentialRampToValueAtTime(0.01, t + i*0.08 + 0.05);
+                        osc.start(t + i*0.08); osc.stop(t + i*0.08 + 0.05);
+                    }
+                }
+            } catch(e) {}
+            setTimeout(callback, 1200);
+        }
+
+        function jouerVictoire() {
+            try {
+                initAudio();
+                if(!audioCtx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => { setTimeout(() => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.4); }, i * 150); });
+            } catch(e) {}
+        }
+
+        // Lecture vocale fluide
+        function parler(texte) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(texte);
+                    utterance.lang = 'fr-CA'; 
+                    utterance.rate = 0.8;
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch(e) {}
+        }
+
+        function lancerFeuxDartifice() {
+            const conteneur = document.getElementById('feux-artifice'); conteneur.innerHTML = '';
+            const particules = ['✨', '🏗️', '🎉', '🌟'];
+            for(let i=0; i<40; i++) {
+                let div = document.createElement('div'); div.innerText = particules[Math.floor(Math.random() * particules.length)]; div.style.position = 'absolute'; div.style.left = '50%'; div.style.top = '50%'; div.style.fontSize = (Math.random() * 2 + 1) + 'rem'; div.style.transition = 'all 1.5s cubic-bezier(0.1, 0.8, 0.3, 1)'; conteneur.appendChild(div);
+                setTimeout(() => { let angle = Math.random() * Math.PI * 2; let distance = Math.random() * 250 + 50; div.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) scale(0)`; div.style.opacity = '0'; }, 50);
+            }
+        }
+
+        // --- LISTES DE MOTS (Mélange de 2 et 3 syllabes) ---
+        const motsJeu1 = [
+            { s1: '🧦', tts1: 'bas', s2: '⏰', tts2: 'tôt', final: '⛵', motFinal: 'bateau', faux1: '🍋', faux2: '🎩' },
+            { s1: '🌉', tts1: 'pont', s2: '🦶', tts2: 'pied', final: '🚒', motFinal: 'pompier', faux1: '⛵', faux2: '🐑' },
+            { s1: '🐱', tts1: 'chat', s2: '🍯', tts2: 'pot', final: '🎩', motFinal: 'chapeau', faux1: '🚒', faux2: '🏰' },
+            { s1: '☁️', tts1: 'mou', s2: '🐟', tts2: 'thon', final: '🐑', motFinal: 'mouton', faux1: '🚒', faux2: '🏰' },
+            { s1: '♨️', tts1: 'chaud', s2: '🥥', tts2: 'caux', s3: '🎶', tts3: 'la', final: '🍫', motFinal: 'chocolat', faux1: '🍭', faux2: '🍩' },
+            { s1: '🔙', tts1: 'do', s2: '🍞', tts2: 'mie', s3: '🚫', tts3: 'nos', final: '🀄', motFinal: 'domino', faux1: '🎲', faux2: '🧩' }
+        ];
+
+        const motsJeu2 = [
+            { s1: '🐱', tts1: 'chat', s2: '📝', tts2: 'mot', final: '🐫', motFinal: 'chameau', faux1: '🥗', faux2: '🔘' },
+            { s1: '🐀', tts1: 'rat', s2: '🎲', tts2: 'dit', final: '🥗', motFinal: 'radis', faux1: '⭕', faux2: '🍬' },
+            { s1: '👻', tts1: 'boue', s2: '🐟', tts2: 'thon', final: '🔘', motFinal: 'bouton', faux1: '🏰', faux2: '🦎' },
+            { s1: '💰', tts1: 'sous', s2: '🍚', tts2: 'riz', final: '🐭', motFinal: 'souris', faux1: '🐫', faux2: '🔘' },
+            { s1: '👣', tts1: 'pas', s2: '🐀', tts2: 'rat', s3: '🌧️', tts3: 'pluie', final: '☂️', motFinal: 'parapluie', faux1: '👢', faux2: '🧥' },
+            { s1: '🧢', tts1: 'cas', s2: '🗓️', tts2: 'mai', s3: '🐀', tts3: 'rat', final: '📷', motFinal: 'caméra', faux1: '📱', faux2: '📺' }
+        ];
+
+        const motsJeu3 = [
+            { s1: '♨️', tts1: 'four', s2: '🍞', tts2: 'mie', final: '🐜', motFinal: 'fourmi' },
+            { s1: '🎶', tts1: 'la', s2: '🍞', tts2: 'pain', final: '🐰', motFinal: 'lapin' },
+            { s1: '⚖️', tts1: 'poids', s2: '🎵', tts2: 'son', final: '🐟', motFinal: 'poisson' },
+            { s1: '🧦', tts1: 'bas', s2: '🥛', tts2: 'lait', final: '🧹', motFinal: 'balai' },
+            { s1: '🪚', tts1: 'scie', s2: '👃', tts2: 'nez', s3: '⛵', tts3: 'mât', final: '🍿', motFinal: 'cinéma' },
+            { s1: '🅰️', tts1: 'a', s2: '🪹', tts2: 'nid', s3: '📝', tts3: 'mot', final: '🐾', motFinal: 'animaux' }
+        ];
+
+        let listeActive = []; let modeJeuActuel = 1; let indexMot = 0; let score = 0;
+        let briquesConstruites = 0;
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'ecran-victoire') { jouerRoulementTambour(() => { jouerVictoire(); lancerFeuxDartifice(); }); }
+        }
+
+        function demarrerJeu(mode) {
+            modeJeuActuel = mode; indexMot = 0; score = 0;
+            if (mode === 1) listeActive = motsJeu1;
+            if (mode === 2) listeActive = motsJeu2;
+            if (mode === 3) listeActive = motsJeu3;
+            
+            document.getElementById('titre-mission').innerText = `mission ${mode}`;
+            
+            document.getElementById('conteneur-machine').style.display = (mode === 1) ? 'flex' : 'none';
+            document.getElementById('conteneur-cliquer').style.display = (mode === 2) ? 'flex' : 'none';
+            document.getElementById('conteneur-construction').style.display = (mode === 3) ? 'flex' : 'none';
+            
+            mettreAJourInterface(); changerEcran('ecran-jeu'); setTimeout(lireMotActuel, 600);
+        }
+
+        function mettreAJourInterface() {
+            document.getElementById('score-affichage').innerText = score;
+            document.getElementById('barre-progression').style.width = ((indexMot / listeActive.length) * 100) + '%';
+            
+            if (indexMot < listeActive.length) {
+                let motData = listeActive[indexMot];
+                let maxB = motData.s3 ? 3 : 2;
+                
+                if (modeJeuActuel === 1) {
+                    let btnF = document.getElementById('btn-fusion');
+                    btnF.style.display = 'block'; document.getElementById('choix-machine').style.visibility = 'hidden';
+                    
+                    let groupe = document.getElementById('groupe-briques');
+                    groupe.style.gap = '40px';
+                    
+                    let htmlBriques = `<div class="brique-part">${motData.s1}</div><div class="brique-part">${motData.s2}</div>`;
+                    if(motData.s3) htmlBriques += `<div class="brique-part">${motData.s3}</div>`;
+                    groupe.innerHTML = htmlBriques;
+
+                    attribuerChoix(['btn-m1', 'btn-m2', 'btn-m3'], motData);
+                } else if (modeJeuActuel === 2) {
+                    let texteVisuel = motData.s1 + ' + ' + motData.s2;
+                    if(motData.s3) texteVisuel += ' + ' + motData.s3;
+                    document.getElementById('visuel-separe').innerText = texteVisuel;
+                    
+                    attribuerChoix(['btn-c1', 'btn-c2', 'btn-c3'], motData);
+                } else if (modeJeuActuel === 3) {
+                    let texteVisuel = motData.s1 + ' + ' + motData.s2;
+                    if(motData.s3) texteVisuel += ' + ' + motData.s3;
+                    document.getElementById('visuel-separe-batir').innerText = texteVisuel;
+                    document.getElementById('consigne-batir').innerText = `Colle ${maxB} briques pour bâtir le mot !`;
+                    
+                    reinitialiserBriques();
+                }
+            } else { changerEcran('ecran-victoire'); }
+        }
+
+        function attribuerChoix(ids, data) {
+            let options = [ { text: data.final, correct: true }, { text: data.faux1, correct: false }, { text: data.faux2, correct: false } ].sort(() => Math.random() - 0.5);
+            ids.forEach((id, i) => {
+                let btn = document.getElementById(id); btn.innerText = options[i].text; btn.dataset.correct = options[i].correct ? 'true' : 'false';
+            });
+        }
+
+        function lireMotActuel() {
+            jouerClic(); 
+            if(indexMot < listeActive.length) {
+                let d = listeActive[indexMot];
+                let phrase = d.tts1 + " ......... " + d.tts2;
+                if(d.tts3) phrase += " ......... " + d.tts3;
+                parler(phrase);
+            }
+        }
+
+        function afficherPointFlottant(element) {
+            let pts = document.createElement('div'); pts.className = 'point-flottant'; pts.innerText = '+10';
+            element.appendChild(pts); setTimeout(() => pts.remove(), 1000);
+        }
+
+        function declencherFusion() {
+            jouerSon('fusion');
+            document.getElementById('btn-fusion').style.display = 'none';
+            let groupe = document.getElementById('groupe-briques');
+            groupe.style.gap = '0px'; 
+            
+            setTimeout(() => { 
+                let briques = groupe.querySelectorAll('.brique-part');
+                briques[0].innerText = '❓';
+                briques[0].style.animation = 'flashFusion 0.5s ease-out';
+                for(let i = 1; i < briques.length; i++) {
+                    briques[i].style.display = 'none'; 
+                }
+                setTimeout(() => { document.getElementById('choix-machine').style.visibility = 'visible'; }, 500);
+            }, 600);
+        }
+
+        function verifierChoix(element) {
+            if(indexMot >= listeActive.length) return;
+            if(element.dataset.correct === 'true') {
+                jouerSon('succes'); score += 10; afficherPointFlottant(element.parentElement);
+                parler(listeActive[indexMot].motFinal);
+                
+                if(modeJeuActuel === 1) { 
+                    let briques = document.getElementById('groupe-briques').querySelectorAll('.brique-part');
+                    briques[0].innerText = listeActive[indexMot].final; 
+                }
+                
+                indexMot++; setTimeout(mettreAJourInterface, 1800); if(indexMot < listeActive.length) setTimeout(lireMotActuel, 2300);
+            } else { jouerSon('erreur'); element.style.animation = 'shake 0.4s'; setTimeout(() => element.style.animation = '', 400); }
+        }
+
+        function ajouterBrique() {
+            let maxB = listeActive[indexMot].s3 ? 3 : 2;
+            if(briquesConstruites >= maxB) return; 
+            
+            jouerSon('brique'); briquesConstruites++;
+            let brique = document.createElement('div'); brique.className = 'brique-collée';
+            if(briquesConstruites > 1) brique.classList.add('brique-droite-slot');
+            document.getElementById('zone-construction').appendChild(brique);
+        }
+        
+        function reinitialiserBriques() { briquesConstruites = 0; document.getElementById('zone-construction').innerHTML = ''; }
+        
+        function validerConstruction() { 
+            if(briquesConstruites === 0) return; 
+            let maxB = listeActive[indexMot].s3 ? 3 : 2;
+            
+            if(briquesConstruites === maxB) {
+                jouerSon('succes'); score += 10; afficherPointFlottant(document.getElementById('conteneur-construction'));
+                document.getElementById('zone-construction').innerHTML = '<div style="font-size:4.5rem; animation: pop 0.5s;">' + listeActive[indexMot].final + '</div>';
+                parler(listeActive[indexMot].motFinal);
+                indexMot++; setTimeout(mettreAJourInterface, 1800); if(indexMot < listeActive.length) setTimeout(lireMotActuel, 2300);
+            } else { jouerSon('erreur'); let zone = document.getElementById('zone-construction'); zone.style.animation = 'shake 0.4s'; setTimeout(() => zone.style.animation = '', 400); }
+        }
+    </script>
+</body>
+</html>
