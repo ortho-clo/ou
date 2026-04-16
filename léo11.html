@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 11 : À la caisse !</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #f4f6f7; color: #2c3e50; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-container { background-color: #ffffff; width: 100%; max-width: 1000px; height: 100vh; max-height: 800px; border-radius: 20px; box-shadow: 0 10px 30px rgba(127, 140, 141, 0.3); position: relative; overflow: hidden; display: flex; flex-direction: column; border: 5px solid #bdc3c7;}
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scanCaissiere { 
+            0% { top: 0; opacity: 0; } 
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; } 
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding: 20px; animation: fadeIn 0.4s ease-out; text-align: center; overflow-y: auto;}
+        .screen.active { display: flex; }
+
+        .titre-mission { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; color: #7f8c8d; text-transform: uppercase; flex-shrink: 0;}
+        .consigne-box { background: #ecf0f1; border: 3px solid #95a5a6; border-radius: 10px; padding: 15px; margin-bottom: 15px; width: 95%; text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
+        
+        /* --- DESIGN GRIS / CAISSE --- */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 20px; display: flex; justify-content: space-between; background: #7f8c8d; color: white; font-weight: bold; z-index: 10; border-bottom: 3px solid #e74c3c; }
+        
+        .zone-enseignant { background: #34495e; color: #ecf0f1; padding: 10px 20px; border-radius: 10px; margin-top: 50px; margin-bottom: 20px; font-size: 1.2rem; border-left: 5px solid #e74c3c; width: 90%; display: flex; justify-content: space-between; align-items: center;}
+        .son-prof { color: #e74c3c; font-weight: bold; font-size: 1.5rem; letter-spacing: 2px;}
+
+        /* --- CARTES DE CHOIX --- */
+        .grille-choix { display: flex; justify-content: center; gap: 20px; width: 100%; flex-wrap: wrap; margin-top: 10px;}
+        .carte-choix { position: relative; cursor: pointer; background: #fff; border: 4px solid #bdc3c7; border-radius: 15px; width: 200px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 6px 15px rgba(0,0,0,0.1); transition: transform 0.2s; overflow: hidden;}
+        .carte-choix:hover { transform: scale(1.05); border-color: #7f8c8d; }
+        
+        .image-mot { font-size: 4rem; margin-bottom: 15px; z-index: 5; }
+        .btn-audio { position: absolute; top: 10px; right: 10px; font-size: 1.5rem; background: #ecf0f1; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 20; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s;}
+        .btn-audio:hover { background: #bdc3c7; transform: scale(1.1);}
+
+        /* --- MAISONS ET GRAINS COLORÉS --- */
+        .quartier { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; width: 100%; position: relative; z-index: 2;}
+        .asphalte { width: 80%; height: 15px; background-color: #576574; position: relative; z-index: 1; border-radius: 0 0 5px 5px;}
+        
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; }
+        .toit { width: 0; height: 0; border-bottom: 15px solid #7f8c8d; }
+        .toit.large { border-left: 15px solid transparent; border-right: 15px solid transparent; }
+        .mur { display: flex; flex-direction: row; background-color: #ecf0f1; border: 2px solid #7f8c8d; border-top: none; height: 25px; justify-content: center;}
+        .brique { height: 100%; border-right: 2px solid rgba(0,0,0,0.2); display: flex; justify-content: space-evenly; align-items: center; padding: 0 4px; gap: 3px; }
+        .brique:last-child { border-right: none; }
+        .mini-point { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 3px rgba(0,0,0,0.3);}
+
+        /* --- EFFET LASER CAISSIÈRE --- */
+        .laser-line { position: absolute; left: 0; width: 100%; height: 4px; background: #e74c3c; box-shadow: 0 0 10px #e74c3c, 0 0 20px #e74c3c; z-index: 10; display: none; pointer-events: none;}
+        .carte-choix.scanning .laser-line { display: block; animation: scanCaissiere 0.8s linear forwards; }
+        .carte-choix.correct { border-color: #2ecc71; background-color: rgba(46, 204, 113, 0.1); }
+        .carte-choix.correct .laser-line { background: #2ecc71; box-shadow: 0 0 10px #2ecc71, 0 0 20px #2ecc71; }
+        .carte-choix.erreur { animation: shake 0.4s; border-color: #e74c3c; }
+
+        /* --- BOUTONS --- */
+        .menu-niveaux { display: flex; gap: 10px; margin-top: 20px; }
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; padding: 12px 20px; color: white; font-size: 1.1rem; transition: 0.2s;}
+        button:hover { filter: brightness(1.1); }
+        .btn-niv1 { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
+        .btn-niv2 { background: #7f8c8d; box-shadow: 0 4px 0 #34495e; }
+        .btn-niv3 { background: #34495e; box-shadow: 0 4px 0 #2c3e50; }
+        
+        #btn-suivant { background: #e74c3c; margin-top: 20px; font-size: 1.5rem; padding: 15px 40px; display: none; animation: fadeIn 0.3s; box-shadow: 0 5px 0 #c0392b;}
+
+        /* --- VISUEL ACCUEIL --- */
+        .visuel-accueil { display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin: 15px 0;}
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="ecran-intro" class="screen active">
+            <h1 class="titre-mission">Mission 11</h1>
+            
+            <div class="consigne-box">
+                <div style="font-size: 1.6rem; font-weight: bold; margin-bottom: 10px; color: #34495e;">À la caisse !</div>
+                <div style="font-size: 1.1rem; line-height: 1.5; text-align: left;">
+                    La <strong>caissière</strong> scanne les articles de l'épicerie avec son faisceau rouge.<br><br>
+                    <strong>Adulte :</strong> Lisez lentement les sons du "code-barres" affichés en haut.<br>
+                    <strong>Enfant :</strong> Rapproche vite les sons (les couleurs de la brique) dans ta tête. Trouve l'article et touche-le pour faire "BIP" à la caisse ! <em>(Un doute sur une image ? Clique sur 🔊)</em>
+                </div>
+            </div>
+
+            <div class="visuel-accueil">
+                <div style="font-size: 5rem;">🛒</div>
+                <div class="quartier" style="width: 150px; padding-bottom: 10px;">
+                    <div class="rue-objets">
+                        <div class="maison-bloc">
+                            <div class="toit large"></div>
+                            <div class="mur">
+                                <div class="brique"><div class="mini-point" style="background-color: #e74c3c;"></div></div>
+                                <div class="brique"><div class="mini-point" style="background-color: #3498db;"></div></div>
+                                <div class="brique"><div class="mini-point" style="background-color: #2ecc71;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asphalte"></div>
+                </div>
+                <div style="font-size: 5rem;">🧾</div>
+            </div>
+
+            <div class="menu-niveaux">
+                <button class="btn-niv1" onclick="jouerSonClic(); lancerNiveau(1)">Niveau 1</button>
+                <button class="btn-niv2" onclick="jouerSonClic(); lancerNiveau(2)">Niveau 2</button>
+                <button class="btn-niv3" onclick="jouerSonClic(); lancerNiveau(3)">Niveau 3</button>
+            </div>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar">
+                <span>⭐ <span id="score">0</span></span>
+                <span>Mission 11</span>
+                <span><span id="affichage-num">1</span>/10</span>
+            </div>
+
+            <div class="zone-enseignant">
+                <div>🛒 Code-barres à dicter :</div>
+                <div class="son-prof" id="consigne-prof">/r/ - /a/</div>
+            </div>
+
+            <div class="grille-choix" id="jeu-dynamique">
+                </div>
+
+            <button id="btn-suivant" onclick="jouerSonClic(); motSuivant()">Article suivant ➡️</button>
+        </div>
+
+        <div id="ecran-victoire" class="screen" style="justify-content: center;">
+            <h1 class="titre-mission">Tous les achats sont scannés !</h1>
+            <div style="font-size: 1.5rem; color: #34495e; margin: 20px 0;">Bravo, tu as fusionné tous les sons !</div>
+            <div style="font-size: 6rem;">🛍️</div>
+            <button class="btn-niv2" onclick="jouerSonClic(); location.reload()" style="margin-top: 20px;">Menu Principal</button>
+        </div>
+    </div>
+
+    <script>
+        // Palette de couleurs pour les sons (phonèmes)
+        const COULEURS_SONS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22'];
+
+        const NIVEAUX = {
+            1: [ 
+                { cible: { img: '🍚', motText: 'riz', prof: '/r/ - /i/', syl: [['c','c']] }, pieges: [{ img: '🍝', motText: 'pâtes', syl: [['c','c','c']] }, { img: '🥐', motText: 'croissant', syl: [['c','c','c'],['c','c']] }] },
+                { cible: { img: '🧤', motText: 'gant', prof: '/g/ - /an/', syl: [['c','c']] }, pieges: [{ img: '🧦', motText: 'chaussette', syl: [['c','c'],['c','c','c']] }, { img: '🧣', motText: 'foulard', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '🍵', motText: 'thé', prof: '/t/ - /é/', syl: [['c','c']] }, pieges: [{ img: '☕', motText: 'café', syl: [['c','c'],['c','c']] }, { img: '🥛', motText: 'lait', syl: [['c','c']] }] },
+                { cible: { img: '🪑', motText: 'banc', prof: '/b/ - /an/', syl: [['c','c']] }, pieges: [{ img: '🛋️', motText: 'divan', syl: [['c','c'],['c','c']] }, { img: '🛏️', motText: 'lit', syl: [['c','c']] }] },
+                { cible: { img: '🥖', motText: 'pain', prof: '/p/ - /in/', syl: [['c','c']] }, pieges: [{ img: '🥯', motText: 'bagel', syl: [['c','c'],['c','c','c']] }, { img: '🥨', motText: 'bretzel', syl: [['c','c','c','c'],['c','c','c']] }] },
+                { cible: { img: '🥤', motText: 'jus', prof: '/j/ - /u/', syl: [['c','c']] }, pieges: [{ img: '🧃', motText: 'boîte', syl: [['c','c','c']] }, { img: '🍾', motText: 'bouteille', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '🛁', motText: 'bain', prof: '/b/ - /in/', syl: [['c','c']] }, pieges: [{ img: '🚿', motText: 'douche', syl: [['c','c','c']] }, { img: '🧼', motText: 'savon', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🗝️', motText: 'clé', prof: '/k/ - /l/ - /é/', syl: [['c','c','c']] }, pieges: [{ img: '🚪', motText: 'porte', syl: [['c','c','c','c']] }, { img: '🔐', motText: 'verrou', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🛞', motText: 'pneu', prof: '/p/ - /n/ - /eu/', syl: [['c','c','c']] }, pieges: [{ img: '🚗', motText: 'auto', syl: [['c'],['c','c']] }, { img: '🚲', motText: 'vélo', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🧚', motText: 'fée', prof: '/f/ - /é/', syl: [['c','c']] }, pieges: [{ img: '🧙‍♀️', motText: 'sorcière', syl: [['c','c','c'],['c','c','c','c']] }, { img: '🧜‍♀️', motText: 'sirène', syl: [['c','c'],['c','c','c']] }] }
+            ],
+            2: [ 
+                { cible: { img: '⛵', motText: 'bateau', prof: '/b/ - /a/ - /t/ - /o/', syl: [['c','c'],['c','c']] }, pieges: [{ img: '🛶', motText: 'canot', syl: [['c','c'],['c','c']] }, { img: '⚓', motText: 'ancre', syl: [['c','c','c']] }] },
+                { cible: { img: '👢', motText: 'botte', prof: '/b/ - /o/ - /t/', syl: [['c','c','c']] }, pieges: [{ img: '👟', motText: 'soulier', syl: [['c','c'],['c','c','c']] }, { img: '👠', motText: 'talon', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🎄', motText: 'sapin', prof: '/s/ - /a/ - /p/ - /in/', syl: [['c','c'],['c','c']] }, pieges: [{ img: '🌲', motText: 'arbre', syl: [['c','c','c','c']] }, { img: '🎁', motText: 'cadeau', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🐄', motText: 'vache', prof: '/v/ - /a/ - /ch/', syl: [['c','c','c']] }, pieges: [{ img: '🐖', motText: 'cochon', syl: [['c','c'],['c','c']] }, { img: '🐎', motText: 'cheval', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '☕', motText: 'tasse', prof: '/t/ - /a/ - /s/', syl: [['c','c','c']] }, pieges: [{ img: '🍵', motText: 'thé', syl: [['c','c']] }, { img: '🥛', motText: 'verre', syl: [['c','c','c']] }] },
+                { cible: { img: '🎁', motText: 'cadeau', prof: '/k/ - /a/ - /d/ - /o/', syl: [['c','c'],['c','c']] }, pieges: [{ img: '🎀', motText: 'boucle', syl: [['c','c','c','c']] }, { img: '🎈', motText: 'ballon', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '✂️', motText: 'ciseaux', prof: '/s/ - /i/ - /z/ - /o/', syl: [['c','c'],['c','c']] }, pieges: [{ img: '📎', motText: 'trombone', syl: [['c','c','c'],['c','c','c']] }, { img: '🖍️', motText: 'crayon', syl: [['c','c','c'],['c','c']] }] },
+                { cible: { img: '🐢', motText: 'tortue', prof: '/t/ - /o/ - /r/ - /t/ - /u/', syl: [['c','c','c'],['c','c']] }, pieges: [{ img: '🐸', motText: 'grenouille', syl: [['c','c','c'],['c','c','c']] }, { img: '🦎', motText: 'lézard', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '📖', motText: 'livre', prof: '/l/ - /i/ - /v/ - /r/', syl: [['c','c','c','c']] }, pieges: [{ img: '📚', motText: 'cahier', syl: [['c','c'],['c','c']] }, { img: '📝', motText: 'papier', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '🍧', motText: 'glace', prof: '/g/ - /l/ - /a/ - /s/', syl: [['c','c','c','c']] }, pieges: [{ img: '🍦', motText: 'cornet', syl: [['c','c','c'],['c','c']] }, { img: '🧁', motText: 'gâteau', syl: [['c','c'],['c','c']] }] }
+            ],
+            3: [ 
+                { cible: { img: '🧳', motText: 'valise', prof: '/v/ - /a/ - /l/ - /i/ - /z/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '🎒', motText: 'sac', syl: [['c','c','c']] }, { img: '👜', motText: 'sacoche', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '🍴', motText: 'fourchette', prof: '/f/ - /ou/ - /r/ - /ch/ - /è/ - /t/', syl: [['c','c','c'],['c','c','c']] }, pieges: [{ img: '🥄', motText: 'cuillère', syl: [['c','c'],['c','c','c']] }, { img: '🍽️', motText: 'assiette', syl: [['c'],['c','c','c','c']] }] },
+                { cible: { img: '🎸', motText: 'guitare', prof: '/g/ - /i/ - /t/ - /a/ - /r/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '🎻', motText: 'violon', syl: [['c','c'],['c'],['c','c']] }, { img: '🥁', motText: 'tambour', syl: [['c','c'],['c','c','c']] }] },
+                { cible: { img: '👑', motText: 'couronne', prof: '/k/ - /ou/ - /r/ - /o/ - /n/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '💍', motText: 'bague', syl: [['c','c','c']] }, { img: '💎', motText: 'diamant', syl: [['c','c'],['c'],['c','c']] }] },
+                { cible: { img: '🧜‍♀️', motText: 'sirène', prof: '/s/ - /i/ - /r/ - /è/ - /n/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '🧚', motText: 'fée', syl: [['c','c']] }, { img: '👸', motText: 'princesse', syl: [['c','c','c'],['c','c','c']] }] },
+                { cible: { img: '☂️', motText: 'parapluie', prof: '/p/ - /a/ - /r/ - /a/ - /p/ - /l/ - /u/ - /i/', syl: [['c','c'],['c','c'],['c','c','c']] }, pieges: [{ img: '🌧️', motText: 'pluie', syl: [['c','c','c']] }, { img: '🧥', motText: 'manteau', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🏴‍☠️', motText: 'pirate', prof: '/p/ - /i/ - /r/ - /a/ - /t/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '⛵', motText: 'bateau', syl: [['c','c'],['c','c']] }, { img: '🗺️', motText: 'carte', syl: [['c','c','c','c']] }] },
+                { cible: { img: '🍒', motText: 'cerise', prof: '/s/ - /e/ - /r/ - /i/ - /z/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '🍓', motText: 'fraise', syl: [['c','c','c','c']] }, { img: '🍇', motText: 'raisin', syl: [['c','c'],['c','c']] }] },
+                { cible: { img: '🌷', motText: 'tulipe', prof: '/t/ - /u/ - /l/ - /i/ - /p/', syl: [['c','c'],['c','c','c']] }, pieges: [{ img: '🌻', motText: 'tournesol', syl: [['c','c','c'],['c','c'],['c','c','c']] }, { img: '🌹', motText: 'rose', syl: [['c','c','c']] }] },
+                { cible: { img: '📷', motText: 'caméra', prof: '/k/ - /a/ - /m/ - /é/ - /r/ - /a/', syl: [['c','c'],['c','c'],['c','c']] }, pieges: [{ img: '📸', motText: 'photo', syl: [['c','c'],['c','c']] }, { img: '📻', motText: 'radio', syl: [['c','c'],['c','c','c']] }] }
+            ]
+        };
+
+        let niveauActuel = 1;
+        let motsJoues = [];
+        let motIndex = 0;
+        let score = 0;
+        let verouillageClick = false;
+
+        function jouerSonClic() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch (e) { }
+        }
+
+        function jouerSonScan() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1600, ctx.currentTime); 
+                const gainNode = ctx.createGain();
+                gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) { }
+        }
+
+        function lireMot(mot, event) {
+            event.stopPropagation(); 
+            const synthese = window.speechSynthesis;
+            const enonce = new SpeechSynthesisUtterance(mot);
+            enonce.lang = 'fr-CA'; 
+            enonce.rate = 1.0; 
+            synthese.speak(enonce);
+        }
+
+        function lancerNiveau(n) {
+            niveauActuel = n;
+            motsJoues = NIVEAUX[n];
+            document.getElementById('ecran-intro').classList.remove('active');
+            document.getElementById('ecran-jeu').classList.add('active');
+            motIndex = 0;
+            score = 0;
+            document.getElementById('score').innerText = score;
+            chargerMot();
+        }
+
+        function genererBriquesHtml(structureSyl) {
+            let indexCouleur = 0;
+            return structureSyl.map(syllabe => `
+                <div class="brique">
+                    ${syllabe.map(() => {
+                        let couleur = COULEURS_SONS[indexCouleur % COULEURS_SONS.length];
+                        indexCouleur++;
+                        return `<div class="mini-point" style="background-color: ${couleur};"></div>`;
+                    }).join('')}
+                </div>
+            `).join('');
+        }
+
+        function chargerMot() {
+            if (motIndex >= motsJoues.length) {
+                document.getElementById('ecran-jeu').classList.remove('active');
+                document.getElementById('ecran-victoire').classList.add('active');
+                return;
+            }
+
+            verouillageClick = false;
+            document.getElementById('btn-suivant').style.display = 'none';
+            const d = motsJoues[motIndex];
+            
+            document.getElementById('affichage-num').innerText = motIndex + 1;
+            document.getElementById('consigne-prof').innerText = d.cible.prof;
+            
+            let choix = [
+                { ...d.cible, isCorrect: true },
+                { ...d.pieges[0], isCorrect: false },
+                { ...d.pieges[1], isCorrect: false }
+            ].sort(() => 0.5 - Math.random());
+
+            const zone = document.getElementById('jeu-dynamique');
+            zone.innerHTML = choix.map(c => `
+                <div class="carte-choix" onclick="verifierReponse(this, ${c.isCorrect})">
+                    <div class="btn-audio" title="Écouter le mot" onclick="lireMot('${c.motText}', event)">🔊</div>
+                    <div class="laser-line"></div>
+                    <div class="image-mot">${c.img}</div>
+                    <div class="quartier">
+                        <div class="rue-objets">
+                            <div class="maison-bloc">
+                                <div class="toit large"></div>
+                                <div class="mur">
+                                    ${genererBriquesHtml(c.syl)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="asphalte"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function verifierReponse(element, isCorrect) {
+            if (verouillageClick) return;
+            
+            element.classList.add('scanning');
+            verouillageClick = true;
+
+            setTimeout(() => {
+                if (isCorrect) {
+                    jouerSonScan(); 
+                    element.classList.add('correct');
+                    score++;
+                    document.getElementById('score').innerText = score;
+                    document.getElementById('btn-suivant').style.display = 'block';
+                } else {
+                    element.classList.add('erreur');
+                    setTimeout(() => {
+                        element.classList.remove('erreur');
+                        element.classList.remove('scanning');
+                        verouillageClick = false;
+                    }, 500);
+                }
+            }, 800); 
+        }
+
+        function motSuivant() {
+            motIndex++;
+            chargerMot();
+        }
+    </script>
+</body>
+</html>
