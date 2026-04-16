@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 8 : Le Chantier des Sons</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; }
+        
+        /* Thème Orange Clair / Blanc (Chantier) */
+        body { background-color: #fff9f2; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-container { background-color: rgba(255, 255, 255, 0.98); width: 100%; max-width: 1000px; height: 100vh; max-height: 750px; border-radius: 20px; box-shadow: 0 10px 30px rgba(250, 152, 58, 0.2); position: relative; overflow: hidden; display: flex; flex-direction: column; border: 8px solid #fa983a;}
+
+        /* Bande de chantier décorative */
+        .bande-chantier { height: 15px; width: 100%; background: repeating-linear-gradient( 45deg, #ffeaa7, #ffeaa7 15px, #ffb142 15px, #ffb142 30px ); position: absolute; top: 0; left: 0; z-index: 20; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseQuestion { 0%, 100% { transform: scale(1); box-shadow: 0 0 5px #fa983a; } 50% { transform: scale(1.2); box-shadow: 0 0 15px #fa983a; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        @keyframes slideDown { 0% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; } 100% { transform: scale(0.5) translateY(300px) rotate(20deg); opacity: 0; } }
+        @keyframes popOut { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(0); } }
+
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding: 35px 20px 20px 20px; animation: fadeIn 0.4s ease-out; text-align: center; overflow-y: auto;}
+        .screen.active { display: flex; }
+
+        /* --- TITRE ET INTRO --- */
+        .titre-mission { font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; color: #e58e26; text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 0px #ffeaa7; }
+        .lecon-visuelle { background: #fff; border: 4px dashed #fa983a; border-radius: 15px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 95%; max-width: 700px; }
+        .phrase-intro { font-size: 1.3rem; font-weight: bold; color: #2c3e50; line-height: 1.4; }
+
+        /* MENU DES NIVEAUX */
+        .menu-niveaux { display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap; justify-content: center;}
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; padding: 15px 25px; font-size: 1.2rem; }
+        button:active { transform: translateY(4px); box-shadow: none !important; }
+        .btn-niv1 { background-color: #ffb142; box-shadow: 0 5px 0 #cc8e35; }
+        .btn-niv2 { background-color: #fa983a; box-shadow: 0 5px 0 #c8792e; }
+        .btn-niv3 { background-color: #e58e26; box-shadow: 0 5px 0 #b7711e; }
+
+        .top-bar { position: absolute; top: 15px; left: 0; right: 0; padding: 10px 20px; display: flex; justify-content: space-between; background: #fa983a; color: white; font-size: 1.2rem; font-weight: bold; z-index: 10; border-bottom: 3px solid #e58e26; }
+
+        /* --- LAYOUT DU JEU --- */
+        .jeu-layout { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; margin-top: 50px; justify-content: center; padding-bottom: 20px;}
+        
+        .zone-consigne { background: white; border: 3px solid #ffb142; border-radius: 15px; padding: 10px 20px; width: 90%; max-width: 700px; font-size: 1.4rem; font-weight: bold; color: #e58e26; position: relative; margin-bottom: 15px; z-index: 20;}
+        .texte-feedback { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 1.2rem; display: none; z-index: 30; }
+        
+        /* --- LA CARTE ET LA RUE (GROSSISSEMENT) --- */
+        .carte-paire { cursor: grab; background: #fff; border: 4px solid #ffb142; border-bottom: 8px solid #ffb142; border-radius: 15px; width: 95%; max-width: 650px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; box-shadow: 0 8px 20px rgba(250, 152, 58, 0.15); transition: transform 0.2s; margin-bottom: 20px; position: relative; z-index: 15; padding-top: 15px; overflow: hidden;}
+        .carte-paire:active { cursor: grabbing; transform: scale(1.02); }
+        
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 40px; width: 100%; padding: 0 20px; position: relative; z-index: 2;}
+        .asphalte { width: 100%; height: 35px; background-color: #576574; position: relative; z-index: 1; margin-top: -2px; border-radius: 0 0 7px 7px;}
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 5px; border-top: 6px dashed #f1c40f; }
+
+        /* Maisons & Briques : BEAUCOUP PLUS GROS */
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .image-mot { font-size: 5rem; margin-bottom: -8px; z-index: 5; text-shadow: 0px 3px 6px rgba(0,0,0,0.15);}
+        
+        .toit { width: 0; height: 0; border-bottom: 30px solid #7f8c8d; margin-bottom: -1px; }
+        .toit.large-1 { border-left: 27px solid transparent; border-right: 27px solid transparent; }
+        .toit.large-2 { border-left: 54px solid transparent; border-right: 54px solid transparent; }
+        .toit.large-3 { border-left: 81px solid transparent; border-right: 81px solid transparent; }
+        .toit.large-4 { border-left: 108px solid transparent; border-right: 108px solid transparent; }
+
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 4px solid #7f8c8d; border-top: none; height: 45px; justify-content: center;}
+        .brique { width: 54px; height: 100%; border-right: 3px solid rgba(0,0,0,0.15); display: flex; justify-content: space-evenly; align-items: center; padding: 0 3px; }
+        .brique:last-child { border-right: none; }
+        
+        .mini-point { width: 12px; height: 12px; background-color: #fff; border: 2px solid #bdc3c7; border-radius: 50%; display: flex; justify-content: center; align-items: center;}
+        
+        /* Le son ciblé avec le ? */
+        .premier-son-question { background-color: #fa983a !important; border: 2px solid #e58e26; color: white; font-weight: bold; font-size: 13px; width: 22px; height: 22px; animation: pulseQuestion 1.5s infinite; }
+
+        /* ZONES DE DÉPÔT */
+        .zones-depot-container { display: flex; width: 100%; max-width: 650px; justify-content: space-around; margin-top: 10px; }
+        
+        .zone-depot { width: 45%; max-width: 250px; height: 160px; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; transition: all 0.3s; border: 5px dashed; background: rgba(255,255,255,0.9); }
+        .zone-depot.dragover { transform: scale(1.08); }
+        
+        .depot-oui { border-color: #27ae60; color: #27ae60; }
+        .depot-oui.dragover { background: #d5f5e3; box-shadow: 0 0 20px #27ae60; }
+        .icone-coquilles { font-size: 4rem; margin-bottom: 5px; }
+
+        .depot-non { border-color: #e74c3c; color: #e74c3c; }
+        .depot-non.dragover { background: #fadbd8; box-shadow: 0 0 20px #e74c3c; }
+        .icone-camion { font-size: 4rem; margin-bottom: 5px; }
+
+        .robot-coquilles { font-size: 8rem; margin: 20px 0; animation: pulseQuestion 2s infinite; }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="bande-chantier"></div>
+
+        <div id="ecran-intro" class="screen active">
+            <h1 class="titre-mission">Mission 8 : Le Même Son ?</h1>
+            
+            <div class="lecon-visuelle">
+                <p class="phrase-intro">
+                    Le chantier fait trop de bruit ! 🏗️<br>
+                    Mets tes coquilles anti-bruit (🎧) pour écouter les tout premiers sons des mots-briques.
+                </p>
+                <p style="font-size: 1.1rem; color: #e58e26; font-weight: bold; margin-bottom: 5px;">
+                    Est-ce que ces deux maisons commencent EXACTEMENT par le même son ? Regarde les <span style="display:inline-block; background-color:#fa983a; color:white; border-radius:50%; width:20px; height:20px; text-align:center; line-height:20px; font-size:12px;">?</span> !
+                </p>
+                
+                <div class="quartier" style="transform: scale(0.9); margin-top: 5px; margin-bottom: 5px;">
+                    <div class="rue-objets">
+                        <div class="maison-bloc">
+                            <div class="image-mot">🍎</div>
+                            <div class="toit large-1"></div>
+                            <div class="mur">
+                                <div class="brique">
+                                    <div class="mini-point premier-son-question">?</div><div class="mini-point"></div><div class="mini-point"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="maison-bloc">
+                            <div class="image-mot">🦋</div>
+                            <div class="toit large-3"></div>
+                            <div class="mur">
+                                <div class="brique"><div class="mini-point premier-son-question">?</div><div class="mini-point"></div></div>
+                                <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                                <div class="brique"><div class="mini-point"></div><div class="mini-point"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asphalte"><div class="ligne-jaune"></div></div>
+                </div>
+            </div>
+
+            <p style="font-size: 1.2rem; font-weight: bold; color: #555;">Choisis ton cours pour démarrer le chantier :</p>
+            <div class="menu-niveaux">
+                <button class="btn-niv1" onclick="lancerNiveau(1)">Niveau 1 : Les Fondations</button>
+                <button class="btn-niv2" onclick="lancerNiveau(2)">Niveau 2 : L'Échafaudage</button>
+                <button class="btn-niv3" onclick="lancerNiveau(3)">Niveau 3 : Le Gratte-Ciel</button>
+            </div>
+        </div>
+
+        <div id="ecran-jeu" class="screen" style="padding: 0; justify-content: center;">
+            <div class="top-bar" id="top-bar">
+                <span>🌟 Étoiles : <span id="score">0</span></span>
+                <span id="titre-niveau-ui">Niveau X</span>
+                <span>Paire <span id="affichage-niveau">1</span>/10</span>
+            </div>
+
+            <div class="jeu-layout" id="conteneur-jeu-dynamique">
+                </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen" style="justify-content: center;">
+            <h1 class="titre-mission" style="font-size: 3rem;">Chantier terminé !</h1>
+            <div class="robot-coquilles">🎧🤖</div>
+            <p style="font-size: 1.8rem; font-weight: bold; color: #e58e26;">Félicitations !</p>
+            <p style="font-size: 1.3rem; font-weight: bold; color: #555; margin-bottom: 30px;">Tu as de super oreilles ! Tu as gagné tes Coquilles Robotiques !</p>
+            <button class="btn-niv1" onclick="retourMenu()">Retour à l'accueil</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DONNÉES DES PAIRES (30 Paires) ---
+        const pairesMots = [
+            // NIVEAU 1 : Les Fondations (Index 0 à 9)
+            { m1: '🍎', text1: 'pomme', syl1: [['c','c','c']], m2: '🦋', text2: 'papillon', syl2: [['c','c'],['c','c'],['c','c']], match: true }, 
+            { m1: '🚗', text1: 'voiture', syl1: [['c','c'],['c','c','c']], m2: '🐄', text2: 'vache', syl2: [['c','c','c']], match: true }, 
+            
+            // LION CORRIGÉ : 2 syllabes, 2e brique = 1 rond ("on")
+            { m1: '🦁', text1: 'lion', syl1: [['c','c'],['c']], m2: '🛏️', text2: 'lit', syl2: [['c','c']], match: true }, 
+            
+            { m1: '🐒', text1: 'singe', syl1: [['c','c','c']], m2: '☀️', text2: 'soleil', syl2: [['c','c'],['c','c','c']], match: true }, 
+            { m1: '🎈', text1: 'ballon', syl1: [['c','c'],['c','c']], m2: '🍌', text2: 'banane', syl2: [['c','c'],['c','c'],['c','c']], match: true }, 
+            
+            // TOMATE CORRIGÉ : 2 syllabes, 2e brique = 3 ronds
+            { m1: '🐢', text1: 'tortue', syl1: [['c','c','c'],['c','c']], m2: '🍅', text2: 'tomate', syl2: [['c','c'],['c','c','c']], match: true }, 
+            
+            { m1: '🐱', text1: 'chat', syl1: [['c','c']], m2: '🍫', text2: 'chocolat', syl2: [['c','c'],['c','c'],['c','c']], match: true }, 
+            { m1: '🐻', text1: 'ours', syl1: [['c','c','c']], m2: '🦊', text2: 'renard', syl2: [['c','c'],['c','c','c']], match: false }, 
+            { m1: '🐎', text1: 'cheval', syl1: [['c','c'],['c','c','c']], m2: '🐶', text2: 'chien', syl2: [['c','c','c']], match: true }, 
+            { m1: '🐷', text1: 'cochon', syl1: [['c','c'],['c','c']], m2: '🐔', text2: 'poule', syl2: [['c','c','c']], match: false }, 
+            
+            // NIVEAU 2 : L'Échafaudage (Index 10 à 19)
+            { m1: '🐊', text1: 'crocodile', syl1: [['c','c','c'],['c','c'],['c','c','c']], m2: '🥕', text2: 'carotte', syl2: [['c','c'],['c','c','c']], match: true }, 
+            { m1: '🐘', text1: 'éléphant', syl1: [['c'],['c','c'],['c','c']], m2: '🐿️', text2: 'écureuil', syl2: [['c'],['c','c'],['c','c','c']], match: true }, 
+            { m1: '🍕', text1: 'pizza', syl1: [['c','c'],['c','c']], m2: '🐧', text2: 'pingouin', syl2: [['c','c'],['c','c']], match: true }, 
+            { m1: '🍉', text1: 'melon', syl1: [['c','c'],['c','c']], m2: '🍓', text2: 'fraise', syl2: [['c','c','c','c']], match: false }, 
+            
+            // SIFFLET CORRIGÉ : 2 syllabes, 2e brique = 3 ronds
+            { m1: '🐍', text1: 'serpent', syl1: [['c','c'],['c','c']], m2: '哨', text2: 'sifflet', syl2: [['c','c'],['c','c','c']], match: true }, 
+            
+            { m1: '🧀', text1: 'fromage', syl1: [['c','c','c'],['c','c'],['c','c']], m2: '🐜', text2: 'fourmi', syl2: [['c','c','c'],['c','c']], match: true }, 
+            { m1: '🚪', text1: 'porte', syl1: [['c','c','c','c']], m2: '🐼', text2: 'panda', syl2: [['c','c'],['c','c']], match: true }, 
+            { m1: '🍄', text1: 'champignon', syl1: [['c','c'],['c','c'],['c','c']], m2: '🏰', text2: 'château', syl2: [['c','c'],['c','c']], match: true }, 
+            { m1: '🐠', text1: 'poisson', syl1: [['c','c'],['c','c']], m2: '🐬', text2: 'dauphin', syl2: [['c','c'],['c','c']], match: false }, 
+            { m1: '🚁', text1: 'hélicoptère', syl1: [['c'],['c','c'],['c','c','c'],['c','c','c']], m2: '🦔', text2: 'hérisson', syl2: [['c'],['c','c'],['c','c']], match: true }, 
+
+            // NIVEAU 3 : Le Gratte-Ciel (Index 20 à 29)
+            { m1: '🦖', text1: 'dinosaure', syl1: [['c','c'],['c','c'],['c','c','c']], m2: '🦷', text2: 'dent', syl2: [['c','c']], match: true }, 
+            { m1: '🌋', text1: 'volcan', syl1: [['c','c','c'],['c','c']], m2: '🚲', text2: 'vélo', syl2: [['c','c'],['c','c']], match: true }, 
+            
+            // GUITARE CORRIGÉ : 2 syllabes, 2e brique = 3 ronds
+            { m1: '🎸', text1: 'guitare', syl1: [['c','c'],['c','c','c']], m2: '🦍', text2: 'gorille', syl2: [['c','c'],['c','c','c']], match: true }, 
+            
+            { m1: '🚀', text1: 'fusée', syl1: [['c','c'],['c','c']], m2: '👻', text2: 'fantôme', syl2: [['c','c'],['c','c','c']], match: true }, 
+            { m1: '🦉', text1: 'hibou', syl1: [['c'],['c','c']], m2: '🦅', text2: 'aigle', syl2: [['c','c','c']], match: false }, 
+            
+            // COCCINELLE CORRIGÉ : 3 syllabes, 1ere brique = 3 ronds
+            { m1: '🐞', text1: 'coccinelle', syl1: [['c','c','c'],['c','c'],['c','c','c']], m2: '🦆', text2: 'canard', syl2: [['c','c'],['c','c','c']], match: true }, 
+            
+            { m1: '🦓', text1: 'zèbre', syl1: [['c','c','c','c']], m2: '0️⃣', text2: 'zéro', syl2: [['c','c'],['c','c']], match: true }, 
+            { m1: '👑', text1: 'couronne', syl1: [['c','c'],['c','c','c']], m2: '✂️', text2: 'ciseaux', syl2: [['c','c'],['c','c']], match: false }, 
+            { m1: '🦒', text1: 'girafe', syl1: [['c','c'],['c','c','c']], m2: '🦺', text2: 'gilet', syl2: [['c','c'],['c','c']], match: true }, 
+            { m1: '🏍️', text1: 'moto', syl1: [['c','c'],['c','c']], m2: '🐑', text2: 'mouton', syl2: [['c','c'],['c','c']], match: true }
+        ];
+
+        let audioCtx = null;
+        let niveauActuel = 1;
+        let indexDebut = 0;
+        let indexFin = 9;
+        let paireCouranteIndex = 0; 
+        let score = 0;
+        let paireNumero = 1; 
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function retourMenu() { changerEcran('ecran-intro'); }
+
+        function lancerNiveau(niv) {
+            try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch(e) {}
+            niveauActuel = niv;
+            indexDebut = (niv - 1) * 10;
+            indexFin = indexDebut + 9;
+            paireCouranteIndex = indexDebut;
+            paireNumero = 1;
+            score = 0;
+            document.getElementById('titre-niveau-ui').innerText = niv === 1 ? "Niveau 1 : Les Fondations" : niv === 2 ? "Niveau 2 : L'Échafaudage" : "Niveau 3 : Le Gratte-Ciel";
+            changerEcran('ecran-jeu');
+            chargerNiveau();
+        }
+
+        function jouerSon(type) {
+            if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
+            if(type === 'ping') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'erreur') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+            if(type === 'glisse') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5); osc.start(); osc.stop(audioCtx.currentTime + 0.5); }
+        }
+
+        function genererMaisonHtml(emoji, tableauSyllabes) {
+            let nbSyl = tableauSyllabes.length;
+            let classToit = 'large-' + nbSyl;
+            
+            let briquesHtml = '';
+            tableauSyllabes.forEach((syllabe, indexSyl) => {
+                let pointsHtml = '';
+                syllabe.forEach((lettre, indexLet) => {
+                    // Le tout premier son de la première syllabe avec le point d'interrogation
+                    if (indexSyl === 0 && indexLet === 0) {
+                        pointsHtml += `<div class="mini-point premier-son-question">?</div>`;
+                    } else {
+                        pointsHtml += `<div class="mini-point"></div>`;
+                    }
+                });
+                briquesHtml += `<div class="brique">${pointsHtml}</div>`;
+            });
+
+            return `
+                <div class="maison-bloc">
+                    <div class="image-mot">${emoji}</div>
+                    <div class="toit ${classToit}"></div>
+                    <div class="mur">${briquesHtml}</div>
+                </div>
+            `;
+        }
+
+        function chargerNiveau() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('affichage-niveau').innerText = paireNumero;
+            
+            if (paireCouranteIndex > indexFin) { 
+                changerEcran('ecran-victoire'); 
+                return; 
+            }
+
+            const p = pairesMots[paireCouranteIndex];
+            const conteneur = document.getElementById('conteneur-jeu-dynamique');
+            
+            conteneur.innerHTML = `
+                <div class="zone-consigne" id="zone-consigne">
+                    <div id="feedback-text" class="texte-feedback"></div>
+                    Est-ce le même son sous les « ? »
+                </div>
+                
+                <div class="carte-paire" id="carte-a-glisser" draggable="true" ondragstart="dragStart(event)" onclick="lireMots()">
+                    <div class="quartier">
+                        <div class="rue-objets">
+                            ${genererMaisonHtml(p.m1, p.syl1)}
+                            ${genererMaisonHtml(p.m2, p.syl2)}
+                        </div>
+                        <div class="asphalte"><div class="ligne-jaune"></div></div>
+                    </div>
+                </div>
+
+                <div class="zones-depot-container">
+                    <div class="zone-depot depot-oui" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event, true)">
+                        <div class="icone-coquilles">🎧</div>
+                        <div>OUI (Pareil)</div>
+                    </div>
+                    <div class="zone-depot depot-non" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event, false)">
+                        <div class="icone-camion">🚛</div>
+                        <div>NON (Différent)</div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => lireMots(), 600);
+        }
+
+        function lireMots() {
+            if ('speechSynthesis' in window) {
+                const p = pairesMots[paireCouranteIndex];
+                let texteAudio = p.text1 + ". . . . " + p.text2; 
+                let u = new SpeechSynthesisUtterance(texteAudio);
+                u.lang = 'fr-CA'; u.rate = 0.85;
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function dragStart(ev) { ev.dataTransfer.setData("text", "carte-a-glisser"); }
+        function dragOver(ev) { ev.preventDefault(); ev.currentTarget.classList.add('dragover'); }
+        function dragLeave(ev) { ev.currentTarget.classList.remove('dragover'); }
+        function drop(ev, choixEstOui) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('dragover');
+            verifierReponse(choixEstOui);
+        }
+
+        function verifierReponse(choix) {
+            const p = pairesMots[paireCouranteIndex];
+            const blocDraggable = document.getElementById('carte-a-glisser');
+            let feed = document.getElementById('feedback-text');
+
+            if (choix === p.match) {
+                score += 1; 
+                if(choix === true) {
+                    jouerSon('ping');
+                    blocDraggable.style.animation = 'popOut 0.5s forwards';
+                } else {
+                    jouerSon('glisse');
+                    blocDraggable.style.animation = 'slideDown 0.8s forwards'; 
+                }
+                feed.innerText = "Excellent !"; feed.style.backgroundColor = '#27ae60'; feed.style.display = 'block';
+                setTimeout(() => { feed.style.display = 'none'; paireCouranteIndex++; paireNumero++; chargerNiveau(); }, 1000);
+            } else {
+                blocDraggable.style.animation = 'shake 0.4s'; jouerSon('erreur');
+                feed.innerText = "Oups ! Écoute bien les premiers sons."; feed.style.backgroundColor = '#e74c3c'; feed.style.display = 'block';
+                setTimeout(() => { feed.style.display = 'none'; blocDraggable.style.animation = ''; }, 1200);
+            }
+        }
+    </script>
+</body>
+</html>
