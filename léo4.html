@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le grand chantier de Léo - Mission 4</title>
+    <style>
+        /* Police stricte et reset */
+        * {
+            box-sizing: border-box;
+            font-family: 'Century Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        body {
+            background-color: #87ceeb;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #app-container {
+            background-color: #fcfcfc;
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            padding: 10px;
+            animation: fadeIn 0.4s ease-in-out;
+            text-align: center;
+        }
+
+        .screen.active { display: flex; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes flipIn { 0% { transform: rotateY(90deg); opacity: 0; } 100% { transform: rotateY(0deg); opacity: 1; } }
+        @keyframes pulseVictoire { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2) rotate(5deg); } }
+
+        /* Titres multicolores partout */
+        .titre-colore {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #1e90ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            line-height: 1.3;
+        }
+
+        .texte-normal {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        /* ----- LÉO ----- */
+        .castor-container {
+            position: relative;
+            display: inline-block;
+            font-size: 3.5rem;
+            animation: pop 3s infinite;
+            margin-bottom: 15px;
+            z-index: 10;
+        }
+        .chapeau-construction {
+            position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 16px; background-color: #f1c40f; border-radius: 20px 20px 0 0; border: 2px solid #d35400; border-bottom: none; z-index: 11;
+        }
+        .chapeau-construction::after {
+            content: ''; position: absolute; bottom: 0; left: -4px; width: 32px; height: 4px; background-color: #f1c40f; border-radius: 2px; border: 2px solid #d35400;
+        }
+        .castor-emoji { display: inline-block; transform: scaleX(-1); }
+
+        /* ----- LA RUE ET LES EXEMPLES ----- */
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; margin-bottom: 20px; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 30px; width: 100%; padding: 0 10px; }
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; }
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .bloc-colle { display: flex; align-items: flex-end; gap: 0; position: relative; z-index: 2; }
+        .lampadaire { display: flex; flex-direction: column; align-items: center; z-index: 2; margin-right: -2px; }
+        .lumiere { font-size: 2rem; text-shadow: 0 0 15px #f1c40f; margin-bottom: -5px; z-index: 3; position: relative; }
+        .poteau-lampe { width: 6px; height: 40px; background-color: #34495e; border-radius: 3px; z-index: 2; }
+
+        .stop-panneau { position: relative; width: 25px; height: 35px; margin-left: 2px; z-index: 5; }
+        .stop-icone { font-size: 1.1rem; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); z-index: 6; }
+        .stop-poteau { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); width: 4px; height: 45px; background-color: #34495e; border-radius: 2px; z-index: 4; }
+
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .toit { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 20px solid #7f8c8d; margin-bottom: -1px; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 35px; }
+        .brique { width: 40px; height: 100%; border-right: 2px solid rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center;}
+        .brique:last-child { border-right: none; }
+        .toit.large-2 { border-left-width: 40px; border-right-width: 40px; }
+        .toit.large-3 { border-left-width: 60px; border-right-width: 60px; }
+
+        .voiture-absolute { position: absolute; right: -30px; width: 30px; bottom: -5px; font-size: 2rem; display: flex; justify-content: center; align-items: flex-end; z-index: 10; }
+
+        /* Bloc des exemples d'introduction avec points d'interrogation TURQUOISE À LA FIN */
+        .exemples-intro { display: flex; align-items: center; justify-content: center; margin-top: 15px; }
+        .espace-maison { width: 30px; } 
+        .q-theme { color: #00cec9; font-weight: bold; font-size: 1.4rem; }
+
+        /* ----- INTERFACE DU JEU ----- */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 15px; display: flex; justify-content: space-between; background: #f1f2f6; border-bottom: 3px solid #dfe4ea; font-size: 1.2rem; font-weight: bold; }
+        .progress-container { width: 40%; height: 20px; background-color: #ddd; border-radius: 10px; overflow: hidden; margin-top: 2px; }
+        .progress-bar { height: 100%; width: 0%; background-color: #00cec9; transition: width 0.3s; }
+        .emoji-display { font-size: 6rem; margin: 10px 0; z-index: 10; }
+        .dragging { position: fixed !important; z-index: 9999; pointer-events: none; }
+        .point-flottant { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: #00cec9; font-weight: bold; animation: floatUp 1s ease-out forwards; pointer-events: none; z-index: 100;}
+
+        /* BOUTONS NAVIGATION ET JEU EN TURQUOISE */
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+        
+        .btn-action-theme { 
+            background-color: #00cec9; 
+            color: white; 
+            padding: 15px 30px; 
+            font-size: 1.2rem; 
+            box-shadow: 0 5px 0 #00b894; 
+            margin: 10px; 
+        }
+
+        .btn-audio { background-color: #00cec9; box-shadow: 0 5px 0 #00b894; color: white; font-size: 3rem; width: 80px; height: 80px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 10px auto; animation: pop 2s infinite; }
+        
+        .btn-menu { padding: 15px; width: 80%; max-width: 400px; display: flex; align-items: center; gap: 15px; font-size: 1.2rem; color: #2d3436; margin: 8px; border-radius: 15px; }
+        .btn-niv-1 { background-color: #ffeaa7; border: 3px solid #fdcb6e; box-shadow: 0 5px 0 #fdcb6e; }
+        .btn-niv-2 { background-color: #55efc4; border: 3px solid #00b894; box-shadow: 0 5px 0 #00b894; }
+        .btn-niv-3 { background-color: #74b9ff; border: 3px solid #0984e3; box-shadow: 0 5px 0 #0984e3; }
+
+        /* Zones et conteneurs pour les jeux */
+        .choix-container { display: flex; gap: 30px; margin-top: 15px; width: 100%; justify-content: center; align-items: center; height: 120px; position: relative; }
+        
+        /* Brique mystère (Jeu 1) */
+        .brique-revelation {
+            width: 80px; height: 60px;
+            background-color: #f1c40f;
+            border: 4px solid #00cec9;
+            border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2.5rem; font-weight: bold; color: #00cec9;
+            box-shadow: 0 5px 0 #00b894;
+            margin: 0 auto;
+        }
+        .brique-revelation.revelee {
+            background-color: #fff;
+            border-color: #00cec9;
+            box-shadow: 0 5px 0 #00b894;
+            animation: flipIn 0.5s ease-out forwards;
+        }
+
+        /* Boîtes et options (Jeu 2 et 3) */
+        .boite-depot { width: 100px; height: 80px; border-radius: 15px; border: 4px dashed #00cec9; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; background-color: #f1f2f6; }
+        .option-glisser { font-size: 4rem; cursor: pointer; z-index: 100; touch-action: none; }
+        
+        .btn-choix { background-color: white; border: 4px solid #bdc3c7; font-size: 3rem; padding: 10px 20px; border-radius: 15px; box-shadow: 0 5px 0 #bdc3c7; }
+        .btn-choix:hover { border-color: #00cec9; }
+
+        .badge-img { font-size: 8rem; margin: 10px; z-index: 2;}
+        .badge-victoire-anime { animation: pulseVictoire 1.5s infinite; }
+        #feux-artifice { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div id="ecran-intro" class="screen active">
+            <p class="titre-colore">Identifie la dernière syllabe.</p>
+            
+            <div class="castor-container">
+                <div class="chapeau-construction"></div>
+                <span class="castor-emoji">🦫</span>
+            </div>
+            
+            <div class="quartier">
+                <div class="rue-objets">
+                    <div class="bloc-colle">
+                        <div class="lampadaire"><div class="lumiere">💡</div><div class="poteau-lampe"></div></div>
+                        <div class="maison-bloc"><div class="toit"></div><div class="mur"><div class="brique"></div></div></div>
+                    </div>
+                    
+                    <div class="maison-bloc">
+                        <div class="toit"></div><div class="mur"><div class="brique"></div></div>
+                        <div class="voiture-absolute">🚘</div>
+                    </div>
+                    
+                    <div class="maison-bloc">
+                        <div class="toit large-2"></div><div class="mur"><div class="brique"></div><div class="brique"></div></div>
+                    </div>
+                    
+                    <div class="bloc-colle">
+                        <div class="maison-bloc"><div class="toit large-3"></div><div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"></div></div></div>
+                        <div class="stop-panneau"><div class="stop-poteau"></div><div class="stop-icone">🛑</div></div>
+                    </div>
+                </div>
+                <div class="asphalte"><div class="ligne-jaune"></div></div>
+                
+                <div class="exemples-intro">
+                    <div class="mur"><div class="brique"><span class="q-theme">❓</span></div></div>
+                    <div class="espace-maison"></div>
+                    <div class="mur"><div class="brique"></div><div class="brique"><span class="q-theme">❓</span></div></div>
+                    <div class="espace-maison"></div>
+                    <div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"><span class="q-theme">❓</span></div></div>
+                </div>
+            </div>
+            
+            <p class="texte-normal">Léo cherche la toute dernière brique des mots.</p>
+            <button class="btn-action-theme" onclick="jouerClic(); changerEcran('ecran-menu')">jouer</button>
+        </div>
+
+        <div id="ecran-menu" class="screen">
+            <p class="titre-colore" style="font-size: 1.8rem;">Choisis ta mission.</p>
+            
+            <button class="btn-menu btn-niv-1" onclick="jouerClic(); demarrerJeu(1)"><span>💎</span> 1. crie et vérifie</button>
+            <button class="btn-menu btn-niv-2" onclick="jouerClic(); demarrerJeu(2)"><span>🖐️</span> 2. glisse la syllabe</button>
+            <button class="btn-menu btn-niv-3" onclick="jouerClic(); demarrerJeu(3)"><span>👆</span> 3. clique sur la syllabe</button>
+            
+            <button class="btn-action-theme" onclick="jouerClic(); changerEcran('ecran-intro')">retour</button>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar">
+                <span>🌟 <span id="score-affichage">0</span></span>
+                <div class="progress-container"><div class="progress-bar" id="barre-progression"></div></div>
+                <span id="titre-mission">mission</span>
+            </div>
+            
+            <p class="titre-colore" id="consigne-jeu" style="margin-top: 40px; font-size: 1.6rem;">Écoute bien !</p>
+            
+            <button class="btn-audio" onclick="lireMotActuel()">🔊</button>
+            <div class="emoji-display" id="mot-visuel">❓</div>
+            
+            <div class="choix-container" id="conteneur-crier" style="display:none; flex-direction: column; width: 100%; height: 160px; position: relative;">
+                <p style="font-weight: bold; color: #00cec9; margin-bottom: 10px;">crie la réponse !</p>
+                <div class="brique-revelation" id="brique-crier">❓</div>
+                
+                <button class="btn-action-theme" style="position: absolute; bottom: -10px; right: 10px;" onclick="revelerReponse()">vérifier 👀</button>
+            </div>
+
+            <div class="choix-container" id="conteneur-glisser" style="display:none; flex-direction: column; height: auto;">
+                <div class="boite-depot cible-depot" id="boite-glisser">Dernière</div>
+                <div style="display: flex; gap: 40px; margin-top: 10px;">
+                    <div class="option-glisser" id="drag-opt-1">❓</div>
+                    <div class="option-glisser" id="drag-opt-2">❓</div>
+                </div>
+            </div>
+
+            <div class="choix-container" id="conteneur-cliquer" style="display:none;">
+                <button class="btn-choix" id="btn-choix-1" onclick="verifierChoix(this)"></button>
+                <button class="btn-choix" id="btn-choix-2" onclick="verifierChoix(this)"></button>
+            </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen">
+            <div id="feux-artifice"></div>
+            <p class="titre-colore" style="font-size: 2.5rem; z-index: 2;">Mission accomplie !</p>
+            
+            <div class="badge-img badge-victoire-anime">💎</div>
+            <p class="texte-normal" style="z-index: 2; font-weight: bold;">Bravo ! Tu as gagné le diamant magique !</p>
+            
+            <button class="btn-action-theme" style="z-index: 2;" onclick="jouerClic(); changerEcran('ecran-menu')">retour aux missions</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Audio
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function jouerSon(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            if (type === 'succes') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'erreur') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'brique') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(350, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            }
+        }
+
+        function jouerClic() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(450, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        // Roulement de tambour explosif sans voix robotique
+        function jouerRoulementTambour(callback) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            let t = audioCtx.currentTime;
+            for(let i=0; i<15; i++) {
+                let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, t + i*0.08);
+                gain.gain.setValueAtTime(0.1, t + i*0.08);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + i*0.08 + 0.05);
+                osc.start(t + i*0.08); osc.stop(t + i*0.08 + 0.05);
+            }
+            setTimeout(callback, 1200);
+        }
+
+        function jouerVictoire() {
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); gain.gain.setValueAtTime(0.2, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+                }, i * 150);
+            });
+        }
+
+        function parler(texte) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-CA'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance);
+        }
+
+        function lancerFeuxDartifice() {
+            const conteneur = document.getElementById('feux-artifice'); conteneur.innerHTML = '';
+            const particules = ['✨', '💎', '🎉', '🌟'];
+            for(let i=0; i<40; i++) {
+                let div = document.createElement('div'); div.innerText = particules[Math.floor(Math.random() * particules.length)]; div.style.position = 'absolute'; div.style.left = '50%'; div.style.top = '50%'; div.style.fontSize = (Math.random() * 2 + 1) + 'rem'; div.style.transition = 'all 1.5s cubic-bezier(0.1, 0.8, 0.3, 1)'; conteneur.appendChild(div);
+                setTimeout(() => { let angle = Math.random() * Math.PI * 2; let distance = Math.random() * 250 + 50; div.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) scale(0)`; div.style.opacity = '0'; }, 50);
+            }
+        }
+
+        // --- LISTES DE MOTS (Dernière syllabe phonologiquement exacte !) ---
+        // J'ai ajouté "ttsPetit" pour corriger la lecture des mots comme "dos" ou "bouh"
+        const motsJeu1 = [
+            { petitMot: 'zoo', iconePetit: '🦁', mot: 'oiseau', icone: '🐦', mauvais: '🐺', ttsPetit: 'zo' },
+            { petitMot: 'son', iconePetit: '🎵', mot: 'poisson', icone: '🐟', mauvais: '🥛', ttsPetit: 'son' },
+            { petitMot: 'dos', iconePetit: '🔙', mot: 'radeau', icone: '🚣', mauvais: '🥖', ttsPetit: 'do' },
+            { petitMot: 'mot', iconePetit: '📝', mot: 'chameau', icone: '🐫', mauvais: '🪣', ttsPetit: 'mo' },
+            { petitMot: 'lait', iconePetit: '🥛', mot: 'balai', icone: '🧹', mauvais: '🎵', ttsPetit: 'lè' },
+            { petitMot: 'pain', iconePetit: '🥖', mot: 'sapin', icone: '🌲', mauvais: '🦁', ttsPetit: 'pain' },
+            { petitMot: 'tronc', iconePetit: '🪵', mot: 'citron', icone: '🍋', mauvais: '📝', ttsPetit: 'tron' },
+            { petitMot: 'bouh', iconePetit: '👻', mot: 'hibou', icone: '🦉', mauvais: '🥖', ttsPetit: 'bou' }
+        ];
+
+        const motsJeu2 = [
+            { petitMot: 'seau', iconePetit: '🪣', mot: 'pinceau', icone: '🖌️', mauvais: '🥖', ttsPetit: 'so' },
+            { petitMot: 'son', iconePetit: '🎵', mot: 'garçon', icone: '👦', mauvais: '👻', ttsPetit: 'son' },
+            { petitMot: 'lait', iconePetit: '🥛', mot: 'poulet', icone: '🍗', mauvais: '🪵', ttsPetit: 'lè' },
+            { petitMot: 'pain', iconePetit: '🥖', mot: 'lapin', icone: '🐰', mauvais: '🔙', ttsPetit: 'pain' },
+            { petitMot: 'seau', iconePetit: '🪣', mot: 'cerceau', icone: '⭕', mauvais: '📝', ttsPetit: 'so' },
+            { petitMot: 'bouh', iconePetit: '👻', mot: 'bambou', icone: '🎋', mauvais: '🥛', ttsPetit: 'bou' },
+            { petitMot: 'son', iconePetit: '🎵', mot: 'glaçon', icone: '🧊', mauvais: '🦁', ttsPetit: 'son' },
+            { petitMot: 'peau', iconePetit: '🖐️', mot: 'drapeau', icone: '🚩', mauvais: '🥖', ttsPetit: 'po' }
+        ];
+
+        const motsJeu3 = [
+            { petitMot: 'tôt', iconePetit: '⏰', mot: 'bateau', icone: '⛵', mauvais: '🎵', ttsPetit: 'to' },
+            { petitMot: 'tôt', iconePetit: '⏰', mot: 'gâteau', icone: '🎂', mauvais: '👻', ttsPetit: 'to' },
+            { petitMot: 'tôt', iconePetit: '⏰', mot: 'marteau', icone: '🔨', mauvais: '🥛', ttsPetit: 'to' },
+            { petitMot: 'thon', iconePetit: '🐟', mot: 'mouton', icone: '🐑', mauvais: '🥖', ttsPetit: 'ton' },
+            { petitMot: 'thon', iconePetit: '🐟', mot: 'bouton', icone: '🔘', mauvais: '🪣', ttsPetit: 'ton' },
+            { petitMot: 'lait', iconePetit: '🥛', mot: 'chalet', icone: '🛖', mauvais: '🔙', ttsPetit: 'lè' },
+            { petitMot: 'dos', iconePetit: '🔙', mot: 'cadeau', icone: '🎁', mauvais: '🥖', ttsPetit: 'do' },
+            { petitMot: 'dos', iconePetit: '🔙', mot: 'rideau', icone: '🪟', mauvais: '🦁', ttsPetit: 'do' }
+        ];
+
+        let listeActive = []; let modeJeuActuel = 1; let indexMot = 0; let score = 0;
+        let estRevele = false;
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'ecran-victoire') { 
+                jouerRoulementTambour(() => {
+                    jouerVictoire(); 
+                    lancerFeuxDartifice();
+                });
+            }
+        }
+
+        function demarrerJeu(mode) {
+            modeJeuActuel = mode; indexMot = 0; score = 0; estRevele = false;
+            if (mode === 1) listeActive = motsJeu1;
+            if (mode === 2) listeActive = motsJeu2;
+            if (mode === 3) listeActive = motsJeu3;
+            
+            document.getElementById('titre-mission').innerText = `mission ${mode}`;
+            
+            document.getElementById('conteneur-crier').style.display = (mode === 1) ? 'flex' : 'none';
+            document.getElementById('conteneur-glisser').style.display = (mode === 2) ? 'flex' : 'none';
+            document.getElementById('conteneur-cliquer').style.display = (mode === 3) ? 'flex' : 'none';
+            
+            mettreAJourInterface(); changerEcran('ecran-jeu'); setTimeout(lireMotActuel, 600);
+        }
+
+        function mettreAJourInterface() {
+            document.getElementById('score-affichage').innerText = score;
+            document.getElementById('barre-progression').style.width = ((indexMot / listeActive.length) * 100) + '%';
+            if (indexMot < listeActive.length) {
+                let motData = listeActive[indexMot];
+                document.getElementById('mot-visuel').innerText = motData.icone;
+                
+                if (modeJeuActuel === 1) {
+                    estRevele = false;
+                    let brique = document.getElementById('brique-crier');
+                    brique.className = 'brique-revelation';
+                    brique.innerText = '❓';
+                } else if (modeJeuActuel === 2) {
+                    let order = Math.random() > 0.5;
+                    let drag1 = document.getElementById('drag-opt-1');
+                    let drag2 = document.getElementById('drag-opt-2');
+                    drag1.innerText = order ? motData.iconePetit : motData.mauvais;
+                    drag1.dataset.correct = order ? 'true' : 'false';
+                    drag2.innerText = order ? motData.mauvais : motData.iconePetit;
+                    drag2.dataset.correct = order ? 'false' : 'true';
+                    [drag1, drag2].forEach(el => {
+                        el.style.transform = 'none'; el.style.left = 'auto'; el.style.top = 'auto';
+                        el.style.display = 'block'; el.onpointerdown = initDrag;
+                    });
+                } else if (modeJeuActuel === 3) {
+                    let order = Math.random() > 0.5;
+                    let btn1 = document.getElementById('btn-choix-1');
+                    let btn2 = document.getElementById('btn-choix-2');
+                    btn1.innerText = order ? motData.iconePetit : motData.mauvais;
+                    btn1.dataset.correct = order ? 'true' : 'false';
+                    btn2.innerText = order ? motData.mauvais : motData.iconePetit;
+                    btn2.dataset.correct = order ? 'false' : 'true';
+                }
+            } else { changerEcran('ecran-victoire'); }
+        }
+
+        function lireMotActuel() {
+            jouerClic(); 
+            if(indexMot < listeActive.length) {
+                let grand = listeActive[indexMot].mot;
+                
+                if (modeJeuActuel === 1) {
+                    if(indexMot === 0) {
+                        parler("Quelle est la dernière syllabe de ... " + grand + " ? Crie la réponse, puis clique sur vérifier.");
+                    } else {
+                        parler(grand);
+                    }
+                } else {
+                    if(indexMot === 0) {
+                         parler("Trouve la dernière syllabe de ... " + grand + ".");
+                    } else {
+                         parler(grand);
+                    }
+                }
+            }
+        }
+
+        function afficherPointFlottant(element) {
+            let pts = document.createElement('div'); pts.className = 'point-flottant'; pts.innerText = '+10';
+            element.appendChild(pts); setTimeout(() => pts.remove(), 1000);
+        }
+
+        // Action Jeu 1
+        function revelerReponse() {
+            if (estRevele || indexMot >= listeActive.length) return;
+            estRevele = true;
+            jouerSon('succes'); score += 10;
+            
+            let brique = document.getElementById('brique-crier');
+            brique.classList.add('revelee');
+            brique.innerText = listeActive[indexMot].iconePetit;
+            // LECTURE PARFAITE de la syllabe grâce à ttsPetit ("do", "zo", etc.)
+            parler(listeActive[indexMot].ttsPetit); 
+            
+            afficherPointFlottant(document.getElementById('conteneur-crier'));
+            
+            indexMot++; 
+            setTimeout(() => {
+                mettreAJourInterface();
+                if(indexMot < listeActive.length) setTimeout(lireMotActuel, 600);
+            }, 2000);
+        }
+
+        // Action Jeu 2
+        let activeDrag = null;
+        function initDrag(e) {
+            activeDrag = e.currentTarget;
+            activeDrag.setPointerCapture(e.pointerId); activeDrag.classList.add('dragging'); jouerSon('brique');
+            activeDrag.style.left = e.clientX + 'px'; activeDrag.style.top = e.clientY + 'px'; activeDrag.style.transform = 'translate(-50%, -50%)';
+            activeDrag.onpointermove = moveDrag; activeDrag.onpointerup = endDrag;
+        }
+        function moveDrag(e) {
+            if(activeDrag) { activeDrag.style.left = e.clientX + 'px'; activeDrag.style.top = e.clientY + 'px'; }
+        }
+        function endDrag(e) {
+            if(!activeDrag) return;
+            activeDrag.onpointermove = null; activeDrag.onpointerup = null;
+            activeDrag.releasePointerCapture(e.pointerId); activeDrag.classList.remove('dragging');
+            activeDrag.style.display = 'none'; let elemDessous = document.elementFromPoint(e.clientX, e.clientY); activeDrag.style.display = 'block';
+            activeDrag.style.left = 'auto'; activeDrag.style.top = 'auto'; activeDrag.style.transform = 'none';
+            
+            let zoneDepot = elemDessous ? elemDessous.closest('.cible-depot') : null;
+            if (zoneDepot) { 
+                if(activeDrag.dataset.correct === 'true') {
+                    jouerSon('succes'); score += 10; afficherPointFlottant(document.getElementById('conteneur-glisser'));
+                    indexMot++; setTimeout(mettreAJourInterface, 600); if(indexMot < listeActive.length) setTimeout(lireMotActuel, 1500);
+                } else {
+                    jouerSon('erreur'); activeDrag.style.animation = 'shake 0.4s'; setTimeout(() => activeDrag.style.animation = '', 400);
+                }
+            } else { jouerSon('erreur'); }
+            activeDrag = null;
+        }
+
+        // Action Jeu 3
+        function verifierChoix(element) {
+            if(indexMot >= listeActive.length) return;
+            if(element.dataset.correct === 'true') {
+                jouerSon('succes'); score += 10; afficherPointFlottant(document.getElementById('conteneur-cliquer'));
+                indexMot++; setTimeout(mettreAJourInterface, 600); if(indexMot < listeActive.length) setTimeout(lireMotActuel, 1500);
+            } else {
+                jouerSon('erreur'); element.style.animation = 'shake 0.4s'; setTimeout(() => element.style.animation = '', 400);
+            }
+        }
+    </script>
+</body>
+</html>
