@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 10 : Identifie le dernier son</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #fffbf0; color: #4e342e; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-container { background-color: rgba(255, 255, 255, 0.95); width: 100%; max-width: 1000px; height: 100vh; max-height: 800px; border-radius: 20px; box-shadow: 0 10px 30px rgba(218, 165, 32, 0.2); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGold { 0%, 100% { box-shadow: 0 0 10px #ffd700; } 50% { box-shadow: 0 0 25px #ffb300; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; width: 100%; padding: 20px; animation: fadeIn 0.4s ease-out; text-align: center; overflow-y: auto;}
+        .screen.active { display: flex; }
+
+        .titre-mission { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; color: #b8860b; text-transform: uppercase; flex-shrink: 0;}
+        .consigne-box { background: #fffde7; border: 3px solid #fbc02d; border-radius: 10px; padding: 15px; margin-bottom: 15px; width: 95%; text-align: center; color: #f57f17; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .lecon-visuelle { background: #fff; border: 4px dashed #f57f17; border-radius: 15px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 95%; }
+
+        /* --- LA RUE D'INTRODUCTION --- */
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 15px; width: 100%; padding: 0 10px; position: relative; z-index: 2;}
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; margin-top: -2px; border-radius: 0 0 7px 7px;}
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative;}
+        .image-mot { font-size: 3.5rem; margin-bottom: -5px; z-index: 5; line-height: 1; height: 50px; display: flex; align-items: flex-end;}
+        .toit { width: 0; height: 0; border-bottom: 25px solid #7f8c8d; margin-bottom: -1px; }
+        .toit.large-1 { border-left: 27px solid transparent; border-right: 27px solid transparent; }
+        .mur { display: flex; flex-direction: row; background-color: #f1c40f; border: 3px solid #7f8c8d; border-top: none; height: 40px; justify-content: center;}
+        .brique { height: 100%; border-right: 2px solid rgba(0,0,0,0.15); display: flex; justify-content: space-evenly; align-items: center; padding: 0 5px; gap: 4px; }
+        .brique:last-child { border-right: none; }
+        
+        .mini-point { width: 14px; height: 14px; background-color: #fff; border: 2px solid #bdc3c7; border-radius: 50%; }
+        .point-cible { background-color: #ffd700 !important; border-color: #d4af37 !important; animation: pulseGold 1.5s infinite; position: relative;}
+
+        /* --- ZONE DE JEU --- */
+        .carte-mot { position: relative; cursor: pointer; background: #fff; border: 4px solid #fbc02d; border-radius: 15px; width: auto; min-width: 250px; padding: 25px 15px 15px 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin: 20px 0; transition: transform 0.2s; }
+        .carte-mot:hover { transform: scale(1.02); border-color: #f57f17; }
+        .bouton-audio { position: absolute; top: 5px; right: 10px; font-size: 1.5rem; color: #b8860b; transition: transform 0.2s; }
+        .bouton-audio:active { transform: scale(0.9); }
+
+        .zone-revelation { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; background: #fff; border: 3px solid #f57f17; border-radius: 20px; padding: 10px 30px; margin-bottom: 10px; transition: 0.3s; box-shadow: 0 4px 10px rgba(245, 127, 23, 0.2);}
+        .icone-grain { font-size: 2.2rem; }
+
+        /* ZONE DROP & CHOIX */
+        .interaction-container { display: none; flex-direction: column; align-items: center; width: 100%; gap: 20px; animation: fadeIn 0.5s; margin-top: 10px;}
+        .choix-sons-container { display: flex; gap: 20px; justify-content: center; width: 100%; position: relative; z-index: 10;}
+        
+        .zone-son { width: 100px; height: 100px; border-radius: 50%; background: white; border: 5px solid #fbc02d; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: grab; touch-action: none; background-color: #fffde7;}
+        .zone-son:active { cursor: grabbing; }
+        .emoji-son { font-size: 3.5rem; pointer-events: none;}
+        
+        .bouton-audio-choix { position: absolute; top: -5px; right: -5px; font-size: 1.2rem; background: white; border-radius: 50%; border: 2px solid #fbc02d; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 20; cursor: pointer;}
+        
+        .drop-zone { width: 140px; height: 140px; border: 5px dashed #d4af37; border-radius: 20px; background: rgba(255, 215, 0, 0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; margin-bottom: 10px;}
+        .drop-zone.hover { background: rgba(255, 215, 0, 0.4); border-style: solid; transform: scale(1.05); }
+
+        /* --- OVERLAY --- */
+        #overlay-prof { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 100; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 0.3s; }
+        .btn-prof { background: #fbc02d; border: 4px solid #f57f17; border-radius: 50%; width: 120px; height: 120px; font-size: 4rem; cursor: pointer; animation: pulseGold 1.5s infinite; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 20px; display: flex; justify-content: space-between; background: #f57f17; color: white; font-weight: bold; z-index: 10; }
+        .menu-niveaux { display: flex; gap: 10px; margin-top: 10px; }
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; padding: 12px 20px; color: white; font-size: 1.1rem;}
+        .btn-niv1 { background: #fbc02d; box-shadow: 0 4px 0 #f57f17; color: #4e342e;}
+        .btn-niv2 { background: #f57f17; box-shadow: 0 4px 0 #e65100; }
+        .btn-niv3 { background: #e65100; box-shadow: 0 4px 0 #bf360c; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="ecran-intro" class="screen active">
+            <h1 class="titre-mission">Mission 10</h1>
+            
+            <div class="consigne-box">
+                <div style="font-size: 1.6rem; font-weight: bold; margin-bottom: 5px; color: #b8860b;">Identifie le dernier son</div>
+                <div style="font-size: 1rem; line-height: 1.4; text-align: left;">
+                    La mission est finie, mais il reste un tout petit <strong>grain d'or</strong> tombé sur le sol, complètement à droite, à la toute fin du mot.<br><br>
+                    Quel est le <strong>dernier petit bruit</strong> que fait votre bouche ? Touche le grain pour voir les choix, puis <strong>glisse</strong> la bonne image dans la zone dorée !
+                </div>
+            </div>
+            
+            <div class="lecon-visuelle">
+                <div class="quartier">
+                    <div class="rue-objets">
+                        <div class="maison-bloc">
+                            <div class="image-mot">🍎</div>
+                            <div class="toit large-1"></div>
+                            <div class="mur"><div class="brique"><div class="mini-point"></div><div class="mini-point"></div><div class="mini-point point-cible"></div></div></div>
+                        </div>
+                        <div style="font-size: 2rem; margin: 0 15px 15px 15px;">➡️</div>
+                        <div class="maison-bloc">
+                            <div class="image-mot">🐑</div>
+                            <div class="toit large-1"></div>
+                            <div style="font-size:0.9rem; color:#888; margin-top:5px;">(Mouton)</div>
+                        </div>
+                    </div>
+                    <div class="asphalte"><div class="ligne-jaune"></div></div>
+                </div>
+            </div>
+
+            <div class="menu-niveaux">
+                <button class="btn-niv1" onclick="lancerNiveau(1)">Niveau 1</button>
+                <button class="btn-niv2" onclick="lancerNiveau(2)">Niveau 2</button>
+                <button class="btn-niv3" onclick="lancerNiveau(3)">Niveau 3</button>
+            </div>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar" id="top-bar">
+                <span>⭐ <span id="score">0</span></span>
+                <span id="titre-niveau-ui">Niveau</span>
+                <span><span id="affichage-num">1</span>/10</span>
+            </div>
+
+            <div id="jeu-dynamique" style="margin-top: 60px; display: flex; flex-direction: column; align-items: center; width: 100%;">
+                </div>
+            
+            <div id="overlay-prof">
+                <h2 style="color: #b8860b; margin-bottom: 20px; font-size: 2rem;">C'est réussi !</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 30px; font-weight: bold; color: #4e342e;">Tu as trouvé le bon grain d'or :</p>
+                <button class="btn-prof" onclick="validationProf()">✨</button>
+            </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen" style="justify-content: center;">
+            <h1 class="titre-mission">Parcours terminé !</h1>
+            <div style="font-size: 6rem;">🏆</div>
+            <button class="btn-niv1" onclick="location.reload()" style="margin-top: 20px;">Menu Principal</button>
+        </div>
+    </div>
+
+    <script>
+        const NIVEAUX = {
+            1: [
+                { img: '🍎', txt: 'pomme', syl: [['c','c','c']], choix: [{img:'🐑', correct:true, txt:'mouton'}, {img:'🚗', correct:false, txt:'voiture'}, {img:'🦁', correct:false, txt:'lion'}] },
+                { img: '🛏️', txt: 'lit', syl: [['c','c']], choix: [{img:'🧊', correct:true, txt:'igloo'}, {img:'🔥', correct:false, txt:'feu'}, {img:'🐀', correct:false, txt:'rat'}] },
+                { img: '👜', txt: 'sac', syl: [['c','c','c']], choix: [{img:'🐷', correct:true, txt:'cochon'}, {img:'☀️', correct:false, txt:'soleil'}, {img:'🛏️', correct:false, txt:'lit'}] },
+                { img: '🐀', txt: 'rat', syl: [['c','c']], choix: [{img:'✈️', correct:true, txt:'avion'}, {img:'👗', correct:false, txt:'robe'}, {img:'👜', correct:false, txt:'sac'}] },
+                { img: '🧵', txt: 'fil', syl: [['c','c','c']], choix: [{img:'🐰', correct:true, txt:'lapin'}, {img:'🪰', correct:false, txt:'mouche'}, {img:'👗', correct:false, txt:'jupe'}] },
+                { img: '🧱', txt: 'mur', syl: [['c','c','c']], choix: [{img:'🦊', correct:true, txt:'renard'}, {img:'🥬', correct:false, txt:'chou'}, {img:'🧂', correct:false, txt:'sel'}] },
+                { img: '🥣', txt: 'bol', syl: [['c','c','c']], choix: [{img:'🐺', correct:true, txt:'loup'}, {img:'🐔', correct:false, txt:'poule'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '👗', txt: 'robe', syl: [['c','c','c']], choix: [{img:'🐋', correct:true, txt:'baleine'}, {img:'🐄', correct:false, txt:'vache'}, {img:'🌊', correct:false, txt:'mer'}] },
+                { img: '👃', txt: 'nez', syl: [['c','c']], choix: [{img:'🐘', correct:true, txt:'éléphant'}, {img:'🚗', correct:false, txt:'voiture'}, {img:'🐄', correct:false, txt:'vache'}] },
+                { img: '🐱', txt: 'chat', syl: [['c','c']], choix: [{img:'🕷️', correct:true, txt:'araignée'}, {img:'🍎', correct:false, txt:'pomme'}, {img:'👜', correct:false, txt:'sac'}] }
+            ],
+            2: [
+                { img: '🍅', txt: 'tomate', syl: [['c','c'], ['c','c','c']], choix: [{img:'🐯', correct:true, txt:'tigre'}, {img:'🥬', correct:false, txt:'chou'}, {img:'🧂', correct:false, txt:'sel'}] },
+                { img: '🦍', txt: 'gorille', syl: [['c','c'], ['c','c','c']], choix: [{img:'🪀', correct:true, txt:'yo-yo'}, {img:'🪱', correct:false, txt:'ver'}, {img:'👑', correct:false, txt:'roi'}] },
+                { img: '🍫', txt: 'chocolat', syl: [['c','c'], ['c','c'], ['c','c']], choix: [{img:'🐝', correct:true, txt:'abeille'}, {img:'🦁', correct:false, txt:'lion'}, {img:'🚗', correct:false, txt:'voiture'}] },
+                { img: '🥗', txt: 'salade', syl: [['c','c'], ['c','c','c']], choix: [{img:'🐬', correct:true, txt:'dauphin'}, {img:'🧱', correct:false, txt:'mur'}, {img:'🥣', correct:false, txt:'bol'}] },
+                { img: '🐎', txt: 'cheval', syl: [['c','c'], ['c','c','c']], choix: [{img:'🦁', correct:true, txt:'lion'}, {img:'🥣', correct:false, txt:'bol'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '🦉', txt: 'hibou', syl: [['c'], ['c','c']], choix: [{img:'🛠️', correct:true, txt:'outil'}, {img:'🔩', correct:false, txt:'vis'}, {img:'⛵', correct:false, txt:'bateau'}] },
+                { img: '🦒', txt: 'girafe', syl: [['c','c'], ['c','c','c']], choix: [{img:'👻', correct:true, txt:'fantôme'}, {img:'🏞️', correct:false, txt:'lac'}, {img:'🐔', correct:false, txt:'poule'}] },
+                { img: '🐁', txt: 'souris', syl: [['c','c'], ['c','c']], choix: [{img:'🧊', correct:true, txt:'igloo'}, {img:'🦊', correct:false, txt:'renard'}, {img:'🪰', correct:false, txt:'mouche'}] },
+                { img: '🐋', txt: 'baleine', syl: [['c','c'], ['c','c','c']], choix: [{img:'☁️', correct:true, txt:'nuage'}, {img:'🔩', correct:false, txt:'vis'}, {img:'⛵', correct:false, txt:'bateau'}] },
+                { img: '🐜', txt: 'fourmi', syl: [['c','c','c'], ['c','c']], choix: [{img:'🏝️', correct:true, txt:'île'}, {img:'🌙', correct:false, txt:'lune'}, {img:'🛣️', correct:false, txt:'rue'}] }
+            ],
+            3: [
+                { img: '🦖', txt: 'dinosaure', syl: [['c','c'], ['c','c'], ['c','c','c']], choix: [{img:'🦈', correct:true, txt:'requin'}, {img:'🌙', correct:false, txt:'lune'}, {img:'🧚', correct:false, txt:'fée'}] },
+                { img: '☎️', txt: 'téléphone', syl: [['c','c'], ['c','c'], ['c','c','c']], choix: [{img:'🚢', correct:true, txt:'navire'}, {img:'🍯', correct:false, txt:'pot'}, {img:'⛵', correct:false, txt:'bateau'}] },
+                { img: '🐊', txt: 'crocodile', syl: [['c','c','c'], ['c','c'], ['c','c','c']], choix: [{img:'📖', correct:true, txt:'livre'}, {img:'🪱', correct:false, txt:'ver'}, {img:'🎀', correct:false, txt:'nœud'}] },
+                { img: '📷', txt: 'caméra', syl: [['c','c'], ['c','c'], ['c','c']], choix: [{img:'🍍', correct:true, txt:'ananas'}, {img:'🦊', correct:false, txt:'renard'}, {img:'🥣', correct:false, txt:'bol'}] },
+                { img: '👖', txt: 'pantalon', syl: [['c','c','c'], ['c','c'], ['c','c']], choix: [{img:'☂️', correct:true, txt:'ombrelle'}, {img:'🍚', correct:false, txt:'riz'}, {img:'🏞️', correct:false, txt:'lac'}] },
+                { img: '🏍️', txt: 'moto', syl: [['c','c'], ['c','c']], choix: [{img:'🍊', correct:true, txt:'orange'}, {img:'👗', correct:false, txt:'jupe'}, {img:'🐍', correct:false, txt:'serpent'}] },
+                { img: '🏠', txt: 'maison', syl: [['c','c'], ['c','c']], choix: [{img:'💅', correct:true, txt:'ongle'}, {img:'🪰', correct:false, txt:'mouche'}, {img:'👧', correct:false, txt:'fille'}] },
+                { img: '🎈', txt: 'ballon', syl: [['c','c','c'], ['c','c']], choix: [{img:'🕚', correct:true, txt:'onze'}, {img:'👗', correct:false, txt:'jupe'}, {img:'🐍', correct:false, txt:'serpent'}] },
+                { img: '🎹', txt: 'piano', syl: [['c','c'], ['c','c']], choix: [{img:'🦴', correct:true, txt:'os'}, {img:'🧳', correct:false, txt:'valise'}, {img:'🎀', correct:false, txt:'nœud'}] },
+                { img: '🚀', txt: 'fusée', syl: [['c','c'], ['c','c']], choix: [{img:'🌟', correct:true, txt:'étoile'}, {img:'🍯', correct:false, txt:'pot'}, {img:'⛵', correct:false, txt:'bateau'}] }
+            ]
+        };
+
+        let niveauActuel = 1;
+        let motsJoues = [];
+        let motIndex = 0;
+        let score = 0;
+        let motActuelTxt = '';
+
+        function jouerSonSucces() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1318.51, ctx.currentTime + 0.15);
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) { }
+        }
+
+        function lancerNiveau(n) {
+            niveauActuel = n;
+            motsJoues = NIVEAUX[n];
+            document.getElementById('ecran-intro').classList.remove('active');
+            document.getElementById('ecran-jeu').classList.add('active');
+            motIndex = 0;
+            chargerMot();
+        }
+
+        function genererBriquesHtml(structureSyl) {
+            const lastBriqueIndex = structureSyl.length - 1;
+            return structureSyl.map((syllabe, briqueIndex) => `
+                <div class="brique">
+                    ${syllabe.map((_, rondIndex) => {
+                        const isCible = (briqueIndex === lastBriqueIndex && rondIndex === syllabe.length - 1);
+                        return `<div class="mini-point ${isCible ? 'point-cible' : ''}"></div>`;
+                    }).join('')}
+                </div>
+            `).join('');
+        }
+
+        function chargerMot() {
+            if (motIndex >= motsJoues.length) {
+                document.getElementById('ecran-jeu').classList.remove('active');
+                document.getElementById('ecran-victoire').classList.add('active');
+                return;
+            }
+
+            const d = motsJoues[motIndex];
+            motActuelTxt = d.txt;
+            const zone = document.getElementById('jeu-dynamique');
+            document.getElementById('affichage-num').innerText = motIndex + 1;
+            
+            let choixMelanges = [...d.choix].sort(() => 0.5 - Math.random());
+
+            zone.innerHTML = `
+                <div class="carte-mot" id="carte-cible" title="Clique pour réentendre le mot" onclick="repeterMot()">
+                    <div class="bouton-audio">🔊</div>
+                    <div class="quartier">
+                        <div class="rue-objets">
+                            <div class="maison-bloc">
+                                <div class="image-mot">${d.img}</div>
+                                <div class="toit large-1"></div>
+                                <div class="mur">
+                                    ${genererBriquesHtml(d.syl)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="asphalte"><div class="ligne-jaune"></div></div>
+                    </div>
+                </div>
+
+                <div class="zone-revelation" id="btn-revelation" onclick="revelerSons()">
+                    <div class="icone-grain">✨</div>
+                    <div style="font-weight: bold; color: #b8860b;">Trouver le grain</div>
+                </div>
+
+                <div class="interaction-container" id="interaction-zone">
+                    <div class="drop-zone" id="zone-reception">
+                        <div style="font-size: 2.5rem; color: #d4af37;">📥</div>
+                        <div style="font-size: 1.1rem; color: #b8860b; font-weight: bold;">Glisse ici !</div>
+                    </div>
+
+                    <div class="choix-sons-container" id="container-sons">
+                        ${choixMelanges.map(c => `
+                            <div class="zone-son" data-correct="${c.correct}">
+                                <div class="bouton-audio-choix" onclick="event.stopPropagation(); speak('${c.txt}')" title="Écouter ce mot">🔊</div>
+                                <div class="emoji-son">${c.img}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            speak(d.txt);
+            initDragAndDrop();
+        }
+
+        function revelerSons() {
+            document.getElementById('btn-revelation').style.display = 'none';
+            document.getElementById('interaction-zone').style.display = 'flex';
+        }
+
+        function repeterMot() {
+            speak(motActuelTxt);
+        }
+
+        function speak(t) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(t);
+                u.lang = 'fr-CA';
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        let draggedItem = null;
+        let startX = 0, startY = 0;
+
+        function initDragAndDrop() {
+            const sons = document.querySelectorAll('.zone-son');
+            sons.forEach(son => {
+                son.addEventListener('pointerdown', dragStart);
+            });
+        }
+
+        function dragStart(e) {
+            if(e.target.classList.contains('bouton-audio-choix')) return;
+
+            draggedItem = this;
+            draggedItem.style.zIndex = 1000;
+            draggedItem.style.transition = 'none';
+
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            document.body.style.overflow = 'hidden'; 
+
+            document.addEventListener('pointermove', dragMove);
+            document.addEventListener('pointerup', dragEnd);
+        }
+
+        function dragMove(e) {
+            if (!draggedItem) return;
+            e.preventDefault(); 
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            draggedItem.style.transform = `translate(${dx}px, ${dy}px) scale(1.1)`;
+        }
+
+        function dragEnd(e) {
+            if (!draggedItem) return;
+            
+            document.removeEventListener('pointermove', dragMove);
+            document.removeEventListener('pointerup', dragEnd);
+            document.body.style.overflow = '';
+
+            draggedItem.style.transition = 'transform 0.3s ease';
+            
+            const dropZone = document.getElementById('zone-reception');
+            const dropRect = dropZone.getBoundingClientRect();
+            const itemRect = draggedItem.getBoundingClientRect();
+
+            const isOverlapping = !(itemRect.right < dropRect.left || 
+                                    itemRect.left > dropRect.right || 
+                                    itemRect.bottom < dropRect.top || 
+                                    itemRect.top > dropRect.bottom);
+
+            if (isOverlapping) {
+                const isCorrect = draggedItem.getAttribute('data-correct') === 'true';
+                verifierGlissade(isCorrect, draggedItem);
+            } else {
+                draggedItem.style.transform = 'translate(0px, 0px) scale(1)';
+            }
+
+            draggedItem.style.zIndex = '';
+            draggedItem = null;
+        }
+
+        function verifierGlissade(isCorrect, element) {
+            if (isCorrect) {
+                jouerSonSucces();
+                score++;
+                document.getElementById('score').innerText = score;
+                element.style.transform = 'translate(0px, -150px) scale(0)'; 
+                element.style.opacity = '0';
+                document.getElementById('zone-reception').style.borderColor = '#2ecc71';
+                document.getElementById('zone-reception').style.backgroundColor = 'rgba(46, 204, 113, 0.2)';
+                
+                setTimeout(() => {
+                    document.getElementById('overlay-prof').style.display = 'flex';
+                }, 400);
+            } else {
+                element.style.animation = 'shake 0.5s';
+                element.style.transform = 'translate(0px, 0px) scale(1)';
+                setTimeout(() => element.style.animation = '', 500);
+            }
+        }
+
+        function validationProf() {
+            document.getElementById('overlay-prof').style.display = 'none';
+            motIndex++;
+            chargerMot();
+        }
+    </script>
+</body>
+</html>
