@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le grand chantier de Léo - Mission 6</title>
+    <style>
+        /* Police stricte et reset */
+        * { box-sizing: border-box; font-family: 'Century Gothic', sans-serif; margin: 0; padding: 0; user-select: none; touch-action: none; }
+
+        /* THÈME MAUVE */
+        body { background-color: #a29bfe; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-container { background-color: #f8f6fb; width: 100%; max-width: 900px; height: 100vh; max-height: 650px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 10px; animation: fadeIn 0.4s ease-in-out; text-align: center; }
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
+        @keyframes floatBubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes manger { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) translateY(-10px); } }
+        @keyframes pulseVert { 0%, 100% { filter: drop-shadow(0 0 5px #2ecc71); } 50% { filter: drop-shadow(0 0 20px #2ecc71); } }
+        @keyframes departTrain { 0% { transform: translateX(0); } 100% { transform: translateX(600px); opacity: 0; } }
+
+        /* Titres multicolores */
+        .titre-colore { font-size: 2.2rem; font-weight: bold; margin-bottom: 15px; background: linear-gradient(90deg, #6c5ce7, #a29bfe, #fd79a8, #e84393); -webkit-background-clip: text; color: transparent; line-height: 1.3; }
+        .texte-normal { font-size: 1.2rem; margin-bottom: 15px; padding: 0 20px; }
+
+        /* ----- LÉO ET LA RUE (Intro) ----- */
+        .castor-container { position: relative; display: inline-block; font-size: 3.5rem; animation: pop 3s infinite; margin-bottom: 15px; z-index: 10; }
+        .chapeau-construction { position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 28px; height: 16px; background-color: #f1c40f; border-radius: 20px 20px 0 0; border: 2px solid #d35400; border-bottom: none; z-index: 11; }
+        .chapeau-construction::after { content: ''; position: absolute; bottom: 0; left: -4px; width: 32px; height: 4px; background-color: #f1c40f; border-radius: 2px; border: 2px solid #d35400; }
+        .castor-emoji { display: inline-block; transform: scaleX(-1); }
+
+        .quartier { display: flex; flex-direction: column; width: 100%; align-items: center; margin-bottom: 20px; transform: scale(0.9); }
+        .rue-objets { display: flex; align-items: flex-end; justify-content: center; gap: 30px; width: 100%; padding: 0 10px; }
+        .asphalte { width: 100%; height: 30px; background-color: #576574; position: relative; z-index: 1; }
+        .ligne-jaune { position: absolute; top: 50%; width: 100%; height: 4px; border-top: 5px dashed #f1c40f; }
+
+        .bloc-colle { display: flex; align-items: flex-end; gap: 0; position: relative; z-index: 2; }
+        .lampadaire { display: flex; flex-direction: column; align-items: center; z-index: 2; margin-right: -2px; }
+        .lumiere { font-size: 2rem; text-shadow: 0 0 15px #f1c40f; margin-bottom: -5px; z-index: 3; position: relative; }
+        .poteau-lampe { width: 6px; height: 40px; background-color: #34495e; border-radius: 3px; z-index: 2; }
+
+        .stop-panneau { position: relative; width: 25px; height: 35px; margin-left: 2px; z-index: 5; }
+        .stop-icone { font-size: 1.1rem; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); z-index: 6; }
+        .stop-poteau { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); width: 4px; height: 45px; background-color: #34495e; border-radius: 2px; z-index: 4; }
+
+        .maison-bloc { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .toit { width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 20px solid #7f8c8d; margin-bottom: -1px; }
+        
+        /* CORRECTION COULEURS : Maisons grises pour faire ressortir le vert ! */
+        .mur { display: flex; flex-direction: row; background-color: #ecf0f1; border: 3px solid #bdc3c7; border-top: none; height: 35px; }
+        .brique { width: 40px; height: 100%; border-right: 2px solid #bdc3c7; display: flex; justify-content: center; align-items: center;}
+        .brique:last-child { border-right: none; }
+        .toit.large-2 { border-left-width: 40px; border-right-width: 40px; }
+        .toit.large-3 { border-left-width: 60px; border-right-width: 60px; }
+
+        .voiture-absolute { position: absolute; right: -30px; width: 30px; bottom: -5px; font-size: 2rem; display: flex; justify-content: center; align-items: flex-end; z-index: 10; }
+
+        /* Schéma Visuel des Rimes : LE VERT PÉTANT */
+        .schema-rimes { display: flex; gap: 30px; align-items: flex-end; justify-content: center; margin-top: 20px; }
+        .brique-rime { background-color: #2ecc71; border-color: #27ae60; animation: pulseVert 1.5s infinite; position: relative; z-index: 5; }
+
+        /* ----- INTERFACE DU JEU ----- */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; padding: 15px; display: flex; justify-content: space-between; background: #f1f2f6; border-bottom: 3px solid #dfe4ea; font-size: 1.2rem; font-weight: bold; z-index: 50; }
+        .progress-container { width: 40%; height: 20px; background-color: #ddd; border-radius: 10px; overflow: hidden; margin-top: 2px; }
+        .progress-bar { height: 100%; width: 0%; background-color: #2ecc71; transition: width 0.3s; }
+        .point-flottant { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 2rem; color: #2ecc71; font-weight: bold; animation: floatUp 1s ease-out forwards; pointer-events: none; z-index: 100;}
+
+        /* BOUTONS ET ÉLÉMENTS DE JEU */
+        button { border: none; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 transparent !important; }
+        
+        .btn-action-mauve { background-color: #6c5ce7; color: white; padding: 15px 30px; font-size: 1.2rem; box-shadow: 0 5px 0 #4834d4; margin: 10px; }
+        .btn-audio { background-color: #6c5ce7; box-shadow: 0 5px 0 #4834d4; color: white; font-size: 2.5rem; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 10px auto; animation: pop 2s infinite; z-index: 10;}
+
+        .zone-dynamique { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; justify-content: center; padding-top: 50px; position: relative; }
+        .jetons-container { display: flex; gap: 20px; justify-content: center; width: 100%; z-index: 20; position: relative; margin-bottom: 30px;}
+        
+        .jeton-mauve { width: 90px; height: 90px; background-color: white; border: 4px solid #6c5ce7; border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 3.5rem; box-shadow: 0 6px 0 #6c5ce7; cursor: grab; position: relative; transition: transform 0.1s; }
+        .jeton-mauve:active { cursor: grabbing; border-color: #2ecc71; box-shadow: 0 6px 0 #2ecc71; }
+
+        /* JEU 1 : La Poubelle */
+        .zone-poubelle { font-size: 6rem; position: relative; z-index: 10; transition: all 0.3s; margin-top: 20px;}
+        .zone-poubelle::after { content: 'poubelle'; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 1.2rem; font-weight: bold; color: #6c5ce7; }
+        .poubelle-ouverte { animation: manger 0.5s; filter: drop-shadow(0 0 20px #e84393); }
+
+        /* JEU 2 : Le Train */
+        .zone-train { position: relative; margin-top: 10px; transition: all 0.5s;}
+        .wagon { width: 140px; height: 90px; background-color: #fdcb6e; border: 4px solid #e17055; border-radius: 10px 10px 0 0; display: flex; justify-content: center; align-items: center; font-size: 3.5rem; position: relative; z-index: 10;}
+        .roues-train { display: flex; justify-content: space-around; width: 100%; position: absolute; bottom: -15px; }
+        .roue { width: 30px; height: 30px; background-color: #2d3436; border: 3px solid #b2bec3; border-radius: 50%; }
+        .wagon::before { content: 'Glisse ici !'; position: absolute; top: -25px; font-size: 1rem; color: #d35400; font-weight: bold; }
+        .wagon-cible { position: absolute; left: -60px; top: 15px; font-size: 2.5rem; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 3px solid #2ecc71;}
+
+        /* JEU 3 : Les Bulles */
+        .bulle-cible { font-size: 5rem; margin-bottom: 40px; animation: pop 2s infinite; background: white; border-radius: 50%; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; border: 5px dashed #2ecc71;}
+        .bulle-cliquable { width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffffff, #a29bfe); border: 2px solid #6c5ce7; display: flex; justify-content: center; align-items: center; font-size: 4rem; cursor: pointer; box-shadow: inset 0 0 20px rgba(255,255,255,0.5), 0 5px 15px rgba(0,0,0,0.1); animation: floatBubble 3s ease-in-out infinite; transition: all 0.2s; }
+        .bulle-cliquable:nth-child(2) { animation-delay: 0.5s; }
+        .bulle-cliquable:nth-child(3) { animation-delay: 1s; }
+        .bulle-cliquable:active { transform: scale(0.9); border-color: #2ecc71; }
+
+        #feux-artifice { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <div id="ecran-intro" class="screen active">
+            <p class="titre-colore">Mission 6 : Le festival des rimes !</p>
+            
+            <div class="castor-container">
+                <div class="chapeau-construction"></div>
+                <span class="castor-emoji">🦫</span>
+            </div>
+            
+            <div class="quartier">
+                <div class="rue-objets">
+                    <div class="bloc-colle">
+                        <div class="lampadaire"><div class="lumiere">💡</div><div class="poteau-lampe"></div></div>
+                        <div class="maison-bloc"><div class="toit"></div><div class="mur"><div class="brique"></div></div></div>
+                    </div>
+                    <div class="maison-bloc">
+                        <div class="toit"></div><div class="mur"><div class="brique"></div></div>
+                        <div class="voiture-absolute">🚘</div>
+                    </div>
+                    <div class="maison-bloc">
+                        <div class="toit large-2"></div><div class="mur"><div class="brique"></div><div class="brique"></div></div>
+                    </div>
+                    <div class="bloc-colle">
+                        <div class="maison-bloc"><div class="toit large-3"></div><div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique"></div></div></div>
+                        <div class="stop-panneau"><div class="stop-poteau"></div><div class="stop-icone">🛑</div></div>
+                    </div>
+                </div>
+                <div class="asphalte"><div class="ligne-jaune"></div></div>
+                
+                <div class="schema-rimes">
+                    <div class="mur"><div class="brique brique-rime"></div></div>
+                    <div style="font-weight: bold; font-size: 1.5rem; margin-bottom: 5px;">=</div>
+                    <div class="mur"><div class="brique"></div><div class="brique brique-rime"></div></div>
+                    <div style="font-weight: bold; font-size: 1.5rem; margin-bottom: 5px;">=</div>
+                    <div class="mur"><div class="brique"></div><div class="brique"></div><div class="brique brique-rime"></div></div>
+                </div>
+            </div>
+            
+            <p class="texte-normal">La rime, c'est le <b>dernier bloc</b> du mot. Regarde bien, c'est le bloc <b style="color:#2ecc71;">VERT</b> ! Prépare-toi pour 3 petits jeux amusants !</p>
+            <button class="btn-action-mauve" onclick="jouerClic(); demarrerJeu()">jouer</button>
+        </div>
+
+        <div id="ecran-jeu" class="screen">
+            <div class="top-bar">
+                <span>🌟 <span id="score-affichage">0</span></span>
+                <div class="progress-container"><div class="progress-bar" id="barre-progression"></div></div>
+                <span>mission 6</span>
+            </div>
+            
+            <div class="zone-dynamique" id="conteneur-jeu-dynamique">
+                </div>
+        </div>
+
+        <div id="ecran-victoire" class="screen">
+            <div id="feux-artifice"></div>
+            <p class="titre-colore" style="font-size: 2.5rem; z-index: 2;">Festival accompli !</p>
+            <div class="castor-container" style="font-size: 6rem; z-index: 2; animation: pop 1.5s infinite;"><span class="castor-emoji">🦫</span></div>
+            <p class="texte-normal" style="z-index: 2; font-weight: bold;">Incroyable ! Tu connais tes rimes sur le bout des doigts !</p>
+            <button class="btn-action-mauve" style="z-index: 2;" onclick="jouerClic(); location.reload();">rejouer</button>
+        </div>
+
+    </div>
+
+    <script>
+        // === INITIALISATION AUDIO ===
+        let audioCtx = null;
+        function initAudio() { try { if (!audioCtx) { const AudioContext = window.AudioContext || window.webkitAudioContext; audioCtx = new AudioContext(); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } } catch(e) {} }
+
+        function jouerSon(type) {
+            try {
+                initAudio(); if(!audioCtx) return;
+                
+                if (type === 'succes') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; 
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.08);
+                        gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.08);
+                        gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + i * 0.08 + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.08 + 0.3);
+                        osc.start(audioCtx.currentTime + i * 0.08); osc.stop(audioCtx.currentTime + i * 0.08 + 0.3);
+                    });
+                }
+                else if (type === 'erreur') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.3); 
+                }
+                else if (type === 'pop') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                }
+            } catch(e) {}
+        }
+
+        function jouerClic() { try { initAudio(); if(!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle'; osc.frequency.setValueAtTime(450, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1); } catch(e) {} }
+
+        function parler(texte) {
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(texte);
+                    utterance.lang = 'fr-CA'; utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch(e) {}
+        }
+
+        function lancerFeuxDartifice() {
+            const conteneur = document.getElementById('feux-artifice'); conteneur.innerHTML = '';
+            const particules = ['✨', '💚', '🎉', '🌟', '🚂', '🎈'];
+            for(let i=0; i<50; i++) {
+                let div = document.createElement('div'); div.innerText = particules[Math.floor(Math.random() * particules.length)]; div.style.position = 'absolute'; div.style.left = '50%'; div.style.top = '50%'; div.style.fontSize = (Math.random() * 2 + 1) + 'rem'; div.style.transition = 'all 1.5s cubic-bezier(0.1, 0.8, 0.3, 1)'; conteneur.appendChild(div);
+                setTimeout(() => { let angle = Math.random() * Math.PI * 2; let distance = Math.random() * 250 + 50; div.style.transform = `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px) scale(0)`; div.style.opacity = '0'; }, 50);
+            }
+        }
+
+        // --- 12 NIVEAUX (SYLLABES PARFAITES) ---
+        const niveauxJeux = [
+            // JEU 1 : L'intrus (Poubelle)
+            { type: 'poubelle', titre: "Glisse l'intrus dans la poubelle", mots: ['🏰', '⛵', '🚗'], tts: ['château', 'bateau', 'voiture'], correctIndex: 2 }, // teau
+            { type: 'poubelle', titre: "Glisse l'intrus dans la poubelle", mots: ['🐰', '🌸', '🌲'], tts: ['lapin', 'fleur', 'sapin'], correctIndex: 1 }, // pin
+            { type: 'poubelle', titre: "Glisse l'intrus dans la poubelle", mots: ['🦆', '🦊', '🐶'], tts: ['canard', 'renard', 'chien'], correctIndex: 2 }, // nard
+            { type: 'poubelle', titre: "Glisse l'intrus dans la poubelle", mots: ['🪑', '🎁', '🪟'], tts: ['chaise', 'cadeau', 'rideau'], correctIndex: 0 }, // deau
+            
+            // JEU 2 : Le Train (Glisser vers la cible)
+            { type: 'train', titre: "Glisse la rime dans le train", cible: '🐑', ttsCible: 'mouton', mots: ['🔘', '🍎', '🐱'], tts: ['bouton', 'pomme', 'chat'], correctIndex: 0 }, // ton
+            { type: 'train', titre: "Glisse la rime dans le train", cible: '🥗', ttsCible: 'radis', mots: ['📅', '🧀', '🍓'], tts: ['mardi', 'fromage', 'fraise'], correctIndex: 0 }, // di
+            { type: 'train', titre: "Glisse la rime dans le train", cible: '🧊', ttsCible: 'glaçon', mots: ['👧', '👦', '👶'], tts: ['fille', 'garçon', 'bébé'], correctIndex: 1 }, // çon
+            { type: 'train', titre: "Glisse la rime dans le train", cible: '📦', ttsCible: 'paquet', mots: ['✉️', '💳', '🎟️'], tts: ['lettre', 'carte', 'ticket'], correctIndex: 2 }, // quet
+            
+            // JEU 3 : Les Bulles (Cliquer)
+            { type: 'bulles', titre: "Éclate la bulle qui rime !", cible: '🐟', ttsCible: 'poisson', mots: ['🚲', '🥤', '🚁'], tts: ['vélo', 'boisson', 'hélicoptère'], correctIndex: 1 }, // sson
+            { type: 'bulles', titre: "Éclate la bulle qui rime !", cible: '🎩', ttsCible: 'chapeau', mots: ['🏁', '📖', '✏️'], tts: ['drapeau', 'livre', 'crayon'], correctIndex: 0 }, // peau
+            { type: 'bulles', titre: "Éclate la bulle qui rime !", cible: '🚜', ttsCible: 'tracteur', mots: ['👨‍🍳', '👮', '👨‍⚕️'], tts: ['cuisinier', 'policier', 'docteur'], correctIndex: 2 }, // teur
+            { type: 'bulles', titre: "Éclate la bulle qui rime !", cible: '🐪', ttsCible: 'chameau', mots: ['👨', '👯', '👩'], tts: ['homme', 'jumeaux', 'femme'], correctIndex: 1 } // meau
+        ];
+
+        let indexNiveau = 0; let score = 0; let typePrecedent = '';
+
+        function changerEcran(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'ecran-victoire') { jouerSon('succes'); setTimeout(() => jouerSon('succes'), 500); lancerFeuxDartifice(); }
+        }
+
+        function demarrerJeu() { indexNiveau = 0; score = 0; typePrecedent = ''; chargerNiveau(); changerEcran('ecran-jeu'); setTimeout(lireConsigne, 600); }
+
+        function chargerNiveau() {
+            document.getElementById('score-affichage').innerText = score;
+            document.getElementById('barre-progression').style.width = ((indexNiveau / niveauxJeux.length) * 100) + '%';
+            
+            if (indexNiveau >= niveauxJeux.length) { changerEcran('ecran-victoire'); return; }
+
+            const donnees = niveauxJeux[indexNiveau];
+            const conteneur = document.getElementById('conteneur-jeu-dynamique');
+            conteneur.innerHTML = ''; 
+
+            let htmlBase = `
+                <p class="titre-colore" style="font-size: 1.6rem; margin-bottom: 5px;">${donnees.titre}</p>
+                <button class="btn-audio" onclick="lireConsigne(true)">🔊</button>
+            `;
+
+            if (donnees.type === 'poubelle') {
+                htmlBase += `<div class="jetons-container" id="conteneur-objets"></div>`;
+                htmlBase += `<div class="zone-poubelle" id="zone-cible">🗑️</div>`;
+                conteneur.innerHTML = htmlBase;
+                const conteneurObj = document.getElementById('conteneur-objets');
+                donnees.mots.forEach((emoji, idx) => {
+                    let jeton = document.createElement('div'); jeton.className = 'jeton-mauve'; jeton.innerText = emoji; jeton.dataset.index = idx;
+                    configurerGlisserDeposer(jeton, 'poubelle'); conteneurObj.appendChild(jeton);
+                });
+            } 
+            else if (donnees.type === 'train') {
+                htmlBase += `<div class="jetons-container" id="conteneur-objets"></div>`;
+                htmlBase += `
+                    <div class="zone-train" id="zone-cible">
+                        <div class="wagon"><div class="wagon-cible">${donnees.cible}</div><span id="contenu-wagon"></span><div class="roues-train"><div class="roue"></div><div class="roue"></div></div></div>
+                    </div>`;
+                conteneur.innerHTML = htmlBase;
+                const conteneurObj = document.getElementById('conteneur-objets');
+                donnees.mots.forEach((emoji, idx) => {
+                    let jeton = document.createElement('div'); jeton.className = 'jeton-mauve'; jeton.innerText = emoji; jeton.dataset.index = idx;
+                    configurerGlisserDeposer(jeton, 'train'); conteneurObj.appendChild(jeton);
+                });
+            }
+            else if (donnees.type === 'bulles') {
+                htmlBase += `<div class="bulle-cible">${donnees.cible}</div>`;
+                htmlBase += `<div class="jetons-container" id="conteneur-objets"></div>`;
+                conteneur.innerHTML = htmlBase;
+                const conteneurObj = document.getElementById('conteneur-objets');
+                donnees.mots.forEach((emoji, idx) => {
+                    let bulle = document.createElement('div'); bulle.className = 'bulle-cliquable'; bulle.innerText = emoji;
+                    bulle.onclick = () => verifierClicBulle(idx, bulle);
+                    conteneurObj.appendChild(bulle);
+                });
+            }
+        }
+
+        function lireConsigne(forceManuel = false) {
+            jouerClic();
+            const d = niveauxJeux[indexNiveau];
+            if (!d) return;
+            
+            let intro = "";
+            // Si c'est un nouveau type de jeu et que ce n'est pas un clic manuel sur le bouton
+            if (!forceManuel && d.type !== typePrecedent) {
+                if (d.type === 'poubelle') intro = "Nouveau jeu ! Trouve le mot qui ne rime pas. ";
+                if (d.type === 'train') intro = "Oh, un train ! Glisse la rime dans le wagon. ";
+                if (d.type === 'bulles') intro = "Attention, ça flotte ! Touche la bulle qui rime avec l'image du centre. ";
+                typePrecedent = d.type;
+            }
+
+            if (d.type === 'poubelle') {
+                parler(`${intro} Cherche l'intrus... ${d.tts[0]} ......... ${d.tts[1]} ......... ${d.tts[2]}`);
+            } else if (d.type === 'train' || d.type === 'bulles') {
+                parler(`${intro} Qu'est-ce qui rime avec ${d.ttsCible} ? ... ${d.tts[0]} ......... ${d.tts[1]} ......... ${d.tts[2]}`);
+            }
+        }
+
+        function afficherPointFlottant(element) {
+            let pts = document.createElement('div'); pts.className = 'point-flottant'; pts.innerText = '+10';
+            element.appendChild(pts); setTimeout(() => pts.remove(), 1000);
+        }
+
+        function validationReussie() {
+            jouerSon('succes'); score += 10;
+            afficherPointFlottant(document.getElementById('conteneur-jeu-dynamique'));
+            parler("Super !");
+            indexNiveau++;
+            setTimeout(chargerNiveau, 2000);
+            if(indexNiveau < niveauxJeux.length) setTimeout(() => lireConsigne(false), 2500);
+        }
+
+        function verifierClicBulle(indexChoisi, bulleElement) {
+            const indexCorrect = niveauxJeux[indexNiveau].correctIndex;
+            if (indexChoisi === indexCorrect) {
+                jouerSon('pop');
+                bulleElement.style.transform = 'scale(0)';
+                setTimeout(() => validationReussie(), 300);
+            } else {
+                jouerSon('erreur');
+                bulleElement.style.animation = 'shake 0.4s';
+                setTimeout(() => bulleElement.style.animation = 'floatBubble 3s ease-in-out infinite', 400);
+            }
+        }
+
+        function configurerGlisserDeposer(element, typeCible) {
+            let posX = 0, posY = 0, depX = 0, depY = 0; let estEnTrainDeGlisser = false;
+
+            element.addEventListener('pointerdown', demarrerGlissement);
+
+            function demarrerGlissement(e) {
+                e.preventDefault(); estEnTrainDeGlisser = true;
+                depX = e.clientX; depY = e.clientY;
+                element.style.zIndex = "100"; element.style.transition = "none"; 
+                document.addEventListener('pointermove', glisser); document.addEventListener('pointerup', arreterGlissement);
+            }
+
+            function glisser(e) {
+                if (!estEnTrainDeGlisser) return; e.preventDefault();
+                posX = depX - e.clientX; posY = depY - e.clientY; depX = e.clientX; depY = e.clientY;
+                let nouvX = (parseFloat(element.dataset.x) || 0) - posX; let nouvY = (parseFloat(element.dataset.y) || 0) - posY;
+                element.style.transform = `translate(${nouvX}px, ${nouvY}px) scale(1.1)`;
+                element.dataset.x = nouvX; element.dataset.y = nouvY;
+            }
+
+            function arreterGlissement(e) {
+                if (!estEnTrainDeGlisser) return; estEnTrainDeGlisser = false;
+                document.removeEventListener('pointermove', glisser); document.removeEventListener('pointerup', arreterGlissement);
+                element.style.transition = "transform 0.3s ease-out"; element.style.zIndex = "20";
+
+                const zoneCible = document.getElementById('zone-cible');
+                const rectJeton = element.getBoundingClientRect(); const rectCible = zoneCible.getBoundingClientRect();
+                const jetonCentreX = rectJeton.left + rectJeton.width / 2; const jetonCentreY = rectJeton.top + rectJeton.height / 2;
+
+                if (jetonCentreX > rectCible.left && jetonCentreX < rectCible.right && jetonCentreY > rectCible.top && jetonCentreY < rectCible.bottom) {
+                    let indexJeton = parseInt(element.dataset.index);
+                    let indexCorrect = niveauxJeux[indexNiveau].correctIndex;
+
+                    if (indexJeton === indexCorrect) {
+                        element.style.display = 'none';
+                        if (typeCible === 'poubelle') {
+                            zoneCible.classList.add('poubelle-ouverte');
+                            setTimeout(() => zoneCible.classList.remove('poubelle-ouverte'), 500);
+                            setTimeout(() => validationReussie(), 300);
+                        } 
+                        else if (typeCible === 'train') {
+                            document.getElementById('contenu-wagon').innerText = element.innerText;
+                            zoneCible.style.animation = "departTrain 1.5s forwards"; 
+                            setTimeout(() => validationReussie(), 800);
+                        }
+                    } else { jouerSon('erreur'); replacerJeton(element); }
+                } else { replacerJeton(element); }
+            }
+        }
+
+        function replacerJeton(jeton) { jeton.style.transform = `translate(0px, 0px) scale(1)`; jeton.dataset.x = 0; jeton.dataset.y = 0; }
+    </script>
+</body>
+</html>
