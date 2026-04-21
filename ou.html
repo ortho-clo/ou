@@ -1,761 +1,381 @@
-!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Le Défi du Chevalier : La Quête du Son OU</title>
-
     <style>
-
         /* CONTRAINTE TECHNIQUE STRICTE : Police Century Gothic pour le 'a' rond */
-
         body {
-
             font-family: 'Century Gothic', AppleGothic, sans-serif;
-
             background-color: #2c3e50;
-
             color: #ecf0f1;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             justify-content: center;
-
             min-height: 100vh;
-
             margin: 0;
-
             padding: 20px;
-
             text-align: center;
-
         }
-
-
 
         #game-container {
-
             background-color: #34495e;
-
             padding: 40px;
-
             border-radius: 20px;
-
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-
             max-width: 800px;
-
             width: 100%;
-
             border: 4px solid #f1c40f;
-
         }
-
-
 
         h1 { color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-
         h2 { color: #e74c3c; }
 
-
-
         /* Alignement sur la même ligne pour les titres avec émojis */
-
         .title-inline {
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             gap: 15px;
-
         }
-
         .title-inline .emoji-inline { font-size: 1.5em; }
 
-
-
         .big-emoji { font-size: 80px; margin: 20px 0; display: block; }
-
         
-
         .level { display: none; }
-
         .level.active { display: block; animation: fadeIn 0.5s; }
-
-
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-
-
         button {
-
             background-color: #e74c3c;
-
             color: white;
-
             border: none;
-
             padding: 15px 30px;
-
             font-size: 1.2em;
-
             font-family: 'Century Gothic', sans-serif;
-
             border-radius: 50px;
-
             cursor: pointer;
-
             margin: 10px;
-
             transition: transform 0.1s, background-color 0.3s;
-
             box-shadow: 0 4px 0 #c0392b;
-
         }
-
-
 
         button:hover:not(:disabled) { background-color: #ff6b6b; }
-
         button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c0392b; }
-
         button:disabled { background-color: #95a5a6; cursor: not-allowed; box-shadow: none;}
 
-
-
         /* Styles spécifiques aux mécaniques */
-
         .logatomes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
-
         .logatome-btn { background-color: #3498db; box-shadow: 0 4px 0 #2980b9; }
-
         .logatome-btn.selected { background-color: #f1c40f; color: #2c3e50; box-shadow: 0 4px 0 #f39c12; }
 
-
-
         .intrus-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
-
         
-
         .hole-sentence { font-size: 1.3em; margin: 20px 0; line-height: 1.8; }
-
         select {
-
             font-size: 1em;
-
             padding: 5px 10px;
-
             font-family: 'Century Gothic', sans-serif;
-
             border-radius: 10px;
-
             background: #ecf0f1;
-
             color: #2c3e50;
-
         }
-
-
 
         .text-box { background-color: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; text-align: left; margin: 20px 0; line-height: 1.6;}
 
-
-
         input[type="text"] {
-
             font-size: 1.2em;
-
             padding: 10px 20px;
-
             font-family: 'Century Gothic', sans-serif;
-
             border-radius: 50px;
-
             border: 2px solid #f1c40f;
-
             background: #ecf0f1;
-
             color: #2c3e50;
-
             margin: 10px;
-
             text-align: center;
-
         }
-
-
 
         #feedback { font-weight: bold; font-size: 1.2em; margin-top: 20px; min-height: 1.5em;}
-
         #feedback.correct { color: #2ecc71; animation: popIn 0.3s; }
-
         #feedback.wrong { color: #e74c3c; animation: shake 0.3s; }
 
-
-
         .teacher-section { background-color: #ecf0f1; color: #2c3e50; padding: 20px; border-radius: 10px; margin-top: 30px; text-align: left;}
-
         .teacher-section h3 { color: #2c3e50; border-bottom: 2px solid #2c3e50;}
 
-
-
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-10px);} 75% {transform: translateX(10px);} }
-
         @keyframes popIn { 0% {transform: scale(0.8); opacity: 0;} 100% {transform: scale(1); opacity: 1;} }
-
     </style>
-
 </head>
-
 <body>
 
-
-
 <div id="game-container">
-
     <h1>⚔️ La Quête du Chevalier OU 🛡️</h1>
 
-
-
     <div id="level-0" class="level active">
-
         <span class="big-emoji">🏰</span>
-
         <h2>Bienvenue, jeune écuyer !</h2>
-
         <p>Le méchant dragon a volé la couronne du roi et s'est caché dans la tour.</p>
-
         <p>Pour l'atteindre, tu dois prouver que tu maîtrises le son <strong>[ou]</strong>.</p>
-
         <p>Relèveras-tu le défi pour devenir Chevalier ?</p>
-
         <button onclick="startFirstLevel()">Je commence la quête !</button>
-
     </div>
-
-
 
     <div id="level-1" class="level">
-
         <h2>Niveau 1 : Le Pont-Levis ⛓️</h2>
-
         <p>Pour faire baisser le pont, clique sur tous les blasons qui contiennent le son <strong>[ou]</strong>.</p>
-
         <div class="logatomes-grid">
-
             <button class="logatome-btn" onclick="toggleSyllable(this, true)">rou</button>
-
             <button class="logatome-btn" onclick="toggleSyllable(this, false)">lo</button>
-
             <button class="logatome-btn" onclick="toggleSyllable(this, false)">ma</button>
-
             <button class="logatome-btn" onclick="toggleSyllable(this, true)">chou</button>
-
             <button class="logatome-btn" onclick="toggleSyllable(this, false)">toi</button>
-
             <button class="logatome-btn" onclick="toggleSyllable(this, true)">nou</button>
-
         </div>
-
         <button id="validate-1" onclick="checkLevel1()">Ouvrir la porte</button>
-
     </div>
-
-
 
     <div id="level-2" class="level">
-
         <h2>Niveau 2 : L'Écurie Royale 🐎</h2>
-
         <p>Trouve le mot qui ne contient <strong>PAS</strong> le son [ou] pour calmer les chevaux.</p>
-
         <div class="intrus-flex">
-
             <button onclick="handleLvl2Choice(this, false)">un genou 🦵</button>
-
             <button onclick="handleLvl2Choice(this, true)">une épée 🗡️</button> <button onclick="handleLvl2Choice(this, false)">une souris 🐭</button>
-
             <button onclick="handleLvl2Choice(this, false)">la soupe 🥣</button>
-
         </div>
-
     </div>
-
-
 
     <div id="level-3" class="level">
-
         <h2>Niveau 3 : La Salle des Gardes 👥</h2>
-
         <p>Choisis la bonne orthographe pour compléter la phrase.</p>
-
         <div class="hole-sentence">
-
             Le chevalier est très m<select id="select-3-1">
-
                 <option value="o">o</option>
-
                 <option value="ou" data-correct="true">ou</option>
-
                 <option value="oi">oi</option>
-
             </select>mou. Il a perdu son d<select id="select-3-2">
-
                 <option value="ou" data-correct="true">ou</option>
-
                 <option value="u">u</option>
-
                 <option value="on">on</option>
-
             </select>dou au pied de la t<select id="select-3-3">
-
                 <option value="u">u</option>
-
                 <option value="eu">eu</option>
-
                 <option value="ou" data-correct="true">ou</option>
-
             </select>r.
-
         </div>
-
         <button onclick="checkLevel3()">Passer les gardes</button>
-
     </div>
-
-
 
     <div id="level-4" class="level">
-
         <h2>Niveau 4 : L'Armurerie Secrète 🛡️</h2>
-
         <p>Lis ce texte et écris le mot de l'armure qui contient le son [ou].</p>
-
         <div class="text-box">
-
             Le chevalier prend sa grande lance. Il met son casque brillant et son bouclier solide. Le voilà prêt pour le combat.
-
         </div>
-
         <p>Quel est l'objet caché dans le texte ?</p>
-
         <input type="text" id="input-4" placeholder="Tape le mot ici">
-
         <br>
-
         <button onclick="checkLevel4()">Ouvrir le coffre</button>
-
     </div>
-
-
 
     <div id="level-5" class="level">
-
         <h2 class="title-inline"><span class="emoji-inline">🐲</span> Niveau 5 : Le Sommet de la Tour</h2>
-
         <p>Le dragon te bloque la route. Pour le vaincre, devine le mot de passe mystère.</p>
-
         
-
         <div class="text-box" style="font-style: italic;">
-
             "Je vis dans la sombre forêt et je hurle à la lune. Les chevaliers me craignent la nuit. Mon nom contient le son [ou]. Qui suis-je ?"
-
         </div>
-
         
-
         <input type="text" id="input-5" placeholder="Le code secret">
-
         <br>
-
         <button onclick="checkLevel5()">Vaincre le dragon !</button>
-
     </div>
-
-
 
     <div id="level-6" class="level">
-
         <span class="big-emoji">👑</span>
-
         <h2>Félicitations, Chevalier ! 🎉</h2>
-
         <p>Tu as vaincu le dragon et récupéré la couronne.</p>
-
         <p>Tu es un expert du son [ou] !</p>
-
         
-
         <div class="teacher-section">
-
             <h3>📖 Coin Lecture & Questions (Pour l'enseignante)</h3>
-
             <p><strong>Texte de lecture :</strong></p>
-
             <p>Le petit écuyer Barnabé est devenu un vrai chevalier. Il monte sur sa pouliche rousse pour faire le tour du château. Dans son sac, il cache une gourde d'eau et des petits morceaux de nougat pour la route. Il est très courageux !</p>
-
             
-
             <p><strong>Questions concrètes :</strong></p>
-
             <ul>
-
                 <li>Comment s'appelle l'écuyer ? (Barnabé)</li>
-
                 <li>Sur quoi monte-t-il ? (Une pouliche rousse)</li>
-
                 <li>Que cache-t-il dans son sac ? (Une gourde et du nougat)</li>
-
             </ul>
-
-
 
             <p><strong>Questions d'inférence (plus difficiles) :</strong></p>
-
             <ul>
-
                 <li>D'après le texte, comment Barnabé se sent-il à la fin de son aventure ? (Fier, courageux, content).</li>
-
                 <li>Pourquoi Barnabé emporte-t-il une gourde et de la nourriture pour faire le tour du château, d'après toi ? (C'est peut-être un grand château, le tour est long, il veut être prévoyant).</li>
-
             </ul>
-
         </div>
-
     </div>
 
-
-
     <div id="feedback"></div>
-
 </div>
 
-
-
 <script>
-
     /* SONS - Web Audio API */
-
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-
-
     function playSound(type) {
-
         if (!audioCtx) return;
-
         const oscillator = audioCtx.createOscillator();
-
         const gainNode = audioCtx.createGain();
-
         oscillator.connect(gainNode);
-
         gainNode.connect(audioCtx.destination);
-
         
-
         if (type === 'correct') {
-
             oscillator.type = 'sine';
-
             oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-
             oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-
             oscillator.start();
-
             oscillator.stop(audioCtx.currentTime + 0.3);
-
         } else {
-
             oscillator.type = 'sawtooth';
-
             oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
-
             oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-
             gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
             oscillator.start();
-
             oscillator.stop(audioCtx.currentTime + 0.4);
-
         }
-
     }
-
-
 
     /* NAVIGATION */
-
     let currentLevel = 0;
-
     const feedbackEl = document.getElementById('feedback');
 
-
-
     function hideAllLevels() {
-
         document.querySelectorAll('.level').forEach(lvl => lvl.classList.remove('active'));
-
     }
-
-
 
     function showLevel(num) {
-
         hideAllLevels();
-
         document.getElementById('level-' + num).classList.add('active');
-
         feedbackEl.textContent = "";
-
         feedbackEl.className = "";
-
         currentLevel = num;
-
         document.getElementById('game-container').scrollTop = 0;
-
     }
-
-
 
     function setFeedback(text, type) {
-
         feedbackEl.textContent = text;
-
         feedbackEl.className = type;
-
         playSound(type);
-
     }
-
-
 
     function startFirstLevel() {
-
         audioCtx.resume().then(() => {
-
             showLevel(1);
-
         });
-
     }
-
-
 
     /* NIVEAU 1 */
-
     let selectedBtnCount = 0;
-
     
-
     function toggleSyllable(btn, isCorrect) {
-
         if(btn.classList.contains('selected')) {
-
             btn.classList.remove('selected');
-
         } else {
-
             btn.classList.add('selected');
-
         }
-
         playSound('correct'); 
-
     }
-
-
 
     function checkLevel1() {
-
         const allButtons = document.querySelectorAll('.logatome-btn');
-
         let error = false;
-
         let correctCount = 0;
-
         
-
         allButtons.forEach(btn => {
-
             const isCorrect = btn.getAttribute('onclick').includes('true');
-
             const isSelected = btn.classList.contains('selected');
 
-
-
             if((isSelected && !isCorrect) || (!isSelected && isCorrect)) {
-
                 error = true;
-
             }
-
         });
 
-
-
         if(!error) {
-
             setFeedback("Bien joué ! Le pont s'abaisse.", "correct");
-
             setTimeout(() => showLevel(2), 1500);
-
         } else {
-
             setFeedback("Raté ! Essaie encore de trouver les bons blasons.", "wrong");
-
         }
-
     }
-
-
 
     /* NIVEAU 2 */
-
     function handleLvl2Choice(btn, isCorrectIntrus) {
-
         const buttons = document.querySelectorAll('#level-2 button');
-
         buttons.forEach(b => b.disabled = true);
 
-
-
         if(isCorrectIntrus) {
-
             btn.style.backgroundColor = "#2ecc71";
-
             setFeedback("C'est ça ! Épée n'a pas le son [ou].", "correct");
-
             setTimeout(() => showLevel(3), 1500);
-
         } else {
-
             btn.style.backgroundColor = "#95a5a6";
-
             setFeedback("Ce mot contient le son [ou] !", "wrong");
-
             setTimeout(() => {
-
                 buttons.forEach(b => {
-
                     b.disabled = false;
-
                     b.removeAttribute('style');
-
                 });
-
             }, 1000);
-
         }
-
     }
-
-
 
     /* NIVEAU 3 */
-
     function checkLevel3() {
-
         const s1 = document.getElementById('select-3-1');
-
         const s2 = document.getElementById('select-3-2');
-
         const s3 = document.getElementById('select-3-3');
 
-
-
         if(s1.value === "ou" && s2.value === "ou" && s3.value === "ou") {
-
             setFeedback("Bravo ! La phrase est correcte, les gardes te laissent passer.", "correct");
-
             setTimeout(() => showLevel(4), 1500);
-
         } else {
-
             setFeedback("Erreur ! Vérifie tes choix.", "wrong");
-
         }
-
     }
-
-
 
     /* NIVEAU 4 */
-
     function checkLevel4() {
-
         const inputVal = document.getElementById('input-4').value.trim().toLowerCase();
-
         
-
         if(inputVal === "bouclier" || inputVal === "le bouclier" || inputVal === "un bouclier") {
-
             setFeedback("C'est exact ! Le coffre s'ouvre.", "correct");
-
             setTimeout(() => showLevel(5), 1500);
-
         } else {
-
             setFeedback("Ce n'est pas le bon mot caché.", "wrong");
-
         }
-
     }
-
-
 
     /* NIVEAU 5 - MODIFIÉ POUR "LOUP" */
-
     function checkLevel5() {
-
         let inputVal = document.getElementById('input-5').value.trim().toLowerCase();
-
         // Retire les accents si jamais l'élève en met
-
         inputVal = inputVal.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
-
         
-
         if(inputVal === "loup" || inputVal === "un loup" || inputVal === "le loup") {
-
             setFeedback("Le dragon s'enfuit ! Tu as gagné !", "correct");
-
             setTimeout(() => showLevel(6), 1500);
-
         } else {
-
             setFeedback("Ce n'est pas la bonne réponse à l'énigme.", "wrong");
-
         }
-
     }
-
 </script>
 
-
-
 </body>
-
 </html>
